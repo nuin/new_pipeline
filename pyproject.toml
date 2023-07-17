@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "pipeline"
+version = "0.1.0"
+description = ""
+authors = ["nuin <nuin@genedrift.org>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+pandas = "^2.0.3"
+PyVCF3 = "^1.0.3"
+pysam = "^0.21.0"
+interop = "^1.2.4"
+
+[tool.poetry.group.dev.dependencies]
+flake8 = "^6.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
