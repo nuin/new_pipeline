@@ -25,6 +25,8 @@ from dotenv import dotenv_values
 from lib.bwa_align import run_bwa
 from lib.dup_indels import remove_duplicates, add_groups
 from lib.recalibration import base_recal1, recalibrate
+from lib.variants_GATK import haplotype_caller
+from lib.variants_GATK3 import haplotype_caller
 
 # main configuration file
 # couch_credentials = open('lib/config/couchdb').read().splitlines()
@@ -194,8 +196,12 @@ def analyse_pairs(config, datadir, samples):
         )
         to_return[sample]["recalibrate"] = recalibration_final
 
-
-
+        GATKvariants = haplotype_caller(
+            sample, datadir, reference, bed_file[sample], gatk
+        )
+        GATK3variants = haplotype_caller(
+            sample, datadir, reference, bed_file[sample], gatk3
+        )
 
     # for pair in sorted_pairs:
     #     try:
@@ -213,33 +219,17 @@ def analyse_pairs(config, datadir, samples):
     #                 + " of "
     #                 + str(len(pairs))
     #             )
-    #             # ########################################### #
-    #             #                                             #
-    #             #           Recalibration                     #
-    #             #                                             #
-    #             # ########################################### #
-    #             # Recalibration step 1
 
-    #
-    #             # Recalibration step 2
-
-    #             update_dict2[pair] = ("Recalibration complete", str(datetime.now()))
-    #
     #             # ########################################### #
     #             #                                             #
     #             #           Variant Calling                   #
     #             #                                             #
     #             # ########################################### #
     #             # GATK4
-    #             GATKvariants = variants_GATK.haplotype_caller(
-    #                 pair, datadir, reference, bed_file[pair], gatk
-    #             )
+
     #
     #             # GATK3
-    #             GATK3variants = variants_GATK3.haplotype_caller(
-    #                 pair, datadir, reference, bed_file[pair], gatk3
-    #             )
-    #             to_return[pair]["variants_GATK_1"] = GATKvariants
+
     #             update_dict3[pair] = ("GATK VCF generated", str(datetime.now()))
     #
     #             # Freebayes
