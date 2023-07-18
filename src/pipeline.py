@@ -13,9 +13,9 @@ import os
 from collections import defaultdict
 from datetime import datetime
 from pathlib import Path, PurePath
+
 import click
 import yaml
-
 from rich.console import Console
 
 console = Console()
@@ -23,6 +23,8 @@ console = Console()
 from dotenv import dotenv_values
 
 from lib.bwa_align import run_bwa
+from lib.dup_indels import remove_duplicates, add_groups
+from lib.recalibration import base_recal1
 
 # main configuration file
 # couch_credentials = open('lib/config/couchdb').read().splitlines()
@@ -103,11 +105,11 @@ def process_dir(config, datadir, samples):
         to_return[sample]["bam"] = run_bwa(
             sample, fastqs, datadir, reference, bwa, samtools
         )
-        # patient_bwa[pair] = ("BWA complete", str(datetime.now()))
-    #
+        patient_bwa[sample] = ("BWA complete", str(datetime.now()))
+
     to_return.update(analyse_pairs(configuration, datadir, samples))
-    #
-    # return to_return
+
+    return to_return
 
 
 def parse_picard(data_lines, pair, picard_metric):
@@ -153,12 +155,9 @@ def analyse_pairs(config, datadir, samples):
     """
 
     to_return = defaultdict(dict)
-
     env = dotenv_values(f"{Path.cwd()}/.env")
 
-    print(env)
     # load software configuration
-
     samtools = env["SAMTOOLS"]
     picard = env["PICARD"]
     gatk = env["GATK"]
@@ -169,16 +168,27 @@ def analyse_pairs(config, datadir, samples):
     annovar_dir = env["ANNOVAR"]
     # transcript_location = software_conf["transcripts"]
     octopus = env["OCTOPUS"]
-    reference = configuration["Reference"]
-    vcf_file = configuration["VCF"]
-    bed_file = configuration["BED"]
-    bait_file = configuration["BAIT"]
-
+    reference = config["Reference"]
+    vcf_file = config["VCF"]
+    bed_file = config["BED"]
+    bait_file = config["BAIT"]
 
     # index = 0  # keeps track of the current sample
     # sorted_pairs = sorted(pairs.keys())
     #
     # # main analysis loop
+    for sample in samples:
+        console.log(f"Processing {sample}")
+        rm_duplicates = remove_duplicates(sample, datadir, picard)
+        to_return[sample]["dedup"] = rm_duplicates
+        adding_groups = add_groups(sample, datadir, picard, samtools)
+        to_return[sample]["add_groups"] = adding_groups
+
+        recalibration_step1 = base_recal1(
+            pair, datadir, bed_file[pair], vcf_file, reference, gatk
+        )
+        to_return[pair]["recalibration1"] = recalibration_step1
+
     # for pair in sorted_pairs:
     #     try:
     #         # checks if sample is fully analysed before starting
@@ -195,26 +205,13 @@ def analyse_pairs(config, datadir, samples):
     #                 + " of "
     #                 + str(len(pairs))
     #             )
-    #
-    #             # remove_duplicates = dup_indels.samtools_duplicates(pair, datadir, samtools)
-    #             remove_duplicates = dup_indels.remove_duplicates(pair, datadir, picard)
-    #             to_return[pair]["dedup"] = remove_duplicates
-    #
-    #             # add groups to the BAM file to avoid errors
-    #             adding_groups = dup_indels.add_groups(pair, datadir, picard, samtools)
-    #             to_return[pair]["add_groups"] = adding_groups
-    #             update_dict[pair] = ("Realign complete", str(datetime.now()))
-    #
     #             # ########################################### #
     #             #                                             #
     #             #           Recalibration                     #
     #             #                                             #
     #             # ########################################### #
     #             # Recalibration step 1
-    #             recalibration_step1 = recalibration.base_recal1(
-    #                 pair, datadir, bed_file[pair], vcf_file, reference, gatk
-    #             )
-    #             to_return[pair]["recalibration1"] = recalibration_step1
+
     #
     #             # Recalibration step 2
     #             recalibration_final = recalibration.recalibrate(

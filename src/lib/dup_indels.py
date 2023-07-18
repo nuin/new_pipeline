@@ -8,12 +8,9 @@
 import os
 import subprocess
 import logging
-import graypy
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-graypy_handler = graypy.GELFUDPHandler('192.168.1.169', 12201)
-logger.addHandler(graypy_handler)
 
 
 def remove_duplicates(sample_id, datadir, picard):
