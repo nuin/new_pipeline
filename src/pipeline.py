@@ -24,7 +24,7 @@ from dotenv import dotenv_values
 
 from lib.bwa_align import run_bwa
 from lib.dup_indels import remove_duplicates, add_groups
-from lib.recalibration import base_recal1
+from lib.recalibration import base_recal1, base_recal2
 
 # main configuration file
 # couch_credentials = open('lib/config/couchdb').read().splitlines()
@@ -185,9 +185,9 @@ def analyse_pairs(config, datadir, samples):
         to_return[sample]["add_groups"] = adding_groups
 
         recalibration_step1 = base_recal1(
-            pair, datadir, bed_file[pair], vcf_file, reference, gatk
+            sample, datadir, bed_file[sample], vcf_file, reference, gatk
         )
-        to_return[pair]["recalibration1"] = recalibration_step1
+        to_return[sample]["recalibration1"] = recalibration_step1
 
     # for pair in sorted_pairs:
     #     try:
