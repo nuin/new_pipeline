@@ -192,7 +192,7 @@ def analyse_pairs(config, datadir, samples):
         recalibration_final = recalibrate(
             sample, datadir, reference, gatk
         )
-        to_return[pair]["recalibrate"] = recalibration_final
+        to_return[sample]["recalibrate"] = recalibration_final
 
 
 
