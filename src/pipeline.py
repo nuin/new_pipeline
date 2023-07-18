@@ -12,7 +12,7 @@ import logging
 import os
 from collections import defaultdict
 from datetime import datetime
-from pathlib import Path, PurePath
+from pathlib import Path
 
 import click
 import yaml
@@ -24,7 +24,7 @@ from dotenv import dotenv_values
 
 from lib.bwa_align import run_bwa
 from lib.dup_indels import remove_duplicates, add_groups
-from lib.recalibration import base_recal1, base_recal2
+from lib.recalibration import base_recal1, recalibrate
 
 # main configuration file
 # couch_credentials = open('lib/config/couchdb').read().splitlines()
@@ -189,6 +189,14 @@ def analyse_pairs(config, datadir, samples):
         )
         to_return[sample]["recalibration1"] = recalibration_step1
 
+        recalibration_final = recalibrate(
+            sample, datadir, reference, gatk
+        )
+        to_return[pair]["recalibrate"] = recalibration_final
+
+
+
+
     # for pair in sorted_pairs:
     #     try:
     #         # checks if sample is fully analysed before starting
@@ -214,10 +222,7 @@ def analyse_pairs(config, datadir, samples):
 
     #
     #             # Recalibration step 2
-    #             recalibration_final = recalibration.recalibrate(
-    #                 pair, datadir, reference, gatk
-    #             )
-    #             to_return[pair]["recalibrate"] = recalibration_final
+
     #             update_dict2[pair] = ("Recalibration complete", str(datetime.now()))
     #
     #             # ########################################### #
