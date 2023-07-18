@@ -27,6 +27,8 @@ from lib.dup_indels import remove_duplicates, add_groups
 from lib.recalibration import base_recal1, recalibrate
 from lib.variants_GATK import haplotype_caller
 from lib.variants_GATK3 import haplotype_caller
+from lib.variants_freebayes import freebayes_caller, edit_freebayes_vcf
+from lib.picard_actions import picard_sort
 
 # main configuration file
 # couch_credentials = open('lib/config/couchdb').read().splitlines()
@@ -202,6 +204,21 @@ def analyse_pairs(config, datadir, samples):
         GATK3variants = haplotype_caller(
             sample, datadir, reference, bed_file[sample], gatk3
         )
+        freebayesvariants = freebayes_caller(
+            sample, datadir, reference, bed_file[sample], freebayes
+        )
+        to_return[sample]["picard_sort"] = picard_sort(
+            sample, datadir, reference, picard
+        )
+        to_return[sample][
+            "freebayes_edit"
+        ] = edit_freebayes_vcf(sample, datadir)
+
+        # to_return[sample]["variants_octopus"] = octopus_caller(
+        #     sample, datadir, reference, bed_file[sample], octopus
+        # )
+
+
 
     # for pair in sorted_pairs:
     #     try:
@@ -232,10 +249,6 @@ def analyse_pairs(config, datadir, samples):
 
     #             update_dict3[pair] = ("GATK VCF generated", str(datetime.now()))
     #
-    #             # Freebayes
-    #             freebayesvariants = variants_freebayes.freebayes(
-    #                 pair, datadir, reference, bed_file[pair], freebayes
-    #             )
     #             if freebayesvariants == "error":
     #                 to_return[pair]["variants_freebayes"] = freebayesvariants
     #                 raise ValueError("\t\tFreebayes variant called failed")
@@ -243,18 +256,6 @@ def analyse_pairs(config, datadir, samples):
     #                 to_return[pair]["variants_freebayes"] = freebayesvariants
     #             update_dict4[pair] = ("Freebayes VCF generated", str(datetime.now()))
     #
-    #             # Freebayes VCF modifications
-    #             to_return[pair]["picard_sort"] = picard_actions.picard_sort(
-    #                 pair, datadir, reference, picard
-    #             )
-    #             to_return[pair][
-    #                 "freebayes_edit"
-    #             ] = variants_freebayes.edit_freebayes_vcf(pair, datadir)
-    #
-    #             # Octopus
-    #             to_return[pair]["variants_octopus"] = variants_octopus.octopus(
-    #                 pair, datadir, reference, bed_file[pair], octopus
-    #             )
     #
     #             # Merging VCFs
     #             to_return[pair]["vcf_merge"] = GATK_vcf.vcf_comparison(
