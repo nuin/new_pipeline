@@ -29,6 +29,7 @@ from lib.variants_GATK import haplotype_caller
 from lib.variants_GATK3 import haplotype_caller
 from lib.variants_freebayes import freebayes_caller, edit_freebayes_vcf
 from lib.picard_actions import picard_sort
+from lib.variants_octopus import octopus_caller
 
 # main configuration file
 # couch_credentials = open('lib/config/couchdb').read().splitlines()
@@ -41,17 +42,76 @@ VERSION = open(VERSIONFILE).read().strip()
 logging.basicConfig(level=logging.INFO)
 
 
-def get_code(sample_id):
+def find_fastq(datadir, panel_samples, panel):
     """
-    Function that returns the  BED code of the sample
-    :param sample_id:
+
+    :param datadir:
     :return:
     """
 
-    return sample_id[-2:]
+    fastqs = glob.glob(f"{datadir}/*.fastq.gz")
+
+    fastqs = sorted(fastqs)
+
+    to_return = []
+    for fastq in fastqs:
+        console.log(f"Found {fastq}")
+        to_return.append(Path(fastq).name)
+
+    return fastqs
 
 
-def process_dir(config, datadir, samples):
+def get_ids(fastqs):
+    """
+
+    :param fastqs:
+    :return:
+    """
+
+    sample_ids = []
+    for fastq in fastqs:
+        sample_ids.append(Path(fastq).name.split("_")[0])
+
+    sample_ids = sorted(set(sample_ids))
+
+    return sample_ids
+
+
+def create_directories(datadir, sample_ids, panel):
+    """
+
+    :param datadir:
+    :param fastqs:
+    :return:
+    """
+
+    try:
+        os.makedirs(f"{datadir}/BAM/")
+    except FileExistsError:
+        console.log(f"{datadir}/BAM/ already exists")
+    console.log(f"Creating directories in {panel} directory")
+    for sample in sample_ids:
+        console.log(f"Processing {sample}")
+        if not Path(f"{datadir}/BAM/{sample}").exists():
+            console.log(f"Creating {datadir}/BAM/{sample}")
+            os.makedirs(f"{datadir}/BAM/{sample}")
+        if not Path(f"{datadir}/BAM/{sample}/BAM/").exists():
+            console.log(f"Creating {datadir}/BAM/{sample}/BAM/")
+            os.makedirs(f"{datadir}/BAM/{sample}/BAM/")
+        if not Path(f"{datadir}/BAM/{sample}/VCF/").exists():
+            console.log(f"Creating {datadir}/BAM/{sample}/VCF/")
+            os.makedirs(f"{datadir}/BAM/{sample}/VCF/")
+        if not Path(f"{datadir}/BAM/{sample}/QC/").exists():
+            console.log(f"Creating {datadir}/BAM/{sample}/QC/")
+            os.makedirs(f"{datadir}/BAM/{sample}/QC/")
+        if not Path(f"{datadir}/BAM/{sample}/Metrics/").exists():
+            console.log(f"Creating {datadir}/BAM/{sample}/Metrics/")
+            os.makedirs(f"{datadir}/BAM/{sample}/Metrics/")
+
+    console.log("Directories created")
+
+
+def process_dir(config, datadir, samples, panel):
     """
     Function that runs all the steps of the pipeline, usually calling
     functions from other modules
@@ -69,9 +129,11 @@ def process_dir(config, datadir, samples):
 
     env = dotenv_values(f"{Path.cwd()}/.env")
     configuration = yaml.safe_load(open(config))
-    console.log("Looking for FASTQ files")
 
-    # call the function to find the FASTQ files
+    console.log("Looking for FASTQ files")
+    panel_samples = list(configuration["BED"].keys())
+    fastqs = find_fastq(datadir, panel_samples, panel)
+    sample_ids = get_ids(fastqs)
 
     bwa = env["BWA"]
     samtools = env["SAMTOOLS"]
@@ -84,56 +146,25 @@ def process_dir(config, datadir, samples):
     # return variable - should be used in logging or some centralized action. queueing
     to_return = defaultdict(dict)
 
+    create_directories(datadir, sample_ids, panel)
+
     # align all pairs
-    for sample in samples:
-        console.log(f"Processing {sample}")
-        patient_bwa = {}
-        if not os.path.exists(f"{datadir}/BAM/{sample}/BAM/"):
-            console.log(f"Creating {datadir}/BAM/{sample}")
-            os.makedirs(f"{datadir}/BAM/{sample}/BAM/")
-        if not os.path.exists(f"{datadir}/BAM/{sample}/VCF/"):
-            console.log(f"Creating {datadir}/BAM/{sample}/VCF/")
-            os.makedirs(f"{datadir}/BAM/{sample}/VCF/")
-        if not os.path.exists(f"{datadir}/BAM/{sample}/QC/"):
-            console.log(f"Creating {datadir}/BAM/{sample}/QC/")
-            os.makedirs(f"{datadir}/BAM/{sample}/QC/")
-        if not os.path.exists(f"{datadir}/BAM/{sample}/Metrics/"):
-            console.log(f"Creating {datadir}/BAM/{sample}/Metrics/")
-            os.makedirs(f"{datadir}/BAM/{sample}/Metrics/")
+    # for sample in samples:
 
-        # code = get_code(pair)
-        # create directories in sample locations
-        # alignment
-        fastqs = glob.glob(f"{datadir}/Data/Intensities/BaseCalls/{sample}*.fastq.gz")
-        console.log(f"Found {len(fastqs)} FASTQ files\n {' '.join(fastqs)}")
-        to_return[sample]["bam"] = run_bwa(
-            sample, fastqs, datadir, reference, bwa, samtools
-        )
-        patient_bwa[sample] = ("BWA complete", str(datetime.now()))
-
-    to_return.update(analyse_pairs(configuration, datadir, samples))
-
-    return to_return
-
-
-def parse_picard(data_lines, pair, picard_metric):
-    """
-    Function that parses picard different metrics files
-    and updates the database with results
-
-    :param data_lines: content of the picard metric file
-    :param pair: sample ID
-    :param picard_metric: type of metric contained in the file
-
-    :type data_lines: string
-    :type pair: string
-    :type picard_metric: string
-
-    :return: success
-    :rtype: string
-    """
-
-    return "success"
+    #
+    #     # code = get_code(pair)
+    #     # create directories in sample locations
+    #     # alignment
+    #     fastqs = glob.glob(f"{datadir}/Data/Intensities/BaseCalls/{sample}*.fastq.gz")
+    #     console.log(f"Found {len(fastqs)} FASTQ files\n {' '.join(fastqs)}")
+    #     to_return[sample]["bam"] = run_bwa(
+    #         sample, fastqs, datadir, reference, bwa, samtools
+    #     )
+    #     patient_bwa[sample] = ("BWA complete", str(datetime.now()))
+    #
+    # to_return.update(analyse_pairs(configuration, datadir, samples))
+    #
+    # return to_return
 
 
 def analyse_pairs(config, datadir, samples):
@@ -193,9 +224,7 @@ def analyse_pairs(config, datadir, samples):
         )
         to_return[sample]["recalibration1"] = recalibration_step1
 
-        recalibration_final = recalibrate(
-            sample, datadir, reference, gatk
-        )
+        recalibration_final = recalibrate(sample, datadir, reference, gatk)
         to_return[sample]["recalibrate"] = recalibration_final
 
         GATKvariants = haplotype_caller(
@@ -210,15 +239,11 @@ def analyse_pairs(config, datadir, samples):
         to_return[sample]["picard_sort"] = picard_sort(
             sample, datadir, reference, picard
         )
-        to_return[sample][
-            "freebayes_edit"
-        ] = edit_freebayes_vcf(sample, datadir)
+        to_return[sample]["freebayes_edit"] = edit_freebayes_vcf(sample, datadir)
 
-        # to_return[sample]["variants_octopus"] = octopus_caller(
-        #     sample, datadir, reference, bed_file[sample], octopus
-        # )
-
-
+        to_return[sample]["variants_octopus"] = octopus_caller(
+            sample, datadir, reference, bed_file[sample], octopus
+        )
 
     # for pair in sorted_pairs:
     #     try:
@@ -602,7 +627,7 @@ def compile_identity(datadir):
     return True
 
 
-def generate_analysis(config, datadir, samples):
+def generate_analysis(config, datadir, samples, panel):
     """
     Main function of the script, find input files, start alignemt and processing
 
@@ -617,47 +642,32 @@ def generate_analysis(config, datadir, samples):
     console.log("Starting analysis and qc report generation")
     console.log(f"Configuration file: {config}")
     console.log(f"Datadir: {datadir}")
-    console.log(f"Samples: {' '.join(samples)}")
+    if samples == []:
+        console.log("Samples: ALL")
+    else:
+        console.log(f"Samples: {' '.join(samples)}")
 
-    patients = process_dir(config, datadir, samples)
+    s = process_dir(config, datadir, samples, panel)
 
-    patients = ""
-    return patients
-
-
-def check_datadir(datadir, configuration_file):
-    """
-    Function that checled the run directory for FASTQ files
-
-    :param datadir: run location
-    :param configuration_file: run yaml file configuration
-
-    :type datadir: string
-    :type configuration_file: string
-    """
-
-    temp = datadir.split("/")
-
-    if len(temp) > 1:
-        return datadir
-
-    if datadir in configuration_file:
-        return os.path.dirname(configuration_file)
-
-    return "FASTQ source not found, please check the configuration and restart the analysis"
+    # patients = ""
+    # return patients
 
 
 @click.command()
-@click.option("-c", "--configuration-file", "configuration_file", help="YAML file")
+@click.option(
+    "-c", "--configuration-file", "configuration_file", help="YAML file", required=True
+)
 @click.option(
     "-s",
     "--sample",
     "samples",
     help="sample to be analysed (it can be multiple, each with a -s)",
     multiple=True,
+    required=False,
 )
-@click.option("-d", "--datadir", "datadir", help="run directory")
-def run_analysis(configuration_file, samples, datadir):
+@click.option("-d", "--datadir", "datadir", help="run directory", required=True)
+@click.option("-p", "--panel", "panel", help="panel to be used", required=True)
+def run_analysis(configuration_file, samples, datadir, panel):
     """
 
     :param configuration_file:
@@ -671,7 +681,7 @@ def run_analysis(configuration_file, samples, datadir):
     console.log("Pipeline current version is " + VERSION)
     console.log("All requirements found, starting analysis")
 
-    patient_dict = generate_analysis(configuration_file, datadir, samples)
+    sample_dict = generate_analysis(configuration_file, datadir, samples, panel)
 
 
 if __name__ == "__main__":
