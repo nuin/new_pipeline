@@ -30,6 +30,7 @@ from lib.variants_GATK3 import haplotype_caller
 from lib.variants_freebayes import freebayes_caller, edit_freebayes_vcf
 from lib.picard_actions import picard_sort
 from lib.variants_octopus import octopus_caller
+from lib.bwa_align import run_bwa
 
 # main configuration file
 # couch_credentials = open('lib/config/couchdb').read().splitlines()
@@ -111,6 +112,29 @@ def create_directories(datadir, sample_ids, panel):
     console.log("Directories created")
 
 
+def align_files(config, datadir: Path, samples: list, fastqs: list) -> bool:
+    """
+
+    :param datadir:
+    :param samples:
+    :return:
+    """
+
+    env = dotenv_values(f"{Path.cwd()}/.env")
+    configuration = yaml.safe_load(open(config))
+    bwa = env["BWA"]
+    samtools = env["SAMTOOLS"]
+    reference = configuration["Reference"]
+
+    console.log("Aligning files")
+
+    for sample in samples:
+        console.log(f"Processing {sample}")
+        fastq_files = glob.glob(f"{datadir}/{sample}*.fastq.gz")
+        console.log(f"Aligning sample {sample}")
+        run_bwa(sample, fastq_files, datadir, reference, bwa, samtools)
+
+
 def process_dir(config, datadir, samples, panel):
     """
     Function that runs all the steps of the pipeline, usually calling
@@ -148,8 +172,7 @@ def process_dir(config, datadir, samples, panel):
 
     create_directories(datadir, sample_ids, panel)
 
-    # align all pairs
-    # for sample in samples:
+    align_files(config, datadir, sample_ids, fastqs)
 
     #
     #     # code = get_code(pair)

@@ -44,15 +44,10 @@ def run_bwa(sample_id, fastq_files, datadir, reference, bwa, samtools):
         console.log(f"{sample_id} BAM file exists and compressed")
         bam_index_check += 1
     else:
-        bwa_string = "%s mem -t 16 %s %s " % (bwa, reference, " ".join(fastq_files))
-        bwa_string += "| %s view -Sb - | %s sort - -o %s" % (
-            samtools,
-            samtools,
-            datadir + "/BAM/" + sample_id + "/BAM/" + sample_id + ".bam",
-        )
-        bwa_string += " && %s index %s" % (
-            samtools,
-            datadir + "/BAM/" + sample_id + "/BAM/" + sample_id + ".bam",
+        bwa_string = f"{bwa} mem -t 16 {reference} {' '.join(fastq_files)} "
+        bwa_string += f"| {samtools} view -Sb - | {samtools} sort - -o {datadir}/BAM/{sample_id}/BAM/{sample_id}.bam"
+        bwa_string += (
+            f" && {samtools} index {datadir}/BAM/{sample_id}/BAM/{sample_id}.bam"
         )
         console.log(f"{bwa_string}")
         proc = subprocess.Popen(
