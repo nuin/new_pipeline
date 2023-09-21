@@ -44,9 +44,10 @@ def run_bwa(sample_id, fastq_files, datadir, reference, bwa, samtools):
         console.log(f"{sample_id} BAM file exists and compressed")
         bam_index_check += 1
     else:
-        bwa_string = f"{bwa} mem -t 16 {reference} {' '.join(fastq_files)} "
-        bwa_string += f"| {samtools} view -Sb - | {samtools} sort - -o {datadir}/BAM/{sample_id}/BAM/{sample_id}.bam"
-        bwa_string += (
+        bam_header = f"@RG\\tID:{sample_id}\\tLB:{datadir}\\tPL:Illumina\\tSM:{sample_id}\\tPU:None"
+        bwa_string = (
+            f"{bwa} mem -t 16 -R '{bam_header}' {reference} {' '.join(fastq_files)} "
+            f"| {samtools} view -Sb - | {samtools} sort - -o {datadir}/BAM/{sample_id}/BAM/{sample_id}.bam"
             f" && {samtools} index {datadir}/BAM/{sample_id}/BAM/{sample_id}.bam"
         )
         console.log(f"{bwa_string}")
