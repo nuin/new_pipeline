@@ -9,18 +9,13 @@
 import os
 import subprocess
 import logging
+from pathlib import Path
+from rich.console import Console
+
+console = Console()
 
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-
-def get_code(sample_id):
-
-    return sample_id[-2:]
-
-
-def haplotype_caller(sample_id, directory, reference, bed_file, gatk):
+def haplotype_caller(datadir, sample_id, reference, bed_file, gatk):
     """
     Function that calls GATK's HaplotypeCaller parameter to generate a list
     of raw variants
@@ -42,43 +37,38 @@ def haplotype_caller(sample_id, directory, reference, bed_file, gatk):
     :return: returns success or exists
     """
 
-    argument_bam = f"{directory}/BAM/{sample_id}/BAM/{sample_id}"
-    argument_vcf = f"{directory}/BAM/{sample_id}/VCF/{sample_id}"
+    vcf_dir = f"{datadir}/BAM/{sample_id}/VCF/"
+    bam_dir = f"{datadir}/BAM/{sample_id}/BAM/"
 
-    if os.path.isfile(argument_vcf + "_GATK3.vcf"):
-        logger.info("Raw GATK3 variants file exists " + sample_id)
+    if Path(f"{vcf_dir}/{sample_id}_GATK3.vcf").exists():
+        console.log(f"{vcf_dir}/{sample_id}_GATK.vcf file exists")
         return "exists"
 
-    logger.info("Start variant calling with GATK3")
+    console.log(f"Start variant calling with GATK3 {sample_id}")
+    # GATK_string = (
+    #     "%s -T HaplotypeCaller -R %s -I %s.recal_reads.bam  --genotyping_mode DISCOVERY -ip 10 "
+    #     "-stand_call_conf 30 -o %s_GATK3.vcf -L %s -pairHMM VECTOR_LOGLESS_CACHING -nct 16 -A StrandBiasBySample"
+    #     % (gatk, reference, argument_bam, argument_vcf, bed_file)
+    # )
+
     GATK_string = (
-        "%s -T HaplotypeCaller -R %s -I %s.recal_reads.bam  --genotyping_mode DISCOVERY -ip 10 "
-        "-stand_call_conf 30 -o %s_GATK3.vcf -L %s -pairHMM VECTOR_LOGLESS_CACHING -nct 16 -A StrandBiasBySample"
-        % (gatk, reference, argument_bam, argument_vcf, bed_file)
+        f"{gatk} -T HaplotypeCaller -R {reference} -I {bam_dir}/{sample_id}.bam -o {vcf_dir}{sample_id}_GATK3.vcf "
+        f"-L {bed_file} -ip 2 -A StrandBiasBySample "
+        f"-stand_call_conf 30 -pairHMM VECTOR_LOGLESS_CACHING -nct 16"
     )
+
+    console.log(f"Command {GATK_string} {sample_id}")
     proc = subprocess.Popen(
         GATK_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
-    logger.info("Command:" + GATK_string + " " + sample_id)
+
     while True:
         output = proc.stderr.readline().strip()
         if output == b"":
             break
         else:
-            logger.info(output.decode("utf-8"))
+            console.log(output.decode("utf-8"))
     proc.wait()
-    logger.info("GATK3 variants determined " + sample_id)
+    console.log("GATK3 variants determined " + sample_id)
+
     return "success"
-
-
-# if __name__ == '__main__':
-
-#     data_directory = '/Users/nuin/Projects/Data/Test_dataset/'
-#     sample_id = 'NA12877_1'
-#     reference = '/opt/reference/hg19.fasta'
-#     bed_file = '/opt/BED/Inherited_Cancer_panel_FINAL.bed'
-#     gatk = 'java -jar /usr/local/bin/GenomeAnalysisTK.jar'
-
-#     haplotype_caller(sample_id, data_directory, reference, bed_file, gatk)
-# do_CGP(sample_id, data_directory)
-# filter_CGP(sample_id, data_directory)
-# annotate(sample_id, data_directory)
