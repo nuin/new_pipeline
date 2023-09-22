@@ -9,11 +9,11 @@
 
 import os
 import subprocess
-import logging
+from pathlib import Path
 
+from rich.console import Console
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+console = Console()
 
 
 def get_code(sample_id):
@@ -21,7 +21,7 @@ def get_code(sample_id):
     return sample_id[-2:]
 
 
-def freebayes_caller(sample_id, directory, reference, bed_file, freebayes):
+def freebayes_caller(datadir, sample_id, reference, bed_file, freebayes):
     """
     Function that calls Freebayes to generate a VCF file
 
@@ -42,37 +42,35 @@ def freebayes_caller(sample_id, directory, reference, bed_file, freebayes):
     :todo: return error
     """
 
-    argument_bam = f"{directory}/BAM/{sample_id}/BAM/{sample_id}"
-    argument_vcf = f"{directory}/BAM/{sample_id}/VCF/{sample_id}"
+    vcf_dir = f"{datadir}/BAM/{sample_id}/VCF/"
+    bam_dir = f"{datadir}/BAM/{sample_id}/BAM/"
 
-    if os.path.isfile(argument_vcf + "_freebayes.vcf"):
-        logger.info("Freebayes VCF file exists " + sample_id)
+    if Path(f"{vcf_dir}/{sample_id}_freebayes.vcf").exists():
+        console.log(f"{vcf_dir}/{sample_id}_freebayes.vcf file exists")
         return "exists"
 
-    logger.info("Starting Freebayes calling " + sample_id)
-    freebayes_string = "%s -f %s -v %s_freebayes.vcf -t %s -P 1 %s.recal_reads.bam" % (
-        freebayes,
-        reference,
-        argument_vcf,
-        bed_file,
-        argument_bam,
+    console.log(f"Start variant calling with Freebayes {sample_id}")
+    freebayes_string = (
+        f"{freebayes} -f {reference} -v {vcf_dir}{sample_id}_freebayes.vcf -t {bed_file} -P 1 "
+        f"{bam_dir}{sample_id}.bam"
     )
+    console.log(f"Command {freebayes_string} {sample_id}")
     proc = subprocess.Popen(
         freebayes_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
-    logger.info("Command: " + freebayes_string + " " + sample_id)
+
     while True:
         output = proc.stderr.readline().strip()
         if output == b"":
             break
         else:
-            logger.info(output.decode("utf-8") + " " + sample_id)
+            console.log(output.decode("utf-8"))
     proc.wait()
-    if os.path.getsize(argument_vcf + "_freebayes.vcf") == 0:
-        logger.error("Freebayes file size 0 " + sample_id)
+    if os.path.getsize(f"{vcf_dir}{sample_id}_freebayes.vcf") == 0:
+        console.log(f"Freebayes file size 0 {sample_id}", style="bold red")
         return "error"
 
-    logger.info("INFO\t\tFrebayes call successful " + sample_id)
+    console.log(f"Freebayes variants determined {sample_id}")
     return "success"
 
 
@@ -87,9 +85,11 @@ def edit_freebayes_vcf(sample_id, directory):
     :type directory: string
     """
 
-    argument_vcf = f"{directory}/BAM/{sample_id}/VCF/{sample_id}"
+    vcf_dir = f"{datadir}/BAM/{sample_id}/VCF/"
+    bam_dir = f"{datadir}/BAM/{sample_id}/BAM/"
 
-    if os.path.isfile(argument_vcf + "_freebayes.final.vcf"):
+    if Path(f"{vcf_dir}/{sample_id}_freebayes.vcf").exists():
+        console.log(f"{vcf_dir}/{sample_id}_GATK.vcf file exists")
         return "exists"
 
     logger.info("Editing sorted Freebayes VCF " + sample_id)
