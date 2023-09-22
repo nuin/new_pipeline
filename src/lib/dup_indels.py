@@ -34,13 +34,11 @@ def remove_duplicates(sample_id, datadir, picard):
     if Path(f"{bam_dir}/{sample_id}.dedup.bam").exists():
         console.log(f"{bam_dir}/{sample_id}.dedup.bam file exists")
         return "exists"
+    elif Path(f"{bam_dir}/{sample_id}.dedup.bam.md5").exists():
+        console.log(f"{bam_dir}/{sample_id}.dedup.bam.md5 file exists")
+        return "exists"
 
     console.log("Picard - Starting duplicate removal")
-    # picard_string = (
-    #     f"{picard} MarkDuplicates INPUT={bam_dir}/{sample_id}.bam "
-    #     f"OUTPUT={bam_dir}/{sample_id}.dedup.bam -MAX_RECORDS_IN_RAM 1000000 -AS true -QUIET true -CREATE_MD5_FILE true "
-    #     f"METRICS_FILE={bam_dir}/{sample_id}.metrics.txt -CREATE_INDEX true"
-    # )
 
     picard_string = (
         f"{picard} MarkDuplicates -I {bam_dir}/{sample_id}.bam -O {bam_dir}/{sample_id}.dedup.bam"
