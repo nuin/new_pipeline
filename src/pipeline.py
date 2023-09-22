@@ -23,7 +23,7 @@ console = Console()
 from dotenv import dotenv_values
 
 from lib.bwa_align import run_bwa
-from lib.dup_indels import remove_duplicates, add_groups
+from lib.dup_indels import remove_duplicates
 from lib.recalibration import base_recal1, recalibrate
 from lib.variants_GATK import haplotype_caller
 from lib.variants_GATK3 import haplotype_caller
@@ -224,16 +224,15 @@ def analyse_pairs(config, datadir, samples):
         to_return[sample]["dedup"] = rm_duplicates
         move_bam(datadir, sample, "dedup")
 
-        # to_return[sample]["add_groups"] = adding_groups
-        #
-        # recalibration_step1 = base_recal1(
-        #     sample, datadir, bed_file[sample], vcf_file, reference, gatk
-        # )
-        # to_return[sample]["recalibration1"] = recalibration_step1
-        #
-        # recalibration_final = recalibrate(sample, datadir, reference, gatk)
-        # to_return[sample]["recalibrate"] = recalibration_final
-        #
+        recalibration_step1 = base_recal1(
+            datadir, sample, bed_file[sample], vcf_file, reference, gatk
+        )
+        to_return[sample]["recalibration1"] = recalibration_step1
+
+        recalibration_final = recalibrate(datadir, sample, reference, gatk)
+        to_return[sample]["recalibrate"] = recalibration_final
+        move_bam(datadir, sample, "recal_reads")
+
         # GATKvariants = haplotype_caller(
         #     sample, datadir, reference, bed_file[sample], gatk
         # )

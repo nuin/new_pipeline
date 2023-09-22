@@ -23,4 +23,6 @@ def move_bam(datadir: Path, sample: str, bam_file: str) -> bool:
         move(f"{bam_location}.{bam_file}.bai", f"{bam_location}.bam.bai")
         console.log("Files moved")
     else:
-        console.log(f"BAM file {bam_file}.bam does not exist")
+        console.log(
+            f"BAM file {bam_file}.bam does not exist, but process might havbe been completed"
+        )
