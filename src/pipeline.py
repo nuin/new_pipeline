@@ -30,7 +30,7 @@ from lib.variants_GATK3 import haplotype_caller
 from lib.variants_freebayes import freebayes_caller, edit_freebayes_vcf
 from lib.picard_actions import picard_sort
 from lib.variants_octopus import octopus_caller
-from lib.bwa_align import run_bwa
+from lib.utils import move_bam
 
 # main configuration file
 # couch_credentials = open('lib/config/couchdb').read().splitlines()
@@ -167,27 +167,13 @@ def process_dir(config, datadir, samples, panel):
     console.log(f"Using SAMTOOLS: {samtools}")
     console.log(f"Using reference: {reference}")
 
-    # return variable - should be used in logging or some centralized action. queueing
-    to_return = defaultdict(dict)
-
     create_directories(datadir, sample_ids, panel)
 
     align_files(config, datadir, sample_ids, fastqs)
 
-    #
-    #     # code = get_code(pair)
-    #     # create directories in sample locations
-    #     # alignment
-    #     fastqs = glob.glob(f"{datadir}/Data/Intensities/BaseCalls/{sample}*.fastq.gz")
-    #     console.log(f"Found {len(fastqs)} FASTQ files\n {' '.join(fastqs)}")
-    #     to_return[sample]["bam"] = run_bwa(
-    #         sample, fastqs, datadir, reference, bwa, samtools
-    #     )
-    #     patient_bwa[sample] = ("BWA complete", str(datetime.now()))
-    #
-    # to_return.update(analyse_pairs(configuration, datadir, samples))
-    #
-    # return to_return
+    analyse_pairs(config, datadir, sample_ids)
+
+    return True
 
 
 def analyse_pairs(config, datadir, samples):
@@ -214,6 +200,7 @@ def analyse_pairs(config, datadir, samples):
 
     to_return = defaultdict(dict)
     env = dotenv_values(f"{Path.cwd()}/.env")
+    configuration = yaml.safe_load(open(config))
 
     # load software configuration
     samtools = env["SAMTOOLS"]
@@ -221,52 +208,49 @@ def analyse_pairs(config, datadir, samples):
     gatk = env["GATK"]
     gatk3 = env["GATK3"]
     freebayes = env["FREEBAYES"]
-    qualimap = env["QUALIMAP"]
+    # qualimap = env["QUALIMAP"]
     snpEff = env["SNPEFF"]
     annovar_dir = env["ANNOVAR"]
     # transcript_location = software_conf["transcripts"]
     octopus = env["OCTOPUS"]
-    reference = config["Reference"]
-    vcf_file = config["VCF"]
-    bed_file = config["BED"]
-    bait_file = config["BAIT"]
+    reference = configuration["Reference"]
+    vcf_file = configuration["VCF"]
+    bed_file = configuration["BED"]
+    bait_file = configuration["BAIT"]
 
-    # index = 0  # keeps track of the current sample
-    # sorted_pairs = sorted(pairs.keys())
-    #
-    # # main analysis loop
-    for sample in samples:
-        console.log(f"Processing {sample}")
+    for pos, sample in enumerate(samples):
+        console.log(f"Processing {sample} :: {pos} of {len(samples)}")
         rm_duplicates = remove_duplicates(sample, datadir, picard)
         to_return[sample]["dedup"] = rm_duplicates
-        adding_groups = add_groups(sample, datadir, picard, samtools)
-        to_return[sample]["add_groups"] = adding_groups
+        move_bam(datadir, sample, "dedup")
 
-        recalibration_step1 = base_recal1(
-            sample, datadir, bed_file[sample], vcf_file, reference, gatk
-        )
-        to_return[sample]["recalibration1"] = recalibration_step1
-
-        recalibration_final = recalibrate(sample, datadir, reference, gatk)
-        to_return[sample]["recalibrate"] = recalibration_final
-
-        GATKvariants = haplotype_caller(
-            sample, datadir, reference, bed_file[sample], gatk
-        )
-        GATK3variants = haplotype_caller(
-            sample, datadir, reference, bed_file[sample], gatk3
-        )
-        freebayesvariants = freebayes_caller(
-            sample, datadir, reference, bed_file[sample], freebayes
-        )
-        to_return[sample]["picard_sort"] = picard_sort(
-            sample, datadir, reference, picard
-        )
-        to_return[sample]["freebayes_edit"] = edit_freebayes_vcf(sample, datadir)
-
-        to_return[sample]["variants_octopus"] = octopus_caller(
-            sample, datadir, reference, bed_file[sample], octopus
-        )
+        # to_return[sample]["add_groups"] = adding_groups
+        #
+        # recalibration_step1 = base_recal1(
+        #     sample, datadir, bed_file[sample], vcf_file, reference, gatk
+        # )
+        # to_return[sample]["recalibration1"] = recalibration_step1
+        #
+        # recalibration_final = recalibrate(sample, datadir, reference, gatk)
+        # to_return[sample]["recalibrate"] = recalibration_final
+        #
+        # GATKvariants = haplotype_caller(
+        #     sample, datadir, reference, bed_file[sample], gatk
+        # )
+        # GATK3variants = haplotype_caller(
+        #     sample, datadir, reference, bed_file[sample], gatk3
+        # )
+        # freebayesvariants = freebayes_caller(
+        #     sample, datadir, reference, bed_file[sample], freebayes
+        # )
+        # to_return[sample]["picard_sort"] = picard_sort(
+        #     sample, datadir, reference, picard
+        # )
+        # to_return[sample]["freebayes_edit"] = edit_freebayes_vcf(sample, datadir)
+        #
+        # to_return[sample]["variants_octopus"] = octopus_caller(
+        #     sample, datadir, reference, bed_file[sample], octopus
+        # )
 
     # for pair in sorted_pairs:
     #     try:
@@ -641,7 +625,7 @@ def compile_identity(datadir):
     all_identity = open(datadir + "/identity.txt", "w")
     for filename in glob.glob(datadir + "/BAM/*/*"):
         if filename.find("identity.txt") >= 0:
-            logger.info(filename)
+            console.log(f"Found {filename}")
             all_identity.write(filename.split("/")[-2] + "\n")
             single_identity = open(filename).read()
             all_identity.write(single_identity)
