@@ -31,6 +31,7 @@ from lib.variants_freebayes import freebayes_caller, edit_freebayes_vcf
 from lib.picard_actions import picard_sort
 from lib.variants_octopus import octopus_caller
 from lib.utils import move_bam
+from lib.GATK_vcf import vcf_comparison
 
 # main configuration file
 # couch_credentials = open('lib/config/couchdb').read().splitlines()
@@ -253,6 +254,10 @@ def analyse_pairs(config, datadir, samples):
             datadir, sample, reference, bed_file[sample], octopus
         )
 
+        to_return[sample]["vcf_merge"] = vcf_comparison(
+            datadir, sample, reference, gatk3
+        )
+
     # for pair in sorted_pairs:
     #     try:
     #         # checks if sample is fully analysed before starting
@@ -280,7 +285,6 @@ def analyse_pairs(config, datadir, samples):
     #
     #             # GATK3
 
-    #             update_dict3[pair] = ("GATK VCF generated", str(datetime.now()))
     #
     #             if freebayesvariants == "error":
     #                 to_return[pair]["variants_freebayes"] = freebayesvariants
@@ -291,9 +295,7 @@ def analyse_pairs(config, datadir, samples):
     #
     #
     #             # Merging VCFs
-    #             to_return[pair]["vcf_merge"] = GATK_vcf.vcf_comparison(
-    #                 pair, datadir, reference, gatk3
-    #             )
+
     #
     #             # ########################################### #
     #             #                                             #
