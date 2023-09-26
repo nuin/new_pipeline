@@ -74,7 +74,7 @@ def freebayes_caller(datadir, sample_id, reference, bed_file, freebayes):
     return "success"
 
 
-def edit_freebayes_vcf(sample_id, directory):
+def edit_freebayes_vcf(sample_id, datadir):
     """
     Function that removes extra lines in Freebayes generated VCF to allow proper sorting
 
@@ -86,38 +86,23 @@ def edit_freebayes_vcf(sample_id, directory):
     """
 
     vcf_dir = f"{datadir}/BAM/{sample_id}/VCF/"
-    bam_dir = f"{datadir}/BAM/{sample_id}/BAM/"
 
-    if Path(f"{vcf_dir}/{sample_id}_freebayes.vcf").exists():
-        console.log(f"{vcf_dir}/{sample_id}_GATK.vcf file exists")
+    if Path(f"{vcf_dir}/{sample_id}_freebayes.final.vcf").exists():
+        console.log(f"{vcf_dir}/{sample_id}_freebayes.final.vcf file exists")
         return "exists"
 
-    logger.info("Editing sorted Freebayes VCF " + sample_id)
-    freebayes_vcf = open(argument_vcf + "_freebayes.sorted.vcf").read().splitlines()
+    freebayes_vcf = (
+        open(f"{vcf_dir}/{sample_id}_freebayes.sorted.vcf").read().splitlines()
+    )
     to_save = ""
     for line in freebayes_vcf:
         if not line.startswith("##contig=<ID"):
             to_save += line + "\n"
 
-    freebayes_final = open(argument_vcf + "_freebayes.final.vcf", "w")
+    console.log(f"Saving edited Freebayes VCF {sample_id}")
+    freebayes_final = open(f"{vcf_dir}/{sample_id}_freebayes.final.vcf", "w")
     freebayes_final.write(to_save)
     freebayes_final.close()
-    logger.info("Editing done " + sample_id)
+    console.log(f"Freebayes VCF edited {sample_id}")
 
     return "success"
-
-
-# if __name__ == '__main__':
-
-#     # data_directory = '/Users/nuin/Projects/Data/Test_dataset/'
-#     # sample_id = 'NA12877_1'
-#     # reference = '/opt/reference/hg19.fasta'
-#     # bed_file = '/opt/BED/Inherited_Cancer_panel_FINAL.bed'
-
-#     data_directory = '/Volumes/Jupiter/CancerPlusRuns/180531_NB551084_0040_AHW3TVAFXX_Cplus_2018_NGS_21/'
-#     sample_id = '18-117-014682B_HL_DF'
-#     reference = '/opt/reference/hg19.fasta'
-#     bed_file = '/opt/BED/Inherited_Cancer_panel_FINAL.bed'
-
-#     freebayes(sample_id, data_directory, reference, bed_file, 'freebayes')
-#     edit_freebayes_vcf(sample_id, data_directory)

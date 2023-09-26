@@ -11,17 +11,14 @@
 
 import os
 import subprocess
-import logging
+from pathlib import Path
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from rich.console import Console
 
-def get_code(sample_id):
-
-    return sample_id[-2:]
+console = Console()
 
 
-def picard_sort(sample_id, datadir, reference, picard):
+def picard_sort(datadir, sample_id, reference, picard):
     """
     Function that calls Picard for Freebayes VCF sorting
 
@@ -36,34 +33,40 @@ def picard_sort(sample_id, datadir, reference, picard):
     :type picard: string
     """
 
-    dictionary = reference.replace('fasta', 'dict')
+    dictionary = reference.replace("fasta", "dict")
 
-    code = get_code(sample_id)
-    argument_vcf = f"{datadir }/BAM/{sample_id}/VCF/{sample_id}"
+    vcf_dir = f"{datadir}/BAM/{sample_id}/VCF/"
 
-    if os.path.isfile(argument_vcf + '_freebayes.sorted.vcf'):
-        logger.info('Freebayes sorted VCF file exists ' + sample_id)
-        return 'exists'
+    if Path(f"{vcf_dir}/{sample_id}_freebayes.final.vcf").exists():
+        console.log(f"{vcf_dir}/{sample_id}_freebayes.sorted.vcf file exists")
+        return "exists"
 
-    logger.info('Sorting Freebayes VCF result')
-    picard_string = '%s SortVcf I=%s_freebayes.vcf O=%s_freebayes.sorted.vcf SEQUENCE_DICTIONARY=%s QUIET=true' % (picard, argument_vcf, argument_vcf, dictionary)
-    logger.info(picard_string + ' ' + sample_id)
-    proc = subprocess.Popen(picard_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    console.log(f"Sorting Freebayes VCF result {sample_id}")
+    picard_string = (
+        f"{picard} SortVcf I={vcf_dir}/{sample_id}_freebayes.vcf "
+        f"O={vcf_dir}/{sample_id}_freebayes.sorted.vcf "
+        f"SEQUENCE_DICTIONARY={dictionary} QUIET=true"
+    )
+    console.log(f"Command {picard_string} {sample_id}")
+    proc = subprocess.Popen(
+        picard_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+    )
     while True:
         output = proc.stderr.readline().strip()
-        if output == b'':
+        if output == b"":
             break
         else:
-            logger.info(output.decode('utf-8'))
+            console.log(output)
     proc.wait()
-    logger.info('Freebayes sorted VCF file file created ' + sample_id)
-    return 'success'
+    console.log(f"Freebayes sorted VCF file file created {sample_id}")
+
+    return "success"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
 
-    datadir = '/Users/nuin/Projects/Data/Test_dataset'
-    sample_id = 'NA12877_1'
-    reference = '/opt/reference/hg19.fasta'
+    datadir = "/Users/nuin/Projects/Data/Test_dataset"
+    sample_id = "NA12877_1"
+    reference = "/opt/reference/hg19.fasta"
 
-    picard_sort(sample_id, datadir, reference, 'picard')
+    picard_sort(sample_id, datadir, reference, "picard")

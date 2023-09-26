@@ -26,7 +26,7 @@ from lib.bwa_align import run_bwa
 from lib.dup_indels import remove_duplicates
 from lib.recalibration import base_recal1, recalibrate
 from lib.variants_GATK import haplotype_caller
-from lib.variants_GATK3 import haplotype_caller
+from lib.variants_GATK3 import haplotype_caller as haplotype_caller3
 from lib.variants_freebayes import freebayes_caller, edit_freebayes_vcf
 from lib.picard_actions import picard_sort
 from lib.variants_octopus import octopus_caller
@@ -219,7 +219,7 @@ def analyse_pairs(config, datadir, samples):
     bait_file = configuration["BAIT"]
 
     for pos, sample in enumerate(samples):
-        console.log(f"Processing {sample} :: {pos} of {len(samples)}")
+        console.log(f"Processing {sample} :: {pos + 1} of {len(samples)}")
         rm_duplicates = remove_duplicates(sample, datadir, picard)
         to_return[sample]["dedup"] = rm_duplicates
         move_bam(datadir, sample, "dedup")
@@ -233,23 +233,25 @@ def analyse_pairs(config, datadir, samples):
         to_return[sample]["recalibrate"] = recalibration_final
         move_bam(datadir, sample, "recal_reads")
 
-        # GATKvariants = haplotype_caller(
-        #     sample, datadir, reference, bed_file[sample], gatk
-        # )
-        # GATK3variants = haplotype_caller(
-        #     sample, datadir, reference, bed_file[sample], gatk3
-        # )
-        # freebayesvariants = freebayes_caller(
-        #     sample, datadir, reference, bed_file[sample], freebayes
-        # )
-        # to_return[sample]["picard_sort"] = picard_sort(
-        #     sample, datadir, reference, picard
-        # )
-        # to_return[sample]["freebayes_edit"] = edit_freebayes_vcf(sample, datadir)
-        #
-        # to_return[sample]["variants_octopus"] = octopus_caller(
-        #     sample, datadir, reference, bed_file[sample], octopus
-        # )
+        GATKvariants = haplotype_caller(
+            datadir, sample, reference, bed_file[sample], gatk
+        )
+
+        GATK3variants = haplotype_caller3(
+            datadir, sample, reference, bed_file[sample], gatk3
+        )
+
+        freebayesvariants = freebayes_caller(
+            datadir, sample, reference, bed_file[sample], freebayes
+        )
+        to_return[sample]["picard_sort"] = picard_sort(
+            datadir, sample, reference, picard
+        )
+        to_return[sample]["freebayes_edit"] = edit_freebayes_vcf(sample, datadir)
+
+        to_return[sample]["variants_octopus"] = octopus_caller(
+            datadir, sample, reference, bed_file[sample], octopus
+        )
 
     # for pair in sorted_pairs:
     #     try:
@@ -272,7 +274,7 @@ def analyse_pairs(config, datadir, samples):
     #             #                                             #
     #             #           Variant Calling                   #
     #             #                                             #
-    #             # ########################################### #
+    #            # ########################################### #
     #             # GATK4
 
     #
