@@ -33,6 +33,7 @@ from lib.variants_octopus import octopus_caller
 from lib.utils import move_bam
 from lib.GATK_vcf import vcf_comparison
 from lib.snpEff_ann import annotate_merged
+from lib.picard_qc import get_coverage
 
 # main configuration file
 # couch_credentials = open('lib/config/couchdb').read().splitlines()
@@ -261,6 +262,14 @@ def analyse_pairs(config, datadir, samples):
 
         to_return[sample]["snpEff"] = annotate_merged(sample, datadir, snpEff)
 
+        to_return[sample]["picard_coverage"] = get_coverage(
+            sample, datadir, reference, bait_file, picard
+        )
+
+        to_return[sample]["picard_coverage_panel"] = get_coverage(
+            sample, datadir, reference, bed_file[sample], picard, "panel"
+        )
+
     # for pair in sorted_pairs:
     #     try:
     #         # checks if sample is fully analysed before starting
@@ -278,41 +287,12 @@ def analyse_pairs(config, datadir, samples):
     #                 + str(len(pairs))
     #             )
 
-    #             # ########################################### #
-    #             #                                             #
-    #             #           Variant Calling                   #
-    #             #                                             #
-    #            # ########################################### #
-    #             # GATK4
-
-    #
-    #             # GATK3
-
-    #
-    #             if freebayesvariants == "error":
-    #                 to_return[pair]["variants_freebayes"] = freebayesvariants
-    #                 raise ValueError("\t\tFreebayes variant called failed")
-    #             else:
-    #                 to_return[pair]["variants_freebayes"] = freebayesvariants
-    #             update_dict4[pair] = ("Freebayes VCF generated", str(datetime.now()))
-    #
-    #
-    #             # Merging VCFs
-
     #
     #             # ########################################### #
     #             #                                             #
     #             #               Annotation                    #
     #             #                                             #
     #             # ########################################### #
-    #             # snpEff
-    #             to_return[pair]["snpEff"] = snpEff_ann.annotate_merged(
-    #                 pair, datadir, snpEff
-    #             )
-    #             update_dict5[pair] = (
-    #                 "snpEff annotation generated",
-    #                 str(datetime.now()),
-    #             )
     #
     #             to_return[pair]["snpEff_pseudo"] = snpEff_ann.annotate_pseudo(
     #                 pair, datadir, snpEff
@@ -342,9 +322,7 @@ def analyse_pairs(config, datadir, samples):
     #             update_dict6[pair].append("qualimap")
     #
     #             # Picard coverage
-    #             to_return[pair]["picard_coverage"] = picard_qc.get_coverage(
-    #                 pair, datadir, reference, bait_file, picard, transcript_location
-    #             )
+
     #             to_return[pair]["picard_coverage_panel"] = picard_qc.get_coverage(
     #                 pair,
     #                 datadir,

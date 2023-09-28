@@ -109,37 +109,6 @@ pycodestyle = ">=2.11.0,<2.12.0"
 pyflakes = ">=3.1.0,<3.2.0"
 
 [[package]]
-name = "interop"
-version = "1.2.3"
-description = "The Illumina InterOp libraries are a set of common routines used for reading InterOp metric files produced by Illumina sequencers. These libraries are backwards compatible and capable of supporting prior releases of the software, with one exception: GA systems have been excluded."
-optional = false
-python-versions = "*"
-files = [
-    {file = "interop-1.2.3-cp27-cp27m-macosx_10_9_x86_64.macosx_10_9_universal2.macosx_10_10_universal2.macosx_10_10_x86_64.whl", hash = "sha256:341d528461358161cfe17973ebaa8c7959d26bb773828a796249b765d44945cc"},
-    {file = "interop-1.2.3-cp27-cp27m-manylinux1_x86_64.whl", hash = "sha256:1d6a090057190c0cc227798893a7293a639481477b48d57679e65c29638e8c48"},
-    {file = "interop-1.2.3-cp27-cp27m-win_amd64.whl", hash = "sha256:4c2d0c08b1a74568ec1f02abda6a6a83915066586203478e0d919b7b7d7260fd"},
-    {file = "interop-1.2.3-cp27-cp27mu-manylinux1_x86_64.whl", hash = "sha256:281cba354a2eb85807eabe3c0c2ad7b82c79dcb4f0901f0f9926220a7d3686c4"},
-    {file = "interop-1.2.3-cp310-cp310-macosx_10_9_x86_64.macosx_10_9_universal2.macosx_10_10_universal2.macosx_10_10_x86_64.whl", hash = "sha256:ce9d89b369203f8dd6a2c3da73cd38f3b019bb63bc9d1b6a8ffed01f0166b367"},
-    {file = "interop-1.2.3-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:0015dc65d9899ed19e4ef70e6eaec49da7b05d745eff7bfd3a830460db1b2e03"},
-    {file = "interop-1.2.3-cp310-cp310-win_amd64.whl", hash = "sha256:a96efe986f5fe511e28fa31e88724f03f803620defe3752c0e507d8806f9c9b1"},
-    {file = "interop-1.2.3-cp35-cp35m-manylinux1_x86_64.whl", hash = "sha256:a4e47c92a60cc640f3c5665f3163928b9e7204b72dd07959cb724bfef9039ec3"},
-    {file = "interop-1.2.3-cp36-cp36m-macosx_10_9_x86_64.macosx_10_9_universal2.macosx_10_10_universal2.macosx_10_10_x86_64.whl", hash = "sha256:7b2929dd679f5f9a196b3d4b14e606435ee4d00a39afa07558a9f24bd219758a"},
-    {file = "interop-1.2.3-cp36-cp36m-manylinux1_x86_64.whl", hash = "sha256:fd7d7900c06c522d78b2dd3f0430113e93e2874c7de1ab8d96586647c804b41a"},
-    {file = "interop-1.2.3-cp36-cp36m-win_amd64.whl", hash = "sha256:fd8542e095109e323bdddbac40a7462f6fa661033ffb0e5257fc77fdd0816c0c"},
-    {file = "interop-1.2.3-cp37-cp37m-macosx_10_9_x86_64.macosx_10_9_universal2.macosx_10_10_universal2.macosx_10_10_x86_64.whl", hash = "sha256:a0dda5b6b450cb03299965087f73624de463cad662ff15d9ffafdfa1e92eb8a2"},
-    {file = "interop-1.2.3-cp37-cp37m-manylinux1_x86_64.whl", hash = "sha256:d58f9e17686ac887aa63b8600c5cb0a968471a02ad18d49462ed757e2e585894"},
-    {file = "interop-1.2.3-cp37-cp37m-win_amd64.whl", hash = "sha256:b3d2798b8de8d33c05ba03f84a1127f882e372f11e2c706a5afd85bbe5e530a9"},
-    {file = "interop-1.2.3-cp38-cp38-macosx_10_9_x86_64.macosx_10_9_universal2.macosx_10_10_universal2.macosx_10_10_x86_64.whl", hash = "sha256:a23e2df2e78f1245fc5d7cd6fa1431143711904bfe6464cd8b8a53a2cb4eea82"},
-    {file = "interop-1.2.3-cp38-cp38-manylinux1_x86_64.whl", hash = "sha256:c80e9226b402235458266f1f687ae2e2d83377580340609a17fb4392a6b63622"},
-    {file = "interop-1.2.3-cp38-cp38-win_amd64.whl", hash = "sha256:d1a481add4209b4478d98a75d6f1b80ac914e6fd2c17523ae851bc693c780160"},
-    {file = "interop-1.2.3-cp39-cp39-macosx_10_9_x86_64.macosx_10_9_universal2.macosx_10_10_universal2.macosx_10_10_x86_64.whl", hash = "sha256:36c7d3cd238afcd45bd30386b62f9b24be6fee1db5f9550f232ba283f61645e0"},
-    {file = "interop-1.2.3-cp39-cp39-win_amd64.whl", hash = "sha256:1f4c7cd68f5dd1a2e66f8d2fdf089a7c6534df57806559e20afb6c544e092836"},
-]
-
-[package.dependencies]
-numpy = {version = ">=1.16.6", markers = "python_version >= \"3.5\""}
-
-[[package]]
 name = "isort"
 version = "5.12.0"
 description = "A Python utility / library to sort Python imports."
@@ -587,6 +556,17 @@ files = [
 ]
 
 [[package]]
+name = "suds-py3"
+version = "1.4.5.0"
+description = "Lightweight SOAP client"
+optional = false
+python-versions = "*"
+files = [
+    {file = "suds-py3-1.4.5.0.tar.gz", hash = "sha256:2b0d433e569c0190ff5e7ed2dfb3287b51bbfb3e51e82361c8bd652c78807167"},
+    {file = "suds_py3-1.4.5.0-py3-none-any.whl", hash = "sha256:0915a7f825c80fa2f0593e040e046bcbc156dd24ba988bb9da6c6604d70155b9"},
+]
+
+[[package]]
 name = "tzdata"
 version = "2023.3"
 description = "Provider of IANA time zone data"
@@ -600,4 +580,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.10"
-content-hash = "168d54765dce505aa39bd7737d38a1b89f04a9db5949d71bb77a7a8078fa353d"
+content-hash = "f93bafa8a8f2e96088ebea4d87bf6a3a98a8c68acf57ea322aa8666b4bb1e835"
