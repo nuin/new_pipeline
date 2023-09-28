@@ -32,6 +32,7 @@ from lib.picard_actions import picard_sort
 from lib.variants_octopus import octopus_caller
 from lib.utils import move_bam
 from lib.GATK_vcf import vcf_comparison
+from lib.snpEff_ann import annotate_merged
 
 # main configuration file
 # couch_credentials = open('lib/config/couchdb').read().splitlines()
@@ -257,6 +258,8 @@ def analyse_pairs(config, datadir, samples):
         to_return[sample]["vcf_merge"] = vcf_comparison(
             datadir, sample, reference, gatk3
         )
+
+        to_return[sample]["snpEff"] = annotate_merged(sample, datadir, snpEff)
 
     # for pair in sorted_pairs:
     #     try:
