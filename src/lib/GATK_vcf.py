@@ -44,19 +44,6 @@ def vcf_comparison(datadir, sample_id, reference, gatk):
         return "exists"
 
     console.log(f"Starting merge GATK, Freebayes and Octopus VCFs {sample_id}")
-    # GATK_string = (
-    #     "%s -T CombineVariants -R %s --variant:freebayes %s_freebayes.final.vcf --variant:gatk %s_GATK.vcf --variant:gatk3 %s_GATK3.vcf --variant:octopus %s_octopus.vcf "
-    #     "-o %s_merged.vcf  --genotypemergeoption UNSORTED --mergeInfoWithMaxAC  --minimumN 2"
-    #     % (
-    #         gatk,
-    #         reference,
-    #         argument_vcf,
-    #         argument_vcf,
-    #         argument_vcf,
-    #         argument_vcf,
-    #         argument_vcf,
-    #     )
-    # )
     GATK_string = (
         f"{gatk} -T CombineVariants -R {reference} --variant:freebayes {vcf_dir}_freebayes.final.vcf"
         f" --variant:gatk {vcf_dir}_GATK.vcf --variant:gatk3 {vcf_dir}_GATK3.vcf "
