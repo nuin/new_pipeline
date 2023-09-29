@@ -34,7 +34,7 @@ from lib.utils import move_bam
 from lib.GATK_vcf import vcf_comparison
 from lib.snpEff_ann import annotate_merged
 from lib.picard_qc import get_coverage
-from lib.picard_metrics import get_yield, get_hs_metrics
+from lib.picard_metrics import get_yield, get_hs_metrics, get_align_summary
 
 # main configuration file
 # couch_credentials = open('lib/config/couchdb').read().splitlines()
@@ -280,6 +280,10 @@ def analyse_pairs(config, datadir, samples):
             sample, datadir, reference, bed_file[sample], picard, "panel"
         )
 
+        to_return[sample]["picard_align_metrics"] = get_align_summary(
+            sample, datadir, reference, picard
+        )
+
     # for pair in sorted_pairs:
     #     try:
     #         # checks if sample is fully analysed before starting
@@ -325,13 +329,6 @@ def analyse_pairs(config, datadir, samples):
     #             #                  QA/QC                      #
     #             #                                             #
     #             # ########################################### #
-    #             # Qualimap
-    #             to_return[pair]["qualimap"] = run_qualimap.call_qualimap(
-    #                 pair, datadir, bed_file[pair], qualimap
-    #             )
-    #             update_dict6[pair].append("qualimap")
-    #
-    #             # Picard coverage
 
     #
     #             if not os.path.isfile(
@@ -383,9 +380,7 @@ def analyse_pairs(config, datadir, samples):
     #                 )
     #
     #             update_dict6[pair].append("picard hs metrics")
-    #             to_return[pair][
-    #                 "picard_align_metrics"
-    #             ] = picard_metrics.get_align_summary(pair, datadir, reference, picard)
+
     #
     #             if not os.path.isfile(
     #                 datadir + "/BAM/" + pair + "/Metrics/" + pair + ".nucl.out"

@@ -37,10 +37,9 @@ def get_yield(sample_id, datadir, picard):
     bam_dir = f"{datadir}/BAM/{sample_id}/BAM/"
     metrics_dir = f"{datadir}/BAM/{sample_id}/Metrics/"
 
-    if Path(f"{metrics_dir}{sample_id},yield.out").exists():
+    if Path(f"{metrics_dir}{sample_id}.yield.out").exists():
         console.log(f"Picard CollectQualityYieldMetrics file exists {sample_id}")
         return "exists"
-
     console.log(f"Starting Picard CollectQualityYieldMetrics creation {sample_id}")
     picard_string = (
         f"{picard} CollectQualityYieldMetrics I={bam_dir}{sample_id}.bam"
@@ -109,7 +108,7 @@ def get_yield_parp(sample_id, directory, picard):
     return "success"
 
 
-def get_hs_metrics(sample_id, directory, reference, bait_file, picard, panel="full"):
+def get_hs_metrics(sample_id, datadir, reference, bait_file, picard, panel="full"):
     """
     :param sample_id: ID of the patient/sample being analysed using Picard
     :param directory: Location of the BAM files
@@ -128,53 +127,59 @@ def get_hs_metrics(sample_id, directory, reference, bait_file, picard, panel="fu
     :todo: return error
     """
 
-    if os.path.isdir(directory + "/BAM/" + sample_id + "/Metrics/"):
-        argument = directory + "/BAM/" + sample_id + "/Metrics/" + sample_id
-    else:
-        argument = directory + "/BAM/" + sample_id + "/" + sample_id
-
-    if os.path.isdir(directory + "/BAM/" + sample_id + "/BAM/"):
-        argument2 = directory + "/BAM/" + sample_id + "/BAM/" + sample_id
-    else:
-        argument2 = directory + "/BAM/" + sample_id + "/" + sample_id
+    bam_dir = f"{datadir}/BAM/{sample_id}/BAM/"
+    metrics_dir = f"{datadir}/BAM/{sample_id}/Metrics/"
 
     if panel == "full":
-        if os.path.isfile(argument + ".hs_metrics.out") or os.path.isfile(
-            argument + ".hs_metrics.out"
-        ):
-            logger.info("Picard CollectHsMetrics file exists " + sample_id)
+        if Path(f"{metrics_dir}{sample_id}.hs_metrics.out").exists():
+            console.log(f"Picard CollectHsMetrics file exists {sample_id}")
             return "exists"
 
-        logger.info("Generating Picard's CollectHsMetrics file " + sample_id)
+        console.log(f"Generating Picard CollectHsMetrics {sample_id}")
+
         picard_string = (
-            "%s CollectHsMetrics I=%s.recal_reads.bam O=%s.hs_metrics.out R=%s BAIT_INTERVALS=%s TARGET_INTERVALS=%s QUIET=true"
-            % (picard, argument2, argument, reference, bait_file, bait_file)
+            f"{picard} CollectHsMetrics I={bam_dir}{sample_id}.bam"
+            f" O={metrics_dir}{sample_id}.hs_metrics.out R={reference}"
+            f" BAIT_INTERVALS={bait_file} TARGET_INTERVALS={bait_file}"
         )
+
         proc = subprocess.Popen(
             picard_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
+        while True:
+            output = proc.stderr.readline().strip()
+            if output == b"":
+                break
+            else:
+                console.log(output.decode("utf-8"))
         proc.wait()
-        logger.info("CollectHsMetrics file created " + sample_id)
+        console.log("CollectHsMetrics file created " + sample_id)
+
         return "success"
 
     bait_file = bait_file.replace(".bed", ".picard.bed")
-    if os.path.isfile(argument + ".hs_metrics.panel.out") or os.path.isfile(
-        argument2 + ".hs_metrics.panel.out"
-    ):
-        logger.info("Picard CollectHsMetrics panel file exists " + sample_id)
+    if Path(f"{metrics_dir}{sample_id}.hs_metrics.panel.out").exists():
+        console.log(f"Picard CollectHsMetrics panel file exists {sample_id}")
         return "exists"
 
-    logger.info("Generating Picard CollectHsMetrics for panel " + sample_id)
+    console.log(f"Generating Picard CollectHsMetrics panel {sample_id}")
     picard_string = (
-        "%s CollectHsMetrics I=%s.recal_reads.bam O=%s.hs_metrics.panel.out R=%s BAIT_INTERVALS=%s TARGET_INTERVALS=%s QUIET=true"
-        % (picard, argument2, argument, reference, bait_file, bait_file)
+        f"{picard} CollectHsMetrics I={bam_dir}{sample_id}.bam"
+        f" O={metrics_dir}{sample_id}.hs_metrics.panel.out R={reference}"
+        f" BAIT_INTERVALS={bait_file} TARGET_INTERVALS={bait_file}"
     )
+
     proc = subprocess.Popen(
         picard_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
+    while True:
+        output = proc.stderr.readline().strip()
+        if output == b"":
+            break
+        else:
+            console.log(output.decode("utf-8"))
     proc.wait()
-    logger.info(proc.stdout.read())
-    logger.info("CollectHsMetrics file created " + sample_id)
+    console.log("CollectHsMetrics panel file created " + sample_id)
     return "success"
 
 
@@ -227,7 +232,7 @@ def get_hs_metrics_parp(sample_id, directory, reference, bait_file, picard):
     return "success"
 
 
-def get_align_summary(sample_id, directory, reference, picard):
+def get_align_summary(sample_id, datadir, reference, picard):
     """
 
     :param sample_id: ID of the patient/sample being analysed using Picard
@@ -247,30 +252,23 @@ def get_align_summary(sample_id, directory, reference, picard):
     :todo: return error
     """
 
-    if os.path.isdir(directory + "/BAM/" + sample_id + "/Metrics/"):
-        argument = directory + "/BAM/" + sample_id + "/Metrics/" + sample_id
-    else:
-        argument = directory + "/BAM/" + sample_id + "/" + sample_id
+    bam_dir = f"{datadir}/BAM/{sample_id}/BAM/"
+    metrics_dir = f"{datadir}/BAM/{sample_id}/Metrics/"
 
-    if os.path.isdir(directory + "/BAM/" + sample_id + "/BAM/"):
-        argument2 = directory + "/BAM/" + sample_id + "/BAM/" + sample_id
-    else:
-        argument2 = directory + "/BAM/" + sample_id + "/" + sample_id
-
-    if os.path.isfile(argument + ".align_metrics.out"):
-        logger.info("Picard CollectAlignmentSummaryMetrics file exists " + sample_id)
+    if Path(f"{metrics_dir}{sample_id}.align_metrics.out").exists():
+        console.log(f"Picard  AlignSummary file exists {sample_id}")
         return "exists"
 
-    logger.info("Creating CollectAlignmentSummaryMetrics file " + sample_id)
+    console.log(f"Generating Picard CollectAlignmentSummaryMetrics {sample_id}")
     picard_string = (
-        "%s CollectAlignmentSummaryMetrics I=%s.recal_reads.bam O=%s.align_metrics.out R=%s QUIET=true"
-        % (picard, argument2, argument, reference)
+        f"{picard} CollectAlignmentSummaryMetrics I={bam_dir}{sample_id}.bam"
+        f" O={metrics_dir}{sample_id}.align_metrics.out R={reference}"
     )
     proc = subprocess.Popen(
         picard_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     proc.wait()
-    logger.info("CollectAlignmentSummaryMetrics file created " + sample_id)
+    console.log(f"CollectAlignmentSummaryMetrics file created {sample_id}")
     return "success"
 
 
