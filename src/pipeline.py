@@ -34,6 +34,7 @@ from lib.utils import move_bam
 from lib.GATK_vcf import vcf_comparison
 from lib.snpEff_ann import annotate_merged
 from lib.picard_qc import get_coverage
+from lib.picard_metrics import get_yield
 
 # main configuration file
 # couch_credentials = open('lib/config/couchdb').read().splitlines()
@@ -270,6 +271,8 @@ def analyse_pairs(config, datadir, samples):
             sample, datadir, reference, bed_file[sample], picard, "panel"
         )
 
+        to_return[sample]["picard_yield"] = get_yield(sample, datadir, picard)
+
     # for pair in sorted_pairs:
     #     try:
     #         # checks if sample is fully analysed before starting
@@ -323,39 +326,6 @@ def analyse_pairs(config, datadir, samples):
     #
     #             # Picard coverage
 
-    #             to_return[pair]["picard_coverage_panel"] = picard_qc.get_coverage(
-    #                 pair,
-    #                 datadir,
-    #                 reference,
-    #                 bed_file[pair],
-    #                 picard,
-    #                 transcript_location,
-    #                 "panel",
-    #             )
-    #
-    #             update_dict6[pair].append("picard coverage")
-    #
-    #             to_return[pair]["picard_yield"] = picard_metrics.get_yield(
-    #                 pair, datadir, picard
-    #             )
-    #             if os.path.isfile(datadir + "/BAM/" + pair + "/" + pair + ".yield.out"):
-    #                 parse_picard(
-    #                     picard_parser.main_parser(
-    #                         datadir + "/BAM/" + pair + "/" + pair + ".yield.out"
-    #                     ),
-    #                     pair,
-    #                     "yield",
-    #                 )
-    #             else:
-    #                 parse_picard(
-    #                     picard_parser.main_parser(
-    #                         datadir + "/BAM/" + pair + "/Metrics/" + pair + ".yield.out"
-    #                     ),
-    #                     pair,
-    #                     "yield",
-    #                 )
-    #             update_dict6[pair].append("picard yield")
-    #
     #             to_return[pair]["picard_hs_metrics"] = picard_metrics.get_hs_metrics(
     #                 pair, datadir, reference, bait_file, picard
     #             )
