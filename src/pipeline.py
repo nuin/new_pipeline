@@ -34,7 +34,7 @@ from lib.utils import move_bam
 from lib.GATK_vcf import vcf_comparison
 from lib.snpEff_ann import annotate_merged
 from lib.picard_qc import get_coverage
-from lib.picard_metrics import get_yield
+from lib.picard_metrics import get_yield, get_hs_metrics
 
 # main configuration file
 # couch_credentials = open('lib/config/couchdb').read().splitlines()
@@ -273,6 +273,13 @@ def analyse_pairs(config, datadir, samples):
 
         to_return[sample]["picard_yield"] = get_yield(sample, datadir, picard)
 
+        to_return[sample]["picard_hs_metrics"] = get_hs_metrics(
+            sample, datadir, reference, bait_file, picard
+        )
+        to_return[sample]["picard_hs_metrics_panel"] = get_hs_metrics(
+            sample, datadir, reference, bed_file[sample], picard, "panel"
+        )
+
     # for pair in sorted_pairs:
     #     try:
     #         # checks if sample is fully analysed before starting
@@ -326,14 +333,6 @@ def analyse_pairs(config, datadir, samples):
     #
     #             # Picard coverage
 
-    #             to_return[pair]["picard_hs_metrics"] = picard_metrics.get_hs_metrics(
-    #                 pair, datadir, reference, bait_file, picard
-    #             )
-    #             to_return[pair][
-    #                 "picard_hs_metrics_panel"
-    #             ] = picard_metrics.get_hs_metrics(
-    #                 pair, datadir, reference, bed_file[pair], picard, "panel"
-    #             )
     #
     #             if not os.path.isfile(
     #                 datadir + "/BAM/" + pair + "/Metrics/" + pair + ".nucl.out"
