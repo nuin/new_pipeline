@@ -61,53 +61,6 @@ def get_yield(sample_id, datadir, picard):
     return "success"
 
 
-def get_yield_parp(sample_id, directory, picard):
-    """
-    :param sample_id: ID of the patient/sample being analysed using Picard
-    :param directory: Location of the BAM files
-    :param reference: Reference genome
-    :param bait_file: Picard specific BED file
-    :param picard: Picard jar file location
-
-    :type sample_id: string
-    :type directory: string
-    :type reference: string
-    :type bait_file: string
-    :type picard: string
-
-    :return: returns success or exists
-
-    :todo: return error
-    """
-
-    if os.path.isdir(directory + "/BAM/" + sample_id + "/Metrics/"):
-        argument = directory + "/BAM/" + sample_id + "/Metrics/" + sample_id
-    else:
-        argument = directory + "/BAM/" + sample_id + "/" + sample_id
-
-    if os.path.isdir(directory + "/BAM/" + sample_id + "/BAM/"):
-        argument2 = directory + "/BAM/" + sample_id + "/BAM/" + sample_id
-    else:
-        argument2 = directory + "/BAM/" + sample_id + "/" + sample_id
-
-    if os.path.isfile(argument + ".yield.out"):
-        logger.info("Picard CollectQualityYieldMetrics file exists " + sample_id)
-        return "exists"
-
-    logger.info("Starting Picard CollectQualityYieldMetrics creation")
-    picard_string = (
-        "%s CollectQualityYieldMetrics I=%s.good.bam O=%s.yield.out QUIET=true"
-        % (picard, argument2, argument)
-    )
-    logger.info(picard_string + " " + sample_id)
-    proc = subprocess.Popen(
-        picard_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    proc.wait()
-    logger.info("CollectQualityYieldMetrics file created")
-    return "success"
-
-
 def get_hs_metrics(sample_id, datadir, reference, bait_file, picard, panel="full"):
     """
     :param sample_id: ID of the patient/sample being analysed using Picard
@@ -183,55 +136,6 @@ def get_hs_metrics(sample_id, datadir, reference, bait_file, picard, panel="full
     return "success"
 
 
-def get_hs_metrics_parp(sample_id, directory, reference, bait_file, picard):
-    """
-    :param sample_id: ID of the patient/sample being analysed using Picard
-    :param directory: Location of the BAM files
-    :param reference: Reference genome
-    :param bait_file: Picard specific BED file
-    :param picard: Picard jar file location
-
-    :type sample_id: string
-    :type directory: string
-    :type reference: string
-    :type bait_file: string
-    :type picard: string
-
-    :return: returns success or exists
-
-    :todo: return error
-    """
-
-    if os.path.isdir(directory + "/BAM/" + sample_id + "/Metrics/"):
-        argument = directory + "/BAM/" + sample_id + "/Metrics/" + sample_id
-    else:
-        argument = directory + "/BAM/" + sample_id + "/" + sample_id
-
-    if os.path.isdir(directory + "/BAM/" + sample_id + "/BAM/"):
-        argument2 = directory + "/BAM/" + sample_id + "/BAM/" + sample_id
-    else:
-        argument2 = directory + "/BAM/" + sample_id + "/" + sample_id
-
-    if os.path.isfile(argument + ".hs_metrics.out") or os.path.isfile(
-        argument + ".hs_metrics.out"
-    ):
-        logger.info("Picard CollectHsMetrics file exists " + sample_id)
-        return "exists"
-
-    logger.info("Generating Picard's CollectHsMetrics file " + sample_id)
-    picard_string = (
-        "%s CollectHsMetrics I=%s.good.bam O=%s.hs_metrics.out R=%s BAIT_INTERVALS=%s TARGET_INTERVALS=%s QUIET=true"
-        % (picard, argument2, argument, reference, bait_file, bait_file)
-    )
-    logger.info(picard_string + " " + sample_id)
-    proc = subprocess.Popen(
-        picard_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    proc.wait()
-    logger.info("CollectHsMetrics file created " + sample_id)
-    return "success"
-
-
 def get_align_summary(sample_id, datadir, reference, picard):
     """
 
@@ -269,53 +173,6 @@ def get_align_summary(sample_id, datadir, reference, picard):
     )
     proc.wait()
     console.log(f"CollectAlignmentSummaryMetrics file created {sample_id}")
-    return "success"
-
-
-def get_align_summary_parp(sample_id, directory, reference, picard):
-    """
-
-    :param sample_id: ID of the patient/sample being analysed using Picard
-    :param directory: Location of the BAM files
-    :param reference: Reference genome
-    :param bait_file: Picard specific BED file
-    :param picard: Picard jar file location
-
-    :type sample_id: string
-    :type directory: string
-    :type reference: string
-    :type bait_file: string
-    :type picard: string
-
-    :return: returns success or exists
-
-    :todo: return error
-    """
-
-    if os.path.isdir(directory + "/BAM/" + sample_id + "/Metrics/"):
-        argument = directory + "/BAM/" + sample_id + "/Metrics/" + sample_id
-    else:
-        argument = directory + "/BAM/" + sample_id + "/" + sample_id
-
-    if os.path.isdir(directory + "/BAM/" + sample_id + "/BAM/"):
-        argument2 = directory + "/BAM/" + sample_id + "/BAM/" + sample_id
-    else:
-        argument2 = directory + "/BAM/" + sample_id + "/" + sample_id
-
-    if os.path.isfile(argument + ".align_metrics.out"):
-        logger.info("Picard CollectAlignmentSummaryMetrics file exists " + sample_id)
-        return "exists"
-
-    logger.info("Creating CollectAlignmentSummaryMetrics file " + sample_id)
-    picard_string = (
-        "%s CollectAlignmentSummaryMetrics I=%s.good.bam O=%s.align_metrics.out R=%s QUIET=true"
-        % (picard, argument2, argument, reference)
-    )
-    proc = subprocess.Popen(
-        picard_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    proc.wait()
-    logger.info("CollectAlignmentSummaryMetrics file created " + sample_id)
     return "success"
 
 
