@@ -31,27 +31,27 @@ def extract_counts(datadir, full_BED, sample_id):
 
     bedfile = open(full_BED).read().splitlines()
     bam_file = f"{datadir}/BAM/{sample_id}/BAM/{sample_id}.bam"
-    # if Path(f"{datadir}/BAM/{sample_id}/{sample_id}.cnv").exists():
-    try:
-        console.log(f"Creating samples CNV file {datadir}")
-        cnv_out = open(f"{datadir}/BAM/{sample_id}/{sample_id}.cnv", "w")
-        cnv_out.write("Location\t")
-        cnv_out.write(f"{sample_id}\n")
-        console.log(f"Analysing BAM file {sample_id} {datadir}")
-        samfile = pysam.AlignmentFile(bam_file, "rb")
-        for location in bedfile:
-            temp = location.split("\t")
-            cnv_out.write(
-                f"{temp[3]}\t{str(samfile.count(reference=temp[0], start=int(temp[1]), end=int(temp[2])))}\n"
-            )
-        cnv_out.close()
+    if not Path(f"{datadir}/BAM/{sample_id}/{sample_id}.cnv").exists():
+        try:
+            console.log(f"Creating samples CNV file {datadir}")
+            cnv_out = open(f"{datadir}/BAM/{sample_id}/{sample_id}.cnv", "w")
+            cnv_out.write("Location\t")
+            cnv_out.write(f"{sample_id}\n")
+            console.log(f"Analysing BAM file {sample_id} {datadir}")
+            samfile = pysam.AlignmentFile(bam_file, "rb")
+            for location in bedfile:
+                temp = location.split("\t")
+                cnv_out.write(
+                    f"{temp[3]}\t{str(samfile.count(reference=temp[0], start=int(temp[1]), end=int(temp[2])))}\n"
+                )
+            cnv_out.close()
 
-        console.log(f"BAM file analysed, CNV file created {sample_id} {datadir}")
-    except Exception as e:
-        console.log(str(e))
-        console.log(f"BAM file not found {sample_id} {datadir}")
-    # else:
-    #     console.log(f"CNV file already exists {sample_id} {datadir}")
+            console.log(f"BAM file analysed, CNV file created {sample_id} {datadir}")
+        except Exception as e:
+            console.log(str(e))
+            console.log(f"BAM file not found {sample_id} {datadir}")
+    else:
+        console.log(f"CNV file already exists {sample_id} {datadir}")
 
 
 if __name__ == "__main__":
