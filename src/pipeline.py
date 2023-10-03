@@ -37,6 +37,7 @@ from lib.picard_qc import get_coverage
 from lib.picard_metrics import get_yield, get_hs_metrics, get_align_summary
 from lib.extract_identity import mpileup, create_identity_table
 from lib.process_identity import barcoding
+from lib.count2 import extract_counts
 
 # main configuration file
 # couch_credentials = open('lib/config/couchdb').read().splitlines()
@@ -214,10 +215,7 @@ def analyse_pairs(config, datadir, samples):
     gatk = env["GATK"]
     gatk3 = env["GATK3"]
     freebayes = env["FREEBAYES"]
-    # qualimap = env["QUALIMAP"]
     snpEff = env["SNPEFF"]
-    annovar_dir = env["ANNOVAR"]
-    # transcript_location = software_conf["transcripts"]
     octopus = env["OCTOPUS"]
     reference = configuration["Reference"]
     vcf_file = configuration["VCF"]
@@ -291,6 +289,15 @@ def analyse_pairs(config, datadir, samples):
         )
         to_return[sample]["identity_table"] = create_identity_table(sample, datadir)
         to_return[sample]["full_identity"] = barcoding(sample, datadir)
+
+        if configuration["FinalDir"].find("Cplus") >= 1:
+            to_return[sample]["cnv"] = extract_counts(
+                datadir, "/opt/BED/new/C+_ALL_IDPE_01JUN2021_Window.bed", sample
+            )
+        else:
+            to_return[sample]["cnv"] = extract_counts(
+                datadir, "/opt/BED/new/CardiacALL_29MAR2021_Window.bed", sample
+            )
 
     # for pair in sorted_pairs:
     #     try:
@@ -417,32 +424,10 @@ def analyse_pairs(config, datadir, samples):
     #
     #             # ########################################### #
     #             #                                             #
-    #             #                Identity.                    #
-    #             #                                             #
-    #             # ########################################### #
-    #             to_return[pair]["mpileup_ident"] = extract_identity.mpileup(
-    #                 pair, datadir, "/opt/bundle/identity.txt", samtools
-    #             )
-    #             to_return[pair][
-    #                 "identity_table"
-    #             ] = extract_identity.create_identity_table(pair, datadir)
-    #             to_return[pair]["full_identity"] = process_identity.barcoding(
-    #                 pair, datadir
-    #             )
-    #
-    #             # ########################################### #
-    #             #                                             #
     #             #                  Sample CNV                 #
     #             #                                             #
     #             # ########################################### #
-    #             if config["FinalDir"].find("Cplus") >= 1:
-    #                 to_return[pair]["cnv"] = count2.extract_counts(
-    #                     datadir, "/opt/BED/new/C+_ALL_IDPE_01JUN2021_Window.bed", pair
-    #                 )
-    #             else:
-    #                 to_return[pair]["cnv"] = count2.extract_counts(
-    #                     datadir, "/opt/BED/new/CardiacALL_29MAR2021_Window.bed", pair
-    #                 )
+
     #
     #             to_return[pair]["variants_table"] = variants_table.extract_info(
     #                 pair, datadir, transcript_location, config["Datadir"]
