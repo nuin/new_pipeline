@@ -35,6 +35,8 @@ from lib.GATK_vcf import vcf_comparison
 from lib.snpEff_ann import annotate_merged
 from lib.picard_qc import get_coverage
 from lib.picard_metrics import get_yield, get_hs_metrics, get_align_summary
+from lib.extract_identity import mpileup, create_identity_table
+from lib.process_identity import barcoding
 
 # main configuration file
 # couch_credentials = open('lib/config/couchdb').read().splitlines()
@@ -283,6 +285,12 @@ def analyse_pairs(config, datadir, samples):
         to_return[sample]["picard_align_metrics"] = get_align_summary(
             sample, datadir, reference, picard
         )
+
+        to_return[sample]["mpileup_ident"] = mpileup(
+            sample, datadir, "/opt/bundle/identity.txt", samtools
+        )
+        to_return[sample]["identity_table"] = create_identity_table(sample, datadir)
+        to_return[sample]["full_identity"] = barcoding(sample, datadir)
 
     # for pair in sorted_pairs:
     #     try:
