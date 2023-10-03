@@ -38,6 +38,8 @@ from lib.picard_metrics import get_yield, get_hs_metrics, get_align_summary
 from lib.extract_identity import mpileup, create_identity_table
 from lib.process_identity import barcoding
 from lib.count2 import extract_counts
+from lib.variants_table import extract_info
+
 
 # main configuration file
 # couch_credentials = open('lib/config/couchdb').read().splitlines()
@@ -299,6 +301,11 @@ def analyse_pairs(config, datadir, samples):
                 datadir, "/opt/BED/new/CardiacALL_29MAR2021_Window.bed", sample
             )
 
+        to_return[sample]["variants_table"] = extract_info(
+            sample, datadir, configuration
+        )
+        console.log(f"Processing {sample} completed")
+
     # for pair in sorted_pairs:
     #     try:
     #         # checks if sample is fully analysed before starting
@@ -429,10 +436,7 @@ def analyse_pairs(config, datadir, samples):
     #             # ########################################### #
 
     #
-    #             to_return[pair]["variants_table"] = variants_table.extract_info(
-    #                 pair, datadir, transcript_location, config["Datadir"]
-    #             )
-    #             logger.info("Process of sample " + pair + " completed")
+
     #         else:
     #             logger.info("Process of sample %s completed previously" % (pair))
     #     except Exception as e:
