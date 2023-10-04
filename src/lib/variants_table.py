@@ -61,10 +61,9 @@ def extract_info(sample_id, datadir, configuration):
     argument = directory + "/BAM/" + sample_id + "/" + sample_id
     # argument_vcf = directory + "/BAM/" + sample_id + "/VCF_" + code + "/" + sample_id
 
-    vcf_dir = f"{datadir}/BAM/{sample_id}/VCF}"
+    vcf_dir = f"{datadir}/BAM/{sample_id}/VCF"
     table_file = open(f"{dadatadir}/BAM/{sample_id}/{sample_id}_table.txt", "w")
     annotated_vcf = vcf.Reader(open(f"{vcf_dir}/{sample_id}_merged.ann.vcf", "r"))
-
 
     # # get sample
     # sample = annotated_vcf.samples[0]
