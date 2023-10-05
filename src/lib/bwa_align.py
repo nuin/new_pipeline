@@ -8,8 +8,9 @@
 import os
 import subprocess
 import logging
-
 from rich.console import Console
+import time
+from lib.utils import move_bam
 
 console = Console()
 
@@ -47,8 +48,7 @@ def run_bwa(sample_id, fastq_files, datadir, reference, bwa, samtools):
         bam_header = f"@RG\\tID:{sample_id}\\tLB:{datadir}\\tPL:Illumina\\tSM:{sample_id}\\tPU:None"
         bwa_string = (
             f"{bwa} mem -t 16 -R '{bam_header}' {reference} {' '.join(fastq_files)} "
-            f"| {samtools} view -Sb - | {samtools} sort - -o {datadir}/BAM/{sample_id}/BAM/{sample_id}.bam"
-            f" && {samtools} index {datadir}/BAM/{sample_id}/BAM/{sample_id}.bam"
+            f"| {samtools} view -Sb - > {datadir}/BAM/{sample_id}/BAM/{sample_id}.bam"
         )
         console.log(f"{bwa_string}")
         proc = subprocess.Popen(
@@ -60,7 +60,39 @@ def run_bwa(sample_id, fastq_files, datadir, reference, bwa, samtools):
                 break
             else:
                 console.log(output.decode("utf-8"))
-        # proc.wait()
+        proc.wait()
+        time.sleep(5)
+        samtools_string = (
+            f"{samtools} sort -l 9 --threads 16 -o {datadir}/BAM/{sample_id}/BAM/{sample_id}.sorted.bam "
+            f"{datadir}/BAM/{sample_id}/BAM/{sample_id}.bam"
+        )
+        console.log(f"{samtools_string}")
+        console.log(f"Sorting BAM file {sample_id}")
+        proc = subprocess.Popen(
+            samtools_string, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True
+        )
+        while True:
+            output = proc.stderr.readline().strip()
+            if output == b"":
+                break
+            else:
+                console.log(output.decode("utf-8"))
+        proc.wait()
+
+        move_bam(datadir, sample_id, "sorted")
+
+        console.log(f"Indexing BAM file {sample_id}")
+        samtools_string_2 = (
+            f"{samtools} index {datadir}/BAM/{sample_id}/BAM/{sample_id}.bam"
+        )
+        proc = subprocess.Popen(
+            samtools_string_2,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=True,
+        )
+        proc.wait()
+
         bam_index_check = 0
         console.log(f"{sample_id} BAM file created")
 

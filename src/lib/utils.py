@@ -20,7 +20,11 @@ def move_bam(datadir: Path, sample: str, bam_file: str) -> bool:
         console.log(f"BAM file {bam_file}.bam exists")
         console.log(f"Moving {bam_location}.{bam_file}.bam to {bam_location}.bam")
         move(f"{bam_location}.{bam_file}.bam", f"{bam_location}.bam")
-        move(f"{bam_location}.{bam_file}.bai", f"{bam_location}.bam.bai")
+        try:
+            move(f"{bam_location}.{bam_file}.bai", f"{bam_location}.bam.bai")
+        except Exception as e:
+            console.log(str(e))
+            console.log("Index file does not exist")
         console.log("Files moved")
     else:
         console.log(
