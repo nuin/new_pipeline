@@ -8,7 +8,7 @@
 
 # octopus -R /opt/reference/hg19.fasta -I
 # /Volumes/Jupiter/CancerPlusRuns/190207_NB551084_0058_AH2J7FAFXY_Cplus_2019_NGS_05_TEST/BAM/19-015-021509B_SJ_OS/BAM/19-015-021509B_SJ_OS.recal_reads.bam
-# -t /opt/BED/Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_GIPoly.bed -o
+# --t /opt/BED/Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_GIPoly.bed -o
 # /Volumes/Jupiter/CancerPlusRuns/190207_NB551084_0058_AH2J7FAFXY_Cplus_2019_NGS_05_TEST/BAM/19-015-021509B_SJ_OS/VCF/19-015-021509B_SJ_OS.octopus.vcf
 
 # pylint: disable-msg=too-many-arguments
@@ -58,8 +58,8 @@ def octopus_caller(datadir, sample_id, reference, bed_file, octopus):
 
     console.log(f"Start variant calling with Octopus {sample_id}")
     octopus_string = (
-        f"{octopus} -R {reference} -I {bam_dir}/{sample_id}.bam -t {bed_file} "
-        f"-o {vcf_dir}/{sample_id}_octopus.vcf"
+        f"{octopus} -R {reference} -I {bam_dir}/{sample_id}.bam --regions-file {bed_file} "
+        f"--threads 16 -o {vcf_dir}/{sample_id}_octopus.vcf"
     )
 
     console.log(f"Command {octopus_string} {sample_id}")

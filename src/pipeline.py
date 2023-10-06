@@ -287,18 +287,18 @@ def analyse_pairs(config, datadir, samples):
         )
 
         to_return[sample]["mpileup_ident"] = mpileup(
-            sample, datadir, "/opt/bundle/identity.txt", samtools
+            sample, datadir, "/apps/data/src/bundle/identity.txt", samtools
         )
         to_return[sample]["identity_table"] = create_identity_table(sample, datadir)
         to_return[sample]["full_identity"] = barcoding(sample, datadir)
 
         if configuration["FinalDir"].find("Cplus") >= 1:
             to_return[sample]["cnv"] = extract_counts(
-                datadir, "/opt/BED/new/C+_ALL_IDPE_01JUN2021_Window.bed", sample
+                datadir, "/apps/data/src/BED/new/C+_ALL_IDPE_01JUN2021_Window.bed", sample
             )
         else:
             to_return[sample]["cnv"] = extract_counts(
-                datadir, "/opt/BED/new/CardiacALL_29MAR2021_Window.bed", sample
+                datadir, "/apps/data/src/BED/new/CardiacALL_29MAR2021_Window.bed", sample
             )
 
         to_return[sample]["variants_table"] = extract_info(

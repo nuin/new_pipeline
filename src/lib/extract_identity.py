@@ -34,22 +34,16 @@ def mpileup(sample_id, datadir, identity, samtools):
     :todo: return error
     """
 
-    # argument2 = datadir + '/BAM/' + sample_id
-
     bam_dir = f"{datadir}/BAM/{sample_id}/BAM/"
 
     if Path(f"{bam_dir}/identity.mpileup").exists():
         console.log(f"Identity mpileup file exists {sample_id}")
         return "exists"
 
+
     console.log(f"Starting mpileup process for identity file {sample_id}")
-    # mpileup_string = "%s mpileup -l %s %s.recal_reads.bam > %s/identity.mpileup" % (
-    #     samtools,
-    #     identity,
-    #     argument,
-    #     argument2,
-    # )
     mpileup_string = f"{samtools} mpileup -l {identity} {bam_dir}{sample_id}.bam > {bam_dir}/identity.mpileup"
+    console.log(mpileup_string)
     proc = subprocess.Popen(
         mpileup_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
@@ -108,9 +102,9 @@ def create_identity_table(sample_id, datadir):
 
 if __name__ == "__main__":
 
-    datadir = "/Users/nuin/New_projects/Data/Illumina/"
-    sample_id = "NA12877_1"
+    datadir = "/nfs/mgn_dna/NGS/230825_NB551084_0261_AHHK2GAFX5/Cardiac_2023_NGS_36/"
+    sample_id = "23GN-191G00031"
     identity_file = "identity.txt"
-    samtools = "samtools"
+    samtools = "/apps/data/src/bin/samtools"
     mpileup(sample_id, datadir, identity_file, samtools)
     create_identity_table(sample_id, datadir)
