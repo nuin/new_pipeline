@@ -40,6 +40,8 @@ from lib.process_identity import barcoding, compile_barcodes
 from lib.count2 import extract_counts
 from lib.variants_table import extract_info
 from lib.cnv import compile_samples, cnv_calculation
+from lib.uniformity import get_coverage_values
+from lib.enrichment import get_enrichment
 
 # main configuration file
 # couch_credentials = open('lib/config/couchdb').read().splitlines()
@@ -322,26 +324,16 @@ def analyse_pairs(config, datadir, samples, panel):
     all_cnvs = compile_samples(datadir)
     cnv_calculation(datadir, all_cnvs, config)
 
-    #
-    # # ########################################### #
-    # #                                             #
-    # #                  CNV calc                   #
-    # #                                             #
-    # # ########################################### #
-    # logger.info("Calculating and saving CNV read normalization")
-    # try:
-    #     
-    #     
-    #     logger.info("Calculation completed, CNV mean file saved")
-    # except Exception as e:
-    #     logger.error("Some errors on CNV determination, please check " + str(e))
-    #
-    # # ########################################### #
-    # #                                             #
-    # #                Uniformity                   #
-    # #                                             #
-    # # ########################################### #
-    # uniformity.get_coverage_values(datadir)
+    console.log("Calculating uniformity")
+    get_coverage_values(datadir, panel)
+
+    console.log("Calculating enrichment")
+    for pos, sample in enumerate(samples):
+        get_enrichment(sample, datadir, panel)
+
+
+
+
     #
     # # ########################################### #
     # #                                             #
@@ -351,26 +343,7 @@ def analyse_pairs(config, datadir, samples, panel):
     #
     # process_folder(datadir)
     # add_samples.create_db_items(datadir, VERSION)
-    #
-    # # ########################################### #
-    # #                                             #
-    # #                  Variants DB                #
-    # #                                             #
-    # # ########################################### #
-    # for pair in pairs:
-    #     # try:
-    #     #     to_return[pair]["final_report"] = generate_final_report.save_report(pair, datadir, transcript_location, config["Datadir"])
-    #     #     try:
-    #     #         copytree("resources", datadir + "/BAM/" + pair + "/resources")
-    #     #     except Exception as e:
-    #     #         logger.warning('Resources folder already exists ' + str(e))
-    #     # except Exception as e:
-    #     #     logger.error(str(e))
-    #     # # check_sample.check_files(pair, datadir)
-    #     check_sample.organize_files(pair, datadir)
-    #
-    # # generate main index deprecated
-    # # generate_index.generate_index_page(datadir)
+
     #
     # # add metrics information to DB
     # try:
@@ -389,16 +362,7 @@ def analyse_pairs(config, datadir, samples, panel):
     # except Exception as e:
     #     logger.warning("Problems adding samples to DB " + str(e))
     #
-    # # ########################################### #
-    # #                                             #
-    # #                  Enrichment                 #
-    # #                                             #
-    # # ########################################### #
-    # try:
-    #     for pair in pairs:
-    #         enrichment.get_enrichment(pair, datadir)
-    # except Exception as e:
-    #     logger.warning("Problems calculating enrichment" + str(e))
+
     #
     # # ########################################### #
     # #                                             #
