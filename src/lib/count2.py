@@ -30,6 +30,7 @@ def extract_counts(datadir, full_BED, sample_id):
     """
 
     bedfile = open(full_BED).read().splitlines()
+    console.log(f"Using BED file {full_BED}")
     bam_file = f"{datadir}/BAM/{sample_id}/BAM/{sample_id}.bam"
     if not Path(f"{datadir}/BAM/{sample_id}/{sample_id}.cnv").exists():
         try:
@@ -54,18 +55,3 @@ def extract_counts(datadir, full_BED, sample_id):
         console.log(f"CNV file already exists {sample_id} {datadir}")
 
 
-if __name__ == "__main__":
-
-    # runs = ['171020_NB551084_0023_AHV2N2AFXX_Cplus_2017_NGS_24']
-    # for run in runs:
-    #     for sample_id in glob.glob('/Volumes/Jupiter/CancerPlusRuns/' + run + '/BAM/*'):
-    #         patient = os.path.basename(sample_id)
-    #         extract_counts('/Volumes/Jupiter/CancerPlusRuns/' + run,
-    #                        '/opt/BED/Inherited_Cancer_panel_BED_Window_2.bed', patient)
-    # extract_counts('/Volumes/Venus/pipeline_validation/CNV/171020_NB551084_0023_AHV2N2AFXX_Cplus_2017_NGS_24',
-    # '/opt/BED/Inherited_Cancer_panel_BED_Window_2.bed', '83862_RP')
-    extract_counts(
-        "/Volumes/Venus/TestDevelopment/PARP/TD_02",
-        "/opt/BED/BRCA_amplicon.bed",
-        "HD-810_H",
-    )
