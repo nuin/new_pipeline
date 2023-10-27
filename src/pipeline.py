@@ -39,7 +39,7 @@ from lib.extract_identity import mpileup, create_identity_table
 from lib.process_identity import barcoding, compile_barcodes
 from lib.count2 import extract_counts
 from lib.variants_table import extract_info
-
+from lib.cnv import compile_samples, cnv_calculation
 
 # main configuration file
 # couch_credentials = open('lib/config/couchdb').read().splitlines()
@@ -180,12 +180,12 @@ def process_dir(config, datadir, samples, panel):
 
     align_files(config, datadir, sample_ids, fastqs)
 
-    analyse_pairs(config, datadir, sample_ids)
+    analyse_pairs(config, datadir, sample_ids, panel)
 
     return True
 
 
-def analyse_pairs(config, datadir, samples):
+def analyse_pairs(config, datadir, samples, panel):
     """
     Main function of the file. Gets all pairs (samples) to
     be analysed and guide the whole process, step by step
@@ -292,7 +292,7 @@ def analyse_pairs(config, datadir, samples):
         to_return[sample]["identity_table"] = create_identity_table(sample, datadir)
         to_return[sample]["full_identity"] = barcoding(sample, datadir)
 
-        if configuration["FinalDir"].find("Cplus") >= 1:
+        if panel == "Cplus":
             to_return[sample]["cnv"] = extract_counts(
                 datadir, "/apps/data/src/BED/new/C+_ALL_IDPE_01JUN2021_Window.bed", sample
             )
@@ -318,16 +318,10 @@ def analyse_pairs(config, datadir, samples):
     console.log("Compiling barcodes")
     compile_barcodes(datadir)
 
-    # # ########################################### #
-    # #                                             #
-    # #                  Barcode                    #
-    # #                                             #
-    # # ########################################### #
-    # logger.info("Barcode compilation")
-    # try:
-    #     process_identity.compile_barcodes(datadir)
-    # except Exception as e:
-    #     logger.error("Barcode compilation not possible" + str(e))
+    console.log("Calculating and saving CNV read normalization")
+    all_cnvs = compile_samples(datadir)
+    cnv_calculation(datadir, all_cnvs, config)
+
     #
     # # ########################################### #
     # #                                             #
@@ -336,8 +330,8 @@ def analyse_pairs(config, datadir, samples):
     # # ########################################### #
     # logger.info("Calculating and saving CNV read normalization")
     # try:
-    #     all_cnvs = cnv.compile_samples(datadir)
-    #     cnv.cnv_calculation(datadir, all_cnvs, yaml_file)
+    #     
+    #     
     #     logger.info("Calculation completed, CNV mean file saved")
     # except Exception as e:
     #     logger.error("Some errors on CNV determination, please check " + str(e))
