@@ -30,7 +30,7 @@ from lib.variants_GATK3 import haplotype_caller as haplotype_caller3
 from lib.variants_freebayes import freebayes_caller, edit_freebayes_vcf
 from lib.picard_actions import picard_sort
 from lib.variants_octopus import octopus_caller
-from lib.utils import move_bam
+from lib.utils import move_bam, compile_identity
 from lib.GATK_vcf import vcf_comparison
 from lib.snpEff_ann import annotate_merged
 from lib.picard_qc import get_coverage
@@ -306,141 +306,16 @@ def analyse_pairs(config, datadir, samples):
         )
         console.log(f"Processing {sample} completed")
 
-    # for pair in sorted_pairs:
-    #     try:
-    #         # checks if sample is fully analysed before starting
-    #         sample_status = check_sample.check_files(pair, datadir)
-    #         index += 1
-    #         logger.info(sample_status)
-    #         sample_status = "Proceed"
-    #         if sample_status == "Proceed":
-    #             logger.info(
-    #                 "Starting analysis of sample "
-    #                 + pair
-    #                 + " "
-    #                 + str(index)
-    #                 + " of "
-    #                 + str(len(pairs))
-    #             )
 
-    #
-    #             # ########################################### #
-    #             #                                             #
-    #             #               Annotation                    #
-    #             #                                             #
-    #             # ########################################### #
-    #
-    #             to_return[pair]["snpEff_pseudo"] = snpEff_ann.annotate_pseudo(
-    #                 pair, datadir, snpEff
-    #             )
-    #             update_dict5[pair] = (
-    #                 "snpEff pseudo annotation generated",
-    #                 str(datetime.now()),
-    #             )
-    #
-    #             # Annovar
-    #             to_return[pair][annovar] = annovar.get_annotation(
-    #                 pair, datadir, annovar_dir
-    #             )
-    #             to_return[pair]["vcf_parser"] = vcf_parser.parse_vcf(
-    #                 pair, datadir, transcript_location, config["FinalDir"]
-    #             )
-    #
-    #             # ########################################### #
-    #             #                                             #
-    #             #                  QA/QC                      #
-    #             #                                             #
-    #             # ########################################### #
 
-    #
-    #             if not os.path.isfile(
-    #                 datadir + "/BAM/" + pair + "/Metrics/" + pair + ".nucl.out"
-    #             ):
-    #                 parse_picard(
-    #                     picard_parser.main_parser(
-    #                         datadir + "/BAM/" + pair + "/" + pair + ".hs_metrics.out"
-    #                     ),
-    #                     pair,
-    #                     "hs",
-    #                 )
-    #                 parse_picard(
-    #                     picard_parser.main_parser(
-    #                         datadir
-    #                         + "/BAM/"
-    #                         + pair
-    #                         + "/"
-    #                         + pair
-    #                         + ".hs_metrics.panel.out"
-    #                     ),
-    #                     pair,
-    #                     "hs_panel",
-    #                 )
-    #             else:
-    #                 parse_picard(
-    #                     picard_parser.main_parser(
-    #                         datadir
-    #                         + "/BAM/"
-    #                         + pair
-    #                         + "/Metrics/"
-    #                         + pair
-    #                         + ".hs_metrics.out"
-    #                     ),
-    #                     pair,
-    #                     "hs",
-    #                 )
-    #                 parse_picard(
-    #                     picard_parser.main_parser(
-    #                         datadir
-    #                         + "/BAM/"
-    #                         + pair
-    #                         + "/Metrics/"
-    #                         + pair
-    #                         + ".hs_metrics.panel.out"
-    #                     ),
-    #                     pair,
-    #                     "hs_panel",
-    #                 )
-    #
-    #             update_dict6[pair].append("picard hs metrics")
+    if not Path(f"{datadir}/identity.txt").exists():
+        console.log("Identity file does not exist, creating it")
+        compile_identity(datadir)
+    else:
+        console.log("Identity file exists")
 
-    #
-    #             if not os.path.isfile(
-    #                 datadir + "/BAM/" + pair + "/Metrics/" + pair + ".nucl.out"
-    #             ):
-    #                 parse_picard(
-    #                     picard_parser.main_parser(
-    #                         datadir + "/BAM/" + pair + "/" + pair + ".align_metrics.out"
-    #                     ),
-    #                     pair,
-    #                     "align",
-    #                 )
-    #             else:
-    #                 parse_picard(
-    #                     picard_parser.main_parser(
-    #                         datadir
-    #                         + "/BAM/"
-    #                         + pair
-    #                         + "/Metrics/"
-    #                         + pair
-    #                         + ".align_metrics.out"
-    #                     ),
-    #                     pair,
-    #                     "align",
-    #                 )
-    #             update_dict6[pair].append("picard align metrics")
-    #
-    #             # ########################################### #
-    #             #                                             #
-    #             #                  Sample CNV                 #
-    #             #                                             #
-    #             # ########################################### #
 
-    #
 
-    #         else:
-    #             logger.info("Process of sample %s completed previously" % (pair))
-    #     except Exception as e:
-    #         logger.error("Process of sample %s failed with error %s" % (pair, e))
     #
     # # ########################################### #
     # #                                             #

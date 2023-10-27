@@ -3,6 +3,7 @@
 from pathlib import Path
 from rich.console import Console
 from shutil import move
+import glob 
 
 console = Console()
 
@@ -30,3 +31,27 @@ def move_bam(datadir: Path, sample: str, bam_file: str) -> bool:
         console.log(
             f"BAM file {bam_file}.bam does not exist, but process might havbe been completed"
         )
+
+
+
+def compile_identity(datadir):
+    """
+    Function that reads samples' identity files
+    and compiles them in a single file
+
+    :param datadir: run location
+
+    :type datadir: string
+
+    :return: boolean
+    """
+
+    all_identity = open(datadir + "/identity.txt", "w")
+    for filename in glob.glob(datadir + "/BAM/*/*"):
+        if filename.find("identity.txt") >= 0:
+            all_identity.write(f"{filename.split('/')[-2]}\n")
+            single_identity = open(filename).read()
+            all_identity.write(single_identity)
+    all_identity.close()
+
+    return True
