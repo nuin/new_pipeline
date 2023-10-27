@@ -36,7 +36,7 @@ from lib.snpEff_ann import annotate_merged
 from lib.picard_qc import get_coverage
 from lib.picard_metrics import get_yield, get_hs_metrics, get_align_summary
 from lib.extract_identity import mpileup, create_identity_table
-from lib.process_identity import barcoding
+from lib.process_identity import barcoding, compile_barcodes
 from lib.count2 import extract_counts
 from lib.variants_table import extract_info
 
@@ -307,7 +307,7 @@ def analyse_pairs(config, datadir, samples):
         console.log(f"Processing {sample} completed")
 
 
-
+    console.log("Compiling identity file")
     if not Path(f"{datadir}/identity.txt").exists():
         console.log("Identity file does not exist, creating it")
         compile_identity(datadir)
@@ -315,23 +315,9 @@ def analyse_pairs(config, datadir, samples):
         console.log("Identity file exists")
 
 
+    console.log("Compiling barcodes")
+    compile_barcodes(datadir)
 
-    #
-    # # ########################################### #
-    # #                                             #
-    # #                  Identity                   #
-    # #                                             #
-    # # ########################################### #
-    # try:
-    #     if os.path.isfile(datadir + "/identity.txt"):
-    #         logger.info("Identity file exists")
-    #     else:
-    #         logger.info("Compiling identity file")
-    #         compile_identity(datadir)
-    #         logger.info("Identity file compiled")
-    # except Exception as e:
-    #     logger.error("Some errors on identity determination, please check " + str(e))
-    #
     # # ########################################### #
     # #                                             #
     # #                  Barcode                    #

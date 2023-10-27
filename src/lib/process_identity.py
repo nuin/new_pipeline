@@ -260,7 +260,6 @@ def compile_barcodes(datadir):
         )
         barcode_dict[sample_id] = barcode_file[0]
         barcodes.write(sample_id + "\t" + barcode_file[0] + "\n")
-    logger.info("Barcodes file created " + sample_id)
 
     barcodes.close()
 
