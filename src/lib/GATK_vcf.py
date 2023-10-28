@@ -6,7 +6,6 @@
 
 """
 
-import os
 import subprocess
 from pathlib import Path
 
@@ -61,7 +60,7 @@ def vcf_comparison(datadir, sample_id, reference, gatk):
         else:
             console.log(output.decode("utf-8"))
     proc.wait()
-    console.log(f"Merge GATK, Freebayes and Octopus VCFs: done")
+    console.log("Merge GATK, Freebayes and Octopus VCFs: done")
 
     return "success"
 

@@ -9,15 +9,10 @@
 import os
 import string
 import subprocess
-from collections import defaultdict
-
-import numpy as np
-import pandas as pd
-
-from suds.client import Client
-
 from pathlib import Path
+
 from rich.console import Console
+from suds.client import Client
 
 console = Console()
 URL = "https://mutalyzer.nl/services/?wsdl"
@@ -180,16 +175,12 @@ def get_coverage_parp(sample_id, directory, reference, bait_file, picard):
         argument2 = directory + "/BAM/" + sample_id + "/" + sample_id
 
     if os.path.isfile(argument + ".nucl.out"):
-        logger.info("Picard coverage file exists")
         return "exists"
 
-    logger.info("Starting Picard's CollectHsMetrics")
     picard_string = (
         '%s CollectHsMetrics BI="%s" I=%s.good.bam PER_BASE_COVERAGE=%s.nucl.out MINIMUM_MAPPING_QUALITY=0 MINIMUM_BASE_QUALITY=0 TARGET_INTERVALS=%s OUTPUT=%s.out R=%s QUIET=true'
         % (picard, bait_file, argument2, argument, bait_file, argument, reference)
     )
-    logger.info("Command " + picard_string)
-    logger.info(picard_string)
     proc = subprocess.Popen(
         picard_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
@@ -198,9 +189,8 @@ def get_coverage_parp(sample_id, directory, reference, bait_file, picard):
         if output == b"":
             break
         else:
-            logger.info(output.decode("utf-8") + " " + sample_id)
+            pass
     proc.wait()
-    logger.info("INFO\t\tPicard coverage file created")
     return "success"
 
 
@@ -269,7 +259,7 @@ def convert_g_to_c(chromosome, position, transcript):
     try:
         return result_dict[transcript]
     except Exception as e:
-        logger.error(str(e) + " " + sample_id)
+        console.log(str(e))
         return str(result[0])
 
 
@@ -317,74 +307,3 @@ def create_table(under_30, chromosome, gene, trans, coverage_file):
                 str(under_30[item][0]) + "\tg." + str(under_30[item][-1]) + "\t"
             )
             table_output.write(start_pos + "\t" + end_pos + "\n")
-
-
-def generate_qc(coverage_file, sample_id, directory, transcript_location):
-    """
-    Function that manages all the work of the other functions
-    calling each parser and generator and creating a pandas
-    DataFrame for each consecutive location in the main coverage
-    file
-
-    :param coverage_file: location of the coverage file
-
-    :type coverage_file: string
-
-    """
-
-    logger.info("Starting GenerateQC " + sample_id)
-
-    transcripts = get_transcripts(transcript_location)
-    coverage_info = pd.read_csv(
-        coverage_file,
-        sep="\t",
-        header=(0),
-        comment="*",
-        usecols=range(4),
-        dtype={"Total_Depth": int},
-    )
-
-    logger.info("Phase 1")
-    try:
-        empty, empty, empty, coverage_info["Gene"], empty = zip(
-            *coverage_info["target"].apply(lambda x: x.split(":"))
-        )
-    except Exception as e:
-        logger.warning(str(e))
-        empty, coverage_info["Gene"], empty = zip(
-            *coverage_info["target"].apply(lambda x: x.split(":"))
-        )
-
-    coverage_info["coverage"] = coverage_info["coverage"].astype(int)
-
-    logger.info("Phase 2 - to plot")
-    to_plot = defaultdict(list)
-    for k, g in coverage_info.groupby(
-        coverage_info["pos"] - np.arange(coverage_info.shape[0])
-    ):
-        gene, segment, chromosome = chr_frame(g)
-        if gene != "empty":
-            to_plot[gene].append(
-                (
-                    segment["coverage"].tolist(),
-                    segment["pos"].tolist(),
-                    segment["chrom"].tolist(),
-                )
-            )
-
-    genes_plot(to_plot, coverage_file, transcripts, sample_id, directory)
-
-
-if __name__ == "__main__":
-
-    data_directory = "/Volumes/Jupiter/CancerPlusRuns/200604_NB551084_0096_AHCTWYAFX2_Cplus_2019_NGS_X2"
-    sample_id = "17-310-020850_KS_OS"
-    get_coverage(
-        sample_id,
-        data_directory,
-        "/opt/reference/hg19.fasta",
-        "/opt/BED/Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_GIPoly.picard.bed",
-        "picard",
-        "/opt/bundle/transcripts.txt",
-        "full",
-    )

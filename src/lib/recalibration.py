@@ -9,7 +9,6 @@
 # pylint: disable-msg=too-many-arguments
 # pylint: disable-msg=line-too-long
 
-import os
 import subprocess
 from pathlib import Path
 
@@ -122,22 +121,3 @@ def recalibrate(datadir, sample_id, reference, gatk):
     recal_file.close()
 
     return "success"
-
-
-if __name__ == "__main__":
-
-    data_directory = "/Users/nuin/Projects/Data/Test_dataset/"
-    sample_id = "NA12877_1"
-    bed_file = "/opt/BED/Inherited_Cancer_panel_FINAL.bed"
-    vcf_file = "/opt/bundle/dbsnp_138.hg19.vcf"
-    reference = "/opt/reference/hg19.fasta"
-    gatk = "java -jar /usr/local/bin/GenomeAnalysisTK.jar"
-
-    base_recal1(sample_id, data_directory, bed_file, vcf_file, reference, gatk)
-    base_recal2(sample_id, data_directory, vcf_file, reference, gatk)
-    recalibrate(sample_id, data_directory, reference, gatk)
-
-# Later
-# java -jar /usr/local/bin/GenomeAnalysisTK.jar -T AnalyzeCovariates -R  ~/New_projects/reference/hg19.fasta -before recal_data.table -after post_recal_data.table -csv report.csv
-
-# Rscript ~/New_projects/bundle/BQSR.R report.csv recal_data.table test.pdf

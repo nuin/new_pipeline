@@ -9,11 +9,11 @@
 # pylint: disable-msg=too-many-arguments
 # pylint: disable-msg=line-too-long
 
-import os
 import glob
-import pandas as pd
-import numpy as np
+import os
 
+import numpy as np
+import pandas as pd
 from rich.console import Console
 
 console = Console()

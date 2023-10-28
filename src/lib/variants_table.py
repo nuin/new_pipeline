@@ -6,15 +6,17 @@
 """
 
 from collections import defaultdict
-import vcf
-import yaml
-import os
+
+from rich.console import Console
+
+# import vcf
+# import yaml
+# import os
 
 # from .vcf_parser import parse_annotation
 
-from pathlib import Path
+# from pathlib import Path
 
-from rich.console import Console
 
 console = Console()
 

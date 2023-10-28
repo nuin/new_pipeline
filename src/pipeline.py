@@ -8,40 +8,37 @@
 """
 
 import glob
-import logging
 import os
 from collections import defaultdict
-from datetime import datetime
 from pathlib import Path
 
 import click
 import yaml
 from rich.console import Console
 
-console = Console()
 
 from dotenv import dotenv_values
 
 from lib.bwa_align import run_bwa
+from lib.cnv import cnv_calculation, compile_samples
+from lib.count2 import extract_counts
 from lib.dup_indels import remove_duplicates
+from lib.enrichment import get_enrichment
+from lib.extract_identity import create_identity_table, mpileup
+from lib.GATK_vcf import vcf_comparison
+from lib.picard_actions import picard_sort
+from lib.picard_metrics import get_align_summary, get_hs_metrics, get_yield
+from lib.picard_qc import get_coverage
+from lib.process_identity import barcoding, compile_barcodes
 from lib.recalibration import base_recal1, recalibrate
+from lib.snpEff_ann import annotate_merged
+from lib.uniformity import get_coverage_values
+from lib.utils import compile_identity, move_bam
+from lib.variants_freebayes import edit_freebayes_vcf, freebayes_caller
 from lib.variants_GATK import haplotype_caller
 from lib.variants_GATK3 import haplotype_caller as haplotype_caller3
-from lib.variants_freebayes import freebayes_caller, edit_freebayes_vcf
-from lib.picard_actions import picard_sort
 from lib.variants_octopus import octopus_caller
-from lib.utils import move_bam, compile_identity
-from lib.GATK_vcf import vcf_comparison
-from lib.snpEff_ann import annotate_merged
-from lib.picard_qc import get_coverage
-from lib.picard_metrics import get_yield, get_hs_metrics, get_align_summary
-from lib.extract_identity import mpileup, create_identity_table
-from lib.process_identity import barcoding, compile_barcodes
-from lib.count2 import extract_counts
 from lib.variants_table import extract_info
-from lib.cnv import compile_samples, cnv_calculation
-from lib.uniformity import get_coverage_values
-from lib.enrichment import get_enrichment
 
 # main configuration file
 # couch_credentials = open('lib/config/couchdb').read().splitlines()
@@ -51,8 +48,7 @@ from lib.enrichment import get_enrichment
 VERSIONFILE = "VERSION"
 VERSION = open(VERSIONFILE).read().strip()
 
-logging.basicConfig(level=logging.INFO)
-
+console = Console()
 
 def find_fastq(datadir, panel_samples, panel):
     """
@@ -374,30 +370,6 @@ def analyse_pairs(config, datadir, samples, panel):
     return to_return
 
 
-def compile_identity(datadir):
-    """
-    Function that reads samples' identity files
-    and compiles them in a single file
-
-    :param datadir: run location
-
-    :type datadir: string
-
-    :return: boolean
-    """
-
-    all_identity = open(datadir + "/identity.txt", "w")
-    for filename in glob.glob(datadir + "/BAM/*/*"):
-        if filename.find("identity.txt") >= 0:
-            console.log(f"Found {filename}")
-            all_identity.write(filename.split("/")[-2] + "\n")
-            single_identity = open(filename).read()
-            all_identity.write(single_identity)
-    all_identity.close()
-
-    return True
-
-
 def generate_analysis(config, datadir, samples, panel):
     """
     Main function of the script, find input files, start alignemt and processing
@@ -420,8 +392,8 @@ def generate_analysis(config, datadir, samples, panel):
 
     s = process_dir(config, datadir, samples, panel)
 
-    # patients = ""
-    # return patients
+    return s
+
 
 
 @click.command()
@@ -453,6 +425,8 @@ def run_analysis(configuration_file, samples, datadir, panel):
     console.log("All requirements found, starting analysis")
 
     sample_dict = generate_analysis(configuration_file, datadir, samples, panel)
+
+    return sample_dict
 
 
 if __name__ == "__main__":

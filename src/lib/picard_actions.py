@@ -9,7 +9,6 @@
 # pylint: disable-msg=too-many-arguments
 # pylint: disable-msg=line-too-long
 
-import os
 import subprocess
 from pathlib import Path
 

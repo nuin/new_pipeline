@@ -1,9 +1,10 @@
 # Paulo Nuin Sep 2023
 
+import glob
 from pathlib import Path
-from rich.console import Console
 from shutil import move
-import glob 
+
+from rich.console import Console
 
 console = Console()
 
@@ -31,7 +32,6 @@ def move_bam(datadir: Path, sample: str, bam_file: str) -> bool:
         console.log(
             f"BAM file {bam_file}.bam does not exist, but process might havbe been completed"
         )
-
 
 
 def compile_identity(datadir):
