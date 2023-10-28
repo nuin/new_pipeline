@@ -53,5 +53,3 @@ def extract_counts(datadir, full_BED, sample_id):
             console.log(f"BAM file not found {sample_id} {datadir}")
     else:
         console.log(f"CNV file already exists {sample_id} {datadir}")
-
-
