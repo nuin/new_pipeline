@@ -6,15 +6,11 @@
 """
 
 
-import glob
-import os
 import subprocess
-import sys
 from pathlib import Path
 
-from rich.console import Console
-
 from dotenv import dotenv_values
+from rich.console import Console
 
 console = Console()
 

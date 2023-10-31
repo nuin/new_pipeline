@@ -6,9 +6,10 @@
 
 """
 
-import sys
-import os
 import glob
+import os
+import sys
+
 import pandas as pd
 from rich.console import Console
 

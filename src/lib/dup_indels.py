@@ -5,9 +5,9 @@
 .. moduleauthor:: Paulo Nuin, December 2015
 """
 
-import os
 import subprocess
 from pathlib import Path
+
 from rich.console import Console
 
 console = Console()

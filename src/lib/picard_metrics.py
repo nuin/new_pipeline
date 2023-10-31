@@ -207,29 +207,14 @@ def get_call_metrics(sample_id, directory, vcf_file, picard):
         argument2 = directory + "/BAM/" + sample_id + "/" + sample_id
 
     if os.path.isfile(argument + ".call_metrics.out.variant_calling_detail_metrics"):
-        logger.info("Picard CollectVariantCallingMetrics file exists " + sample_id)
         return "exists"
 
-    logger.info("Generating CollectVariantCallingMetrics file " + sample_id)
     picard_string = (
         "%s CollectVariantCallingMetrics I=%s_merged.vcf O=%s.call_metrics.out DBSNP=%s QUIET=true"
         % (picard, argument2, argument, vcf_file)
     )
-    logger.info(picard_string + " " + sample_id)
     proc = subprocess.Popen(
         picard_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     proc.wait()
-    logger.info("CollectVariantCallingMetrics file created " + sample_id)
     return "success"
-
-
-if __name__ == "__main__":
-
-    data_directory = "/Users/nuin/New_projects/Data/CAC0002-27826881"
-    sample_id = "CAC0002"
-
-    # get_yield(sample_id, data_directory, 'picard')
-    # get_hs_metrics(sample_id, data_directory, '/opt/reference/hg19.fasta', '/opt/BED/Inherited_Cancer_panel_FINAL.picard.bed', '/opt/BED/Inherited_Cancer_panel_FINAL.list', 'picard')
-    # get_align_summary(sample_id, data_directory, '/opt/reference/hg19.fasta', 'picard')
-    # get_call_metrics(sample_id, data_directory, '/opt/bundle/dbsnp_138.hg19.vcf', 'picard')

@@ -6,10 +6,9 @@
 
 """
 
-import os
 import subprocess
-import logging
 from pathlib import Path
+
 from rich.console import Console
 
 console = Console()

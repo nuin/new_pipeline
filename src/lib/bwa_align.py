@@ -5,11 +5,13 @@
 .. moduleauthor:: Paulo Nuin, July 2016
 """
 
+import logging
 import os
 import subprocess
-import logging
-from rich.console import Console
 import time
+
+from rich.console import Console
+
 from lib.utils import move_bam
 
 console = Console()

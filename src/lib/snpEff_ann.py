@@ -6,7 +6,6 @@
 
 """
 
-import os
 import subprocess
 from pathlib import Path
 
@@ -67,57 +66,6 @@ def annotate_merged(sample_id, datadir, snpEff):
     return "success"
 
 
-def annotate_pseudo(sample_id, datadir, snpEff):
-    """
-    Function that calls snpEff to annotated the required
-    VCF file
-
-    :param sample_id: ID of the patient/sample being analysed
-    :param datadir: Location of the BAM files
-    :param snpEff: snpEff executable location
-
-    :type sample_id: string
-    :type datadir: string
-    :type snpEff: string
-
-    :return: returns success or exists
-
-    :todo: return error
-    """
-
-    code = get_code(sample_id)
-    argument_VCF = datadir + "/BAM/" + sample_id + "/VCF_" + code + "/" + sample_id
-
-    if os.path.isfile(argument_VCF + "_PSEUDO.ann.vcf"):
-        logger.info("Annotated VCF file exists")
-        return "exists"
-
-    logger.info("Starting snpEff annotation")
-    snpEff_string = (
-        "%s hg19 %s_PSEUDO.vcf -t -onlyTr /opt/bundle/transcripts_only.txt"
-        % (snpEff, argument_VCF)
-    )
-    logger.info(snpEff_string)
-    proc = subprocess.Popen(
-        snpEff_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    to_write = ""
-    while True:
-        output = proc.stdout.readline().strip()
-        to_write += output.decode("utf-8") + "\n"
-        if output == b"":
-            break
-        else:
-            logger.info(output.decode("utf-8")[:50])
-    proc.wait()
-    pseudo_ann = open(argument_VCF + "_PSEUDO.ann.vcf", "w")
-    pseudo_ann.write(to_write)
-    pseudo_ann.close()
-    logger.info("Annotated VCF file generated")
-
-    return "success"
-
-
 if __name__ == "__main__":
 
     datadir = "/Volumes/Juggernaut/200320_NB551084_0089_AH2YWNAFX2_Cplus_2020_NGS_07"
@@ -127,4 +75,4 @@ if __name__ == "__main__":
     # reference = '/opt/reference/hg19.fasta'
     # gatk = 'java -jar /usr/local/bin/GATK4.jar'
 
-    annotate_pseudo(sample_id, datadir, snpEff)
+    # annotate_pseudo(sample_id, datadir, snpEff)
