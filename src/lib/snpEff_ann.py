@@ -42,7 +42,7 @@ def annotate_merged(sample_id, datadir, snpEff):
     console.log(f"Starting snpEff annotation {sample_id}")
 
     snpeff_string = (
-        f"{snpEff} hg19 {vcf_dir}_merged.vcf -onlyTr /opt/bundle/transcripts_only.txt"
+        f"{snpEff} hg19 {vcf_dir}_merged.vcf -onlyTr /apps/data/src/bundle/transcripts_only.txt"
     )
     console.log(snpeff_string)
 
