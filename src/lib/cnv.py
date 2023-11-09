@@ -7,10 +7,11 @@
 
 import glob
 import os
-import pandas as pd
-import yaml
-import requests
 import sys
+
+import pandas as pd
+import requests
+import yaml
 from rich.console import Console
 
 console = Console()
@@ -57,12 +58,12 @@ def compile_samples(datadir):
     :return pandas DataFrame with raw coverage data for each window
     """
 
-    if datadir.find('Cplus') >= 0:
-        panel = 'cplus'
-        expected_lines = 7068
-    else:
-        expected_lines = 15677
-        panel = 'cardiac'
+    # if datadir.find('Cplus') >= 0:
+    #     panel = 'cplus'
+    #     expected_lines = 7068
+    # else:
+    #     expected_lines = 15677
+    #     panel = 'cardiac'
 
     all_cnvs = pd.DataFrame()
     for sample in glob.glob(datadir + '/BAM/*'):
@@ -74,7 +75,7 @@ def compile_samples(datadir):
 
         all_cnvs[sample_id] = cnv_sample
 
-    console.log(f"CNV information from all samples collected")
+    console.log("CNV information from all samples collected")
 
     all_cnvs['Location'] = location
     # saves file, just in case

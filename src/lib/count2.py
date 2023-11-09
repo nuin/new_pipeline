@@ -5,9 +5,9 @@
 .. moduleauthor:: Paulo Nuin, October 2017
 """
 
-import os
-import pysam
 from pathlib import Path
+
+import pysam
 from rich.console import Console
 
 console = Console()
