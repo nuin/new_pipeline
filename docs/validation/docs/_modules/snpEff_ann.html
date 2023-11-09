@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>snpEff_ann &mdash; MDL 1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> MDL
+          </a>
+              <div class="version">
+                Version 1.4.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../ngs_pipeline.html">NGS pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../running_north.html">Running the pipeline at GLS North</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../running_south.html">Running the pipeline at GLS South</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genes.html">Genes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands_ngs.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code.html">Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_data_mgmt.html">Code - Data Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_webapps.html">Code - Webapps</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">MDL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">Module code</a> &raquo;</li>
+      <li>snpEff_ann</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for snpEff_ann</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: snpEff_ann</span>
+<span class="sd">    :platform: any</span>
+<span class="sd">    :synopsis: This module calls snpEff to annotate variants from the merged VCF file</span>
+<span class="sd">.. moduleauthor:: Paulo Nuin, June 2016</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">graypy</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">get_code</span><span class="p">(</span><span class="n">sample_id</span><span class="p">):</span>
+    
+        <span class="k">return</span> <span class="n">sample_id</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
+
+
+<div class="viewcode-block" id="annotate_merged"><a class="viewcode-back" href="../code.html#snpEff_ann.annotate_merged">[docs]</a><span class="k">def</span> <span class="nf">annotate_merged</span><span class="p">(</span><span class="n">sample_id</span><span class="p">,</span> <span class="n">datadir</span><span class="p">,</span> <span class="n">snpEff</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function that calls snpEff to annotated the required</span>
+<span class="sd">    VCF file</span>
+
+<span class="sd">    :param sample_id: ID of the patient/sample being analysed</span>
+<span class="sd">    :param datadir: Location of the BAM files</span>
+<span class="sd">    :param snpEff: snpEff executable location</span>
+
+<span class="sd">    :type sample_id: string</span>
+<span class="sd">    :type datadir: string</span>
+<span class="sd">    :type snpEff: string</span>
+
+<span class="sd">    :return: returns success or exists</span>
+
+<span class="sd">    :todo: return error</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">code</span> <span class="o">=</span> <span class="n">get_code</span><span class="p">(</span><span class="n">sample_id</span><span class="p">)</span>
+    <span class="n">argument_VCF</span> <span class="o">=</span> <span class="n">datadir</span> <span class="o">+</span> <span class="s1">&#39;/BAM/&#39;</span> <span class="o">+</span> <span class="n">sample_id</span> <span class="o">+</span> <span class="s1">&#39;/VCF_&#39;</span> <span class="o">+</span> <span class="n">code</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">sample_id</span>
+
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">argument_VCF</span> <span class="o">+</span> <span class="s1">&#39;_merged.ann.vcf&#39;</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Annotated VCF file exists&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;exists&#39;</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Starting snpEff annotation&#39;</span><span class="p">)</span>
+    <span class="n">snpEff_string</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> hg19 </span><span class="si">%s</span><span class="s1">_merged.vcf -t -onlyTr /opt/bundle/transcripts_only.txt&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">snpEff</span><span class="p">,</span> <span class="n">argument_VCF</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">snpEff_string</span><span class="p">)</span>
+    <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">snpEff_string</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
+    <span class="n">to_write</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">to_write</span> <span class="o">+=</span> <span class="n">output</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="k">if</span> <span class="n">output</span> <span class="o">==</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)[:</span><span class="mi">50</span><span class="p">])</span>
+    <span class="n">proc</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+    <span class="n">merged_ann</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">argument_VCF</span> <span class="o">+</span> <span class="s1">&#39;_merged.ann.vcf&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+
+    <span class="n">merged_ann</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">to_write</span><span class="p">)</span>
+    <span class="n">merged_ann</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Annotated VCF file generated&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s1">&#39;success&#39;</span></div>
+
+
+<div class="viewcode-block" id="annotate_pseudo"><a class="viewcode-back" href="../code.html#snpEff_ann.annotate_pseudo">[docs]</a><span class="k">def</span> <span class="nf">annotate_pseudo</span><span class="p">(</span><span class="n">sample_id</span><span class="p">,</span> <span class="n">datadir</span><span class="p">,</span> <span class="n">snpEff</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function that calls snpEff to annotated the required</span>
+<span class="sd">    VCF file</span>
+
+<span class="sd">    :param sample_id: ID of the patient/sample being analysed</span>
+<span class="sd">    :param datadir: Location of the BAM files</span>
+<span class="sd">    :param snpEff: snpEff executable location</span>
+
+<span class="sd">    :type sample_id: string</span>
+<span class="sd">    :type datadir: string</span>
+<span class="sd">    :type snpEff: string</span>
+
+<span class="sd">    :return: returns success or exists</span>
+
+<span class="sd">    :todo: return error</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">code</span> <span class="o">=</span> <span class="n">get_code</span><span class="p">(</span><span class="n">sample_id</span><span class="p">)</span>
+    <span class="n">argument_VCF</span> <span class="o">=</span> <span class="n">datadir</span> <span class="o">+</span> <span class="s1">&#39;/BAM/&#39;</span> <span class="o">+</span> <span class="n">sample_id</span> <span class="o">+</span> <span class="s1">&#39;/VCF_&#39;</span> <span class="o">+</span> <span class="n">code</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">sample_id</span>
+
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">argument_VCF</span> <span class="o">+</span> <span class="s1">&#39;_PSEUDO.ann.vcf&#39;</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Annotated VCF file exists&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;exists&#39;</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Starting snpEff annotation&#39;</span><span class="p">)</span>
+    <span class="n">snpEff_string</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> hg19 </span><span class="si">%s</span><span class="s1">_PSEUDO.vcf -t -onlyTr /opt/bundle/transcripts_only.txt&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">snpEff</span><span class="p">,</span> <span class="n">argument_VCF</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">snpEff_string</span><span class="p">)</span>
+    <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">snpEff_string</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
+    <span class="n">to_write</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">proc</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">readline</span><span class="p">()</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+        <span class="n">to_write</span> <span class="o">+=</span> <span class="n">output</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+        <span class="k">if</span> <span class="n">output</span> <span class="o">==</span> <span class="sa">b</span><span class="s1">&#39;&#39;</span><span class="p">:</span>
+            <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">output</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)[:</span><span class="mi">50</span><span class="p">])</span>
+    <span class="n">proc</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+    <span class="n">pseudo_ann</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">argument_VCF</span> <span class="o">+</span> <span class="s1">&#39;_PSEUDO.ann.vcf&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+    <span class="n">pseudo_ann</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">to_write</span><span class="p">)</span>
+    <span class="n">pseudo_ann</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Annotated VCF file generated&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="s1">&#39;success&#39;</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+    <span class="n">datadir</span> <span class="o">=</span> <span class="s1">&#39;/Volumes/Juggernaut/200320_NB551084_0089_AH2YWNAFX2_Cplus_2020_NGS_07&#39;</span>
+    <span class="c1"># sample_id = &#39;20GN-011G00002_PJ_DF&#39;</span>
+    <span class="n">sample_id</span> <span class="o">=</span> <span class="s1">&#39;19-252-017170B_LL_FC&#39;</span>
+    <span class="n">snpEff</span> <span class="o">=</span> <span class="s1">&#39;java -jar /usr/local/bin/snpEff.jar&#39;</span>
+    <span class="c1"># reference = &#39;/opt/reference/hg19.fasta&#39;</span>
+    <span class="c1"># gatk = &#39;java -jar /usr/local/bin/GATK4.jar&#39;</span>
+
+    <span class="n">annotate_pseudo</span><span class="p">(</span><span class="n">sample_id</span><span class="p">,</span> <span class="n">datadir</span><span class="p">,</span> <span class="n">snpEff</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2015-2019, Paulo Nuin.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
