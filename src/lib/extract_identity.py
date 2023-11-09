@@ -41,7 +41,6 @@ def mpileup(sample_id, datadir, identity, samtools):
         console.log(f"Identity mpileup file exists {sample_id}")
         return "exists"
 
-
     console.log(f"Starting mpileup process for identity file {sample_id}")
     mpileup_string = f"{samtools} mpileup -l {identity} {bam_dir}{sample_id}.bam > {bam_dir}/identity.mpileup"
     console.log(mpileup_string)

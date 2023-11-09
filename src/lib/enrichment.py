@@ -14,6 +14,7 @@ from rich.console import Console
 
 console = Console()
 
+
 def get_enrichment(sample_id, datadir, panel):
     """
 
@@ -24,7 +25,9 @@ def get_enrichment(sample_id, datadir, panel):
 
     env = dotenv_values(f"{Path.cwd()}/.env")
 
-    console.log(f"Saving enrichment file to {datadir}/BAM/{sample_id}/BAM/enrichment.enr")
+    console.log(
+        f"Saving enrichment file to {datadir}/BAM/{sample_id}/BAM/enrichment.enr"
+    )
 
     bam_dir = f"{datadir}/BAM/{sample_id}/BAM/"
 
@@ -35,13 +38,18 @@ def get_enrichment(sample_id, datadir, panel):
 
     enrichment_string = f"{env['ENRICHMENT']} {bam_dir}/{sample_id}.bam {bam_dir}/{sample_id}.bam.bai {bed_file} > {bam_dir}/enrichment.enr"
 
-
     if not Path(f"{bam_dir}/enrichment.enr").exists():
-        console.log(f"Saving enrichment file to {datadir}/BAM/{sample_id}/BAM/enrichment.enr")
+        console.log(
+            f"Saving enrichment file to {datadir}/BAM/{sample_id}/BAM/enrichment.enr"
+        )
         console.log(enrichment_string)
-        proc = subprocess.Popen(enrichment_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(
+            enrichment_string,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
         proc.wait()
         console.log(f"Enrichment file generated {sample_id}")
     else:
         console.log(f"Enrichment file already exists {sample_id}")
-
