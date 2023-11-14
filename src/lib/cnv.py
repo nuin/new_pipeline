@@ -16,7 +16,7 @@ from rich.console import Console
 
 console = Console()
 
-XLINKED = ['FANCB', 'DMD', 'EMD', 'FHL1', 'GLA', 'LAMP2', 'TAZ']
+XLINKED = ["FANCB", "DMD", "EMD", "FHL1", "GLA", "LAMP2", "TAZ"]
 
 
 def print_full(x):
@@ -26,9 +26,9 @@ def print_full(x):
     :return:
     """
 
-    pd.set_option('display.max_rows', len(x))
+    pd.set_option("display.max_rows", len(x))
     print(x)
-    pd.reset_option('display.max_rows')
+    pd.reset_option("display.max_rows")
 
 
 def check_file_size(cnv_file, panel, expected_lines):
@@ -66,21 +66,25 @@ def compile_samples(datadir):
     #     panel = 'cardiac'
 
     all_cnvs = pd.DataFrame()
-    for sample in glob.glob(datadir + '/BAM/*'):
+    for sample in glob.glob(datadir + "/BAM/*"):
         console.log(f"Getting CNV information from {sample}")
         sample_id = os.path.basename(sample)
         # if not check_file_size(f"{sample}/{sample_id}.cnv", panel, expected_lines):
-        cnv_sample = pd.read_csv(sample + '/' + sample_id + '.cnv', sep='\t', usecols=[sample_id])
-        location = pd.read_csv(sample + '/' + sample_id + '.cnv', sep='\t', usecols=['Location'])
+        cnv_sample = pd.read_csv(
+            sample + "/" + sample_id + ".cnv", sep="\t", usecols=[sample_id]
+        )
+        location = pd.read_csv(
+            sample + "/" + sample_id + ".cnv", sep="\t", usecols=["Location"]
+        )
 
         all_cnvs[sample_id] = cnv_sample
 
     console.log("CNV information from all samples collected")
 
-    all_cnvs['Location'] = location
+    all_cnvs["Location"] = location
     # saves file, just in case
-    all_cnvs.to_csv(datadir + '/cnv_counts.txt', sep='\t', index=True, header=True)
-    all_cnvs = all_cnvs.set_index(['Location'])
+    all_cnvs.to_csv(datadir + "/cnv_counts.txt", sep="\t", index=True, header=True)
+    all_cnvs = all_cnvs.set_index(["Location"])
 
     return all_cnvs
 
@@ -111,11 +115,11 @@ def cnv_calculation(datadir, cnvs, yaml_file):
     console.log(f"Reading configuration file {yaml_file}")
     configuration = yaml.load(open(yaml_file).read(), Loader=yaml.FullLoader)
     # split the genders for X-linked calculation
-    males, females = split_genders(configuration['Gender'])
+    males, females = split_genders(configuration["Gender"])
 
     # remove some columns from the DataFrame
     console.log("Removing columns from the DataFrame")
-    cnvs = cnvs.loc[:, ~cnvs.columns.str.contains('^Unnamed')]
+    cnvs = cnvs.loc[:, ~cnvs.columns.str.contains("^Unnamed")]
 
     # intra-sample normalization
     console.log("Intra-sample normalization")
@@ -126,7 +130,7 @@ def cnv_calculation(datadir, cnvs, yaml_file):
     # sca.to_csv(datadir + '/zscoreS.txt', sep='\t')
 
     # save table, just in case
-    cnvs2.to_csv(datadir + '/cnv_sum.txt', sep='\t')
+    cnvs2.to_csv(datadir + "/cnv_sum.txt", sep="\t")
 
     # inter-sample normalization
     console.log("Inter-sample normalization")
@@ -134,26 +138,25 @@ def cnv_calculation(datadir, cnvs, yaml_file):
 
     # calculating overall standard deviation
     console.log("Calculating standard deviation")
-    cnvs3['std'] = cnvs3.std(axis=1)
+    cnvs3["std"] = cnvs3.std(axis=1)
     # calculating female standard deviation
     console.log("Calculating female std deviation")
-    cnvs3['stdF'] = cnvs3[females].std(axis=1)
+    cnvs3["stdF"] = cnvs3[females].std(axis=1)
     # calculating male standard deviation
     console.log("Calculating male std deviation")
-    cnvs3['stdM'] = cnvs3[males].std(axis=1)
+    cnvs3["stdM"] = cnvs3[males].std(axis=1)
     # saving final file
     console.log("Saving final file")
-    cnvs3.to_csv(f"{datadir}/cnv_mean.txt", sep='\t')
-
+    cnvs3.to_csv(f"{datadir}/cnv_mean.txt", sep="\t")
 
     # do CNV calculation for X-linked genes if there are more than 2 males in the run
     # todo: if there's only one male?
     if len(males) >= 2:
-        cnvs_xlinked = cnvs.loc[cnvs.index.str.contains('|'.join(XLINKED))]
-        cnvs = cnvs[~cnvs.index.str.contains('FANCB')]
+        cnvs_xlinked = cnvs.loc[cnvs.index.str.contains("|".join(XLINKED))]
+        cnvs = cnvs[~cnvs.index.str.contains("FANCB")]
         cnvs_calculation_xlinked(datadir, cnvs_xlinked, cnvs2, yaml_file)
 
-    return 'done'
+    return "done"
 
 
 def split_genders(samples):
@@ -172,8 +175,8 @@ def split_genders(samples):
     #     else:
     #         males.append(list(i.keys())[0])
 
-    females = [k for k, v in samples.items() if v == 'Female' or v == 'F']
-    males = [k for k, v in samples.items() if v == 'Male' or v == 'M']
+    females = [k for k, v in samples.items() if v == "Female" or v == "F"]
+    males = [k for k, v in samples.items() if v == "Male" or v == "M"]
 
     return males, females
 
@@ -184,7 +187,7 @@ def get_xlinked():
     :return:
     """
 
-    r = requests.get('http://10.106.108.24:8010/api/?chromosome=chrX')
+    r = requests.get("http://10.106.108.24:8010/api/?chromosome=chrX")
 
     if not r.ok:
         r.raise_for_status()
@@ -213,13 +216,13 @@ def cnvs_calculation_xlinked(datadir, cnvs_xlinked, cnv_sum, yaml_file):
 
     match_string = []
     for gene in get_xlinked():
-        match_string.append(gene['symbol'])
+        match_string.append(gene["symbol"])
 
-    to_match = '|'.join(match_string)
+    to_match = "|".join(match_string)
 
     configuration = yaml.load(open(yaml_file).read(), Loader=yaml.FullLoader)
 
-    males, females = split_genders(configuration['Gender'])
+    males, females = split_genders(configuration["Gender"])
 
     cnv_males = cnvs_xlinked[males]
     cnv_females = cnvs_xlinked[females]
@@ -227,26 +230,25 @@ def cnvs_calculation_xlinked(datadir, cnvs_xlinked, cnv_sum, yaml_file):
     cnv4 = cnv_sum
     cnv4 = cnv4.apply(lambda x: x / x.sum(), axis=0)
 
-    cnv4['avgF'] = cnv4[females].mean(axis=1)
-    cnv4['avgM'] = cnv4[males].mean(axis=1)
+    cnv4["avgF"] = cnv4[females].mean(axis=1)
+    cnv4["avgM"] = cnv4[males].mean(axis=1)
 
-    cnv4[males] = cnv4[males].apply(lambda x: x / cnv4['avgF'])
-    cnv4[females] = cnv4[females].apply(lambda x: x / cnv4['avgM'])
+    cnv4[males] = cnv4[males].apply(lambda x: x / cnv4["avgF"])
+    cnv4[females] = cnv4[females].apply(lambda x: x / cnv4["avgM"])
 
     cnvs_chrX = cnv4.loc[cnv4.index.str.contains(to_match)]
-    cnvs_chrX.to_csv(datadir + '/cnv_mean_xlinked_cross.txt', sep='\t')
+    cnvs_chrX.to_csv(datadir + "/cnv_mean_xlinked_cross.txt", sep="\t")
 
     cnv_males2 = cnv_males.apply(lambda x: x / x.sum(), axis=0)
     cnv_males3 = cnv_males2.apply(lambda x: x / x.mean(), axis=1)
-    cnv_males3['stdM'] = cnv_males3.std(axis=1)
+    cnv_males3["stdM"] = cnv_males3.std(axis=1)
 
     cnv_females2 = cnv_females.apply(lambda x: x / x.sum(), axis=0)
     cnv_females3 = cnv_females2.apply(lambda x: x / x.mean(), axis=1)
-    cnv_females3['stdF'] = cnv_females3.std(axis=1)
+    cnv_females3["stdF"] = cnv_females3.std(axis=1)
 
     cnvs_xlinked_comb = pd.concat([cnv_females3, cnv_males3], axis=1)
 
-    cnvs_xlinked_comb.to_csv(datadir + '/cnv_mean_xlinked.txt', sep='\t')
+    cnvs_xlinked_comb.to_csv(datadir + "/cnv_mean_xlinked.txt", sep="\t")
 
-    return 'done'
-
+    return "done"

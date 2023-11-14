@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NGS pipeline &mdash; MDL 1 documentation</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Running the pipeline at GLS North" href="running_north.html" />
+    <link rel="prev" title="Welcome to MDL’s NGS pipeline documentation!" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="index.html" class="icon icon-home"> MDL
+          </a>
+              <div class="version">
+                Version 1.4.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">NGS pipeline</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#characteristics">Characteristics</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#technical-information">Technical information</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#requirements">Requirements</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#usage">Usage</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#running-the-pipeline-at-gls-north">Running the pipeline at GLS North</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#running-the-pipeline-at-gls-south">Running the pipeline at GLS South</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#installation">Installation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#python-modules">Python modules</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#external-programs">External programs</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#result-files">Result files</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#logging">Logging</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#code-documentation">Code documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#validation">Validation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="running_north.html">Running the pipeline at GLS North</a></li>
+<li class="toctree-l1"><a class="reference internal" href="running_south.html">Running the pipeline at GLS South</a></li>
+<li class="toctree-l1"><a class="reference internal" href="genes.html">Genes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="commands_ngs.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code.html">Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code_data_mgmt.html">Code - Data Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="code_webapps.html">Code - Webapps</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MDL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>NGS pipeline</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/ngs_pipeline.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="ngs-pipeline">
+<h1>NGS pipeline<a class="headerlink" href="#ngs-pipeline" title="Permalink to this headline">¶</a></h1>
+<section id="characteristics">
+<h2>Characteristics<a class="headerlink" href="#characteristics" title="Permalink to this headline">¶</a></h2>
+<p>The MDL NGS analysis pipeline is an analysis system based on Python scripts that wrap different external open-source tools. Following clinical, diagnostic and research guidelines the pipeline uses, presently, two variant callers to produce results on mutations present in patients’ NGS samples.</p>
+<p>The pipeline is being developed to work with TruSight Cancer+ panel of 104 cancer-related genes. This panel takes advantage of MiSeq and NextSeq instruments to generate millions of reads for up to 24 samples. The list of genes in the panel and sub-panels can be found here: <a class="reference internal" href="genes.html"><span class="doc">Genes</span></a>.</p>
+<p>At the moment the Python section of the pipeline is composed of 35 scripts that call external applications (list can be found here: <a class="reference internal" href="applications.html"><span class="doc">Applications</span></a>)</p>
+</section>
+<section id="technical-information">
+<h2>Technical information<a class="headerlink" href="#technical-information" title="Permalink to this headline">¶</a></h2>
+<section id="requirements">
+<h3>Requirements<a class="headerlink" href="#requirements" title="Permalink to this headline">¶</a></h3>
+<blockquote>
+<div><p>MDL’s NGS pipeline requires (for now) Python 3.x.x and any operating system that Python and the third-party tools works natively. Due mainly to the latter, the pipeline might only work on Unix-like systems, Linux, Solaris or OS X, provided that the external apps can be compiled. Currently, the scripts and other apps were tested on</p>
+</div></blockquote>
+<ul class="simple">
+<li><p>OS X</p></li>
+<li><p>Debian 7</p></li>
+<li><p>RHEL</p></li>
+</ul>
+<p>Compilation of Platypus could not be completed on RHEL.</p>
+<p>Python modules required to run the pipeline properly are:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="http://www.numpy.org">numpy</a>  version 1.15.4</p></li>
+<li><p><a class="reference internal" href="#bokeh">bokeh</a>  version 1.2.0</p></li>
+<li><p><a class="reference external" href="http://pysam.readthedocs.io/en/latest/">pysam</a>  version 0.15.1</p></li>
+<li><p><a class="reference internal" href="#matplotlib">matplotlib</a>  version 2.2.3</p></li>
+<li><p><a class="reference internal" href="#holoviews">holoviews</a>  version 1.10.9</p></li>
+<li><p><a class="reference external" href="http://rpy2.bitbucket.org">rpy2</a>  version 2.9.4</p></li>
+<li><p><a class="reference external" href="http://pandas.pydata.org">pandas</a>  version 0.23.4</p></li>
+<li><p><a class="reference internal" href="#setuptools">setuptools</a>  version 40.8.0</p></li>
+<li><p><a class="reference internal" href="#graypy">graypy</a>  version 1.1.2</p></li>
+<li><p><a class="reference internal" href="#couchbase">couchbase</a>  version 2.5.1</p></li>
+<li><p><a class="reference internal" href="#psutil">psutil</a>  version 5.4.8</p></li>
+<li><p><a class="reference internal" href="#py2exe">py2exe</a>  version 0.9.2.2</p></li>
+<li><p><a class="reference internal" href="#requests">requests</a>  version 2.20.1</p></li>
+<li><p><a class="reference internal" href="#watchdog">watchdog</a>  version 0.9.0</p></li>
+<li><p><a class="reference external" href="http://jinja.pocoo.org/docs/dev/">Jinja2</a>  version 2.10</p></li>
+<li><p><a class="reference external" href="https://pypi.python.org/pypi/colorama">colorama</a>  version 0.4.0</p></li>
+<li><p><a class="reference external" href="https://www.rethinkdb.com/api/python/">rethinkdb</a>  version 2.3.0.post6</p></li>
+<li><p><a class="reference external" href="https://pyvcf.readthedocs.io/en/latest/">PyVCF</a>  version 0.6.8</p></li>
+<li><p><a class="reference internal" href="#interop">interop</a>  version 1.1.8</p></li>
+<li><p><a class="reference internal" href="#suds-jurko">suds_jurko</a>  version 0.6</p></li>
+<li><p><a class="reference external" href="http://pyyaml.org">PyYAML</a>  version 5.1.2</p></li>
+</ul>
+<p>Python Standard Library module currently used in the pipeline</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://docs.python.org/2/library/os.html">os</a></p></li>
+<li><p><a class="reference external" href="https://docs.python.org/2/library/subprocess.html">subprocess</a></p></li>
+<li><p><a class="reference external" href="https://docs.python.org/2/library/logging.html">logging</a></p></li>
+<li><p><a class="reference external" href="https://docs.python.org/2/library/glob.html">glob</a></p></li>
+<li><p><a class="reference external" href="https://docs.python.org/2/library/sys.html">sys</a></p></li>
+<li><p><a class="reference external" href="https://docs.python.org/2/library/collections.html">collections</a>  - defaultdict</p></li>
+<li><p><a class="reference external" href="https://docs.python.org/2/library/string.html">string</a></p></li>
+</ul>
+<p>There’s one main module in the pipeline, <code class="docutils literal notranslate"><span class="pre">align.py</span></code> that import submodules that perform the actual analysis, while <code class="docutils literal notranslate"><span class="pre">align.py</span></code> works as a task manager. Full module and sub-modules documentation is below.</p>
+</section>
+<section id="usage">
+<h3>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h3>
+<p>Pipeline usage at the moment is still dependent on command-line options. Two configuration files are required, one with paths for the external tools, another with the run configuration information. The external tool configuration is still under development, and app paths are hard-coded on the scripts.</p>
+<p>The run configuration file has this format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Panel</span><span class="p">:</span> <span class="n">CancerPlus</span>
+<span class="n">Reference</span><span class="p">:</span> <span class="s1">&#39;/opt/reference/hg19.fasta&#39;</span>
+<span class="n">BAIT</span><span class="p">:</span> <span class="s1">&#39;/opt/BED/Inherited_Cancer_panel_FINAL.picard.bed&#39;</span>
+<span class="n">VCF</span><span class="p">:</span> <span class="s1">&#39;/opt/bundle/dbsnp_138.hg19.vcf&#39;</span>
+<span class="n">Datadir</span><span class="p">:</span> <span class="s1">&#39;Test_dataset&#39;</span>
+<span class="n">FinalDir</span><span class="p">:</span> <span class="n">Test_dataset</span>
+<span class="n">BED</span><span class="p">:</span>
+    <span class="mi">19</span><span class="o">-</span><span class="mi">200</span><span class="o">-</span><span class="n">NA12877_PG_9P</span><span class="p">:</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">BED</span><span class="o">/</span><span class="n">Inherited_Cancer_panel_FINAL</span><span class="o">.</span><span class="n">bed</span>
+    <span class="o">&lt;</span><span class="n">sample</span> <span class="nb">id</span><span class="o">&gt;</span><span class="p">:</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">BED</span><span class="o">/</span><span class="n">Inherited_Cancer_panel_FINAL</span><span class="o">.</span><span class="n">bed</span>
+<span class="n">Gender</span><span class="p">:</span>
+  <span class="o">-</span> <span class="mi">19</span><span class="o">-</span><span class="mi">200</span><span class="o">-</span><span class="n">NA12877_PG_9P</span><span class="p">:</span> <span class="n">Female</span>
+  <span class="o">-</span> <span class="o">&lt;</span><span class="n">sample</span> <span class="nb">id</span><span class="o">&gt;</span><span class="p">:</span> <span class="n">Female</span>
+</pre></div>
+</div>
+<p>And the configuration file has been named following the convention</p>
+<p><code class="docutils literal notranslate"><span class="pre">&lt;Panel_name&gt;_NGS&lt;run_number&gt;.yaml</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">CancerPlus_NGS01.yaml</span></code></p>
+<p>with the panel name, the reference file, the specific BED file for each sample, BAIT file for Picard coverage output, known VCF file for indel realignment and base recalibration and the data directory where the FASTQ.gz are located. This structure permits that many sub-panels are analyzed at the same time, providing flexibility of sample type and required analysis. Another piece of information required for all samples is their gender, which is used sapecifically for CNV calculation of X-linked genes in the sub-panels.</p>
+<p>The pipeline first module, <code class="docutils literal notranslate"><span class="pre">align.py</span></code>, searches the data directory for compressed FASTQ file pairs (<code class="docutils literal notranslate"><span class="pre">FASTQ.gz</span></code>) and generates the whole analysis. Output is saved in a <code class="docutils literal notranslate"><span class="pre">BAM</span></code> directory specified data directory, with results separated in sub-directory named after each sample IDs.</p>
+<p>All commands used in the third-party applications are listed here <a class="reference internal" href="commands_ngs.html"><span class="doc">Commands</span></a></p>
+<p>Another <code class="docutils literal notranslate"><span class="pre">yaml</span></code> file is required to tell the pipeline where to find binary files and executables. This file, named <code class="docutils literal notranslate"><span class="pre">programs.yaml</span></code> is required and its absence will generate an error. Its structure is detailed below:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">##################################</span>
+<span class="c1">##### Programs ###################</span>
+<span class="c1">##################################</span>
+
+<span class="n">GATK</span><span class="p">:</span> <span class="s1">&#39;java -jar /usr/local/bin/GATK4.jar&#39;</span>
+<span class="n">GATK3</span><span class="p">:</span> <span class="s1">&#39;java -jar /usr/local/bin/GenomeAnalysisTK.jar&#39;</span>
+<span class="n">Picard</span><span class="p">:</span> <span class="s1">&#39;/usr/local/bin/picard&#39;</span>
+<span class="n">Freebayes</span><span class="p">:</span> <span class="s1">&#39;/usr/local/bin/freebayes&#39;</span>
+<span class="n">Platypus</span><span class="p">:</span> <span class="s1">&#39;/opt/bin/Platypus_0.8.1/Platypus.py&#39;</span>
+<span class="n">Atlas</span><span class="p">:</span> <span class="s1">&#39;ruby /opt/Atlas-Indel2/Atlas-Indel2.rb&#39;</span>
+<span class="n">BWA</span><span class="p">:</span> <span class="s1">&#39;/usr/local/bin/BWA&#39;</span>
+<span class="n">Samtools</span><span class="p">:</span> <span class="s1">&#39;/usr/local/bin/samtools&#39;</span>
+<span class="n">Varscan</span><span class="p">:</span> <span class="s1">&#39;java -jar /opt/varscan-master/VarScan.v2.4.0.jar&#39;</span>
+<span class="n">Bedtools</span><span class="p">:</span> <span class="s1">&#39;/usr/local/bin/bedtools&#39;</span>
+<span class="n">Socrates</span><span class="p">:</span> <span class="s1">&#39;java -jar /opt/socrates-1.13-jar-with-dependencies.jar&#39;</span>
+<span class="n">Qualimap</span><span class="p">:</span> <span class="s1">&#39;/Applications/Bioinformatics/qualimap/qualimap&#39;</span>
+<span class="n">snpEff</span><span class="p">:</span> <span class="s1">&#39;/usr/local/bin/snpEff&#39;</span>
+<span class="n">ClinEff</span><span class="p">:</span> <span class="s1">&#39;java -jar /opt/bin/clinEff/ClinEff.jar&#39;</span>
+<span class="n">annovar</span><span class="p">:</span> <span class="s1">&#39;/opt/bin/annovar&#39;</span>
+<span class="n">multiqc</span><span class="p">:</span> <span class="s1">&#39;multiqc&#39;</span>
+<span class="n">octopus</span><span class="p">:</span> <span class="s1">&#39;/usr/local/bin/octopus&#39;</span>
+
+<span class="c1">##################################</span>
+<span class="c1">##### Locations ##################</span>
+<span class="c1">##################################</span>
+
+<span class="n">BED_files</span><span class="p">:</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">BED</span>
+<span class="n">full_BED</span><span class="p">:</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">BED</span><span class="o">/</span><span class="n">Inherited_Cancer_panel_FINAL</span><span class="o">.</span><span class="n">bed</span>
+<span class="n">report_location</span><span class="p">:</span> <span class="o">/</span><span class="n">Volumes</span><span class="o">/</span><span class="n">diagonalley</span><span class="o">/</span><span class="p">{{</span> <span class="n">year</span> <span class="p">}}</span><span class="o">/</span><span class="n">Cplus</span><span class="o">/</span><span class="n">NGS_test</span><span class="o">/</span>
+<span class="n">transcripts</span><span class="p">:</span> <span class="o">/</span><span class="n">opt</span><span class="o">/</span><span class="n">bundle</span><span class="o">/</span><span class="n">transcripts</span><span class="o">.</span><span class="n">txt</span>
+<span class="n">DB</span><span class="p">:</span> <span class="mf">192.168.1.169</span>
+</pre></div>
+</div>
+<p><em>(some of the above are deprecated, but kept in the list for legacy and possible future purposes)</em></p>
+<p>Analysis is started with the following command in a terminal:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="n">align</span><span class="o">.</span><span class="n">py</span> <span class="o">&lt;</span><span class="n">location</span> <span class="n">of</span> <span class="n">the</span> <span class="n">run</span> <span class="n">configuration</span> <span class="n">YAML</span> <span class="n">file</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>Main output will be generated inside the run directory, and log file is located inside the sub-directory <code class="docutils literal notranslate"><span class="pre">log</span></code> inside align.py’s directory.</p>
+<section id="running-the-pipeline-at-gls-north">
+<h4>Running the pipeline at GLS North<a class="headerlink" href="#running-the-pipeline-at-gls-north" title="Permalink to this headline">¶</a></h4>
+<p>This section can be found here <a class="reference internal" href="running_north.html"><span class="doc">Running the pipeline at GLS North</span></a>.</p>
+</section>
+<section id="running-the-pipeline-at-gls-south">
+<h4>Running the pipeline at GLS South<a class="headerlink" href="#running-the-pipeline-at-gls-south" title="Permalink to this headline">¶</a></h4>
+<p>This section can be found here <a class="reference internal" href="running_south.html"><span class="doc">Running the pipeline at GLS South</span></a>.</p>
+</section>
+</section>
+<section id="installation">
+<h3>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h3>
+<p>The pipeline to be used does not need to be installed, as it is a set of connected scripts. But the requirements and third party tools listed above need to be installed/compiled in the host system.</p>
+<section id="python-modules">
+<h4>Python modules<a class="headerlink" href="#python-modules" title="Permalink to this headline">¶</a></h4>
+<p>To install Python requirement, <a class="reference external" href="https://pip.pypa.io/en/stable/">pip</a> needs to be present in the system and the following command can be issued:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
+</pre></div>
+</div>
+<p>from the directory where <code class="docutils literal notranslate"><span class="pre">align.py</span></code> is located (usually <code class="docutils literal notranslate"><span class="pre">cancerplus/code/pipeline</span></code>). This will install:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">numpy</span><span class="o">==</span><span class="mf">1.15.4</span>
+<span class="n">bokeh</span><span class="o">==</span><span class="mf">1.2.0</span>
+<span class="n">pysam</span><span class="o">==</span><span class="mf">0.15.1</span>
+<span class="n">matplotlib</span><span class="o">==</span><span class="mf">2.2.3</span>
+<span class="n">holoviews</span><span class="o">==</span><span class="mf">1.10.9</span>
+<span class="n">rpy2</span><span class="o">==</span><span class="mf">2.9.4</span>
+<span class="n">pandas</span><span class="o">==</span><span class="mf">0.23.4</span>
+<span class="n">setuptools</span><span class="o">==</span><span class="mf">40.8.0</span>
+<span class="n">graypy</span><span class="o">==</span><span class="mf">1.1.2</span>
+<span class="n">couchbase</span><span class="o">==</span><span class="mf">2.5.1</span>
+<span class="n">altair</span><span class="o">==</span><span class="mf">2.2.2</span>
+<span class="n">psutil</span><span class="o">==</span><span class="mf">5.4.8</span>
+<span class="n">py2exe</span><span class="o">==</span><span class="mf">0.9.2.2</span>
+<span class="n">requests</span><span class="o">==</span><span class="mf">2.20.1</span>
+<span class="n">watchdog</span><span class="o">==</span><span class="mf">0.9.0</span>
+<span class="n">Jinja2</span><span class="o">==</span><span class="mf">2.10</span>
+<span class="n">colorama</span><span class="o">==</span><span class="mf">0.4.0</span>
+<span class="n">kafka</span><span class="o">==</span><span class="mf">1.3.5</span>
+<span class="n">rethinkdb</span><span class="o">==</span><span class="mf">2.3.0</span><span class="o">.</span><span class="n">post6</span>
+<span class="n">PyVCF</span><span class="o">==</span><span class="mf">0.6.8</span>
+<span class="n">vega_datasets</span><span class="o">==</span><span class="mf">0.6.0</span>
+<span class="n">interop</span><span class="o">==</span><span class="mf">1.1.8</span>
+<span class="n">cx_Freeze</span><span class="o">==</span><span class="mf">5.1.1</span>
+<span class="n">suds_jurko</span><span class="o">==</span><span class="mf">0.6</span>
+<span class="n">PyYAML</span><span class="o">==</span><span class="mf">5.1.2</span>
+</pre></div>
+</div>
+</section>
+<section id="external-programs">
+<h4>External programs<a class="headerlink" href="#external-programs" title="Permalink to this headline">¶</a></h4>
+<p>The pipeline at the moment uses these software to run the analysis:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://software.broadinstitute.org/gatk/">GATK</a></p></li>
+<li><p><a class="reference external" href="https://broadinstitute.github.io/picard/">Picard</a></p></li>
+<li><p><a class="reference external" href="https://github.com/ekg/freebayes">Freebayes</a></p></li>
+<li><p><a class="reference external" href="http://bio-bwa.sourceforge.net">BWA</a></p></li>
+<li><p><a class="reference external" href="https://samtools.github.io">Samtools</a></p></li>
+<li><p><a class="reference external" href="http://bedtools.readthedocs.io">Bedtools</a></p></li>
+<li><p><a class="reference external" href="http://qualimap.bioinfo.cipf.es">Qualimap</a></p></li>
+<li><p><a class="reference external" href="http://snpeff.sourceforge.net">snpEff</a></p></li>
+</ul>
+<p>Please follow the installation/compilation instructions on their home page to have the program set in your system.</p>
+</section>
+</section>
+<section id="result-files">
+<h3>Result files<a class="headerlink" href="#result-files" title="Permalink to this headline">¶</a></h3>
+<p>This is the list of result files generated by the pipeline:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>├── &lt;sample id&gt;.barcode.txt
+├── &lt;sample id&gt;.cnv
+├── &lt;sample id&gt;.identity_full.txt
+├── &lt;sample id&gt;_final_report.html
+├── &lt;sample id&gt;_table.txt
+├── BAM
+│   ├── &lt;sample id&gt;.bam
+│   ├── &lt;sample id&gt;.bam.bai
+│   ├── &lt;sample id&gt;.dedup.bam
+│   ├── &lt;sample id&gt;.fix.bam
+│   ├── &lt;sample id&gt;.good.bam
+│   ├── &lt;sample id&gt;.good.bam.bai
+│   ├── &lt;sample id&gt;.pos.bam
+│   ├── &lt;sample id&gt;.recal_reads.bai
+│   ├── &lt;sample id&gt;.recal_reads.bam
+│   ├── &lt;sample id&gt;.sort.bam
+│   ├── identity.mpileup
+│   └── recal_data.table
+├── Metrics
+│   ├── &lt;sample id&gt;.align_metrics.out
+│   ├── &lt;sample id&gt;.hs_metrics.out
+│   ├── &lt;sample id&gt;.hs_metrics.panel.out
+│   ├── &lt;sample id&gt;.nucl.out
+│   ├── &lt;sample id&gt;.nucl.panel.out
+│   ├── &lt;sample id&gt;.out
+│   ├── &lt;sample id&gt;.panel.out
+│   └── &lt;sample id&gt;.yield.out
+├── QC
+│   ├── &lt;sample id&gt;_&lt;GENE&gt;.html
+│   ├── &lt;GENE&gt;.png
+├── VCF_&lt;sub panel_code&gt;
+│   ├── &lt;sample id&gt;.avinput
+│   ├── &lt;sample id&gt;.hg19_multianno.txt
+│   ├── &lt;sample id&gt;.hg19_multianno.vcf
+│   ├── &lt;sample id&gt;_GATK.vcf
+│   ├── &lt;sample id&gt;_GATK.vcf.idx
+│   ├── &lt;sample id&gt;_GATK3.vcf
+│   ├── &lt;sample id&gt;_GATK3.vcf.idx
+│   ├── &lt;sample id&gt;_freebayes.final.vcf
+│   ├── &lt;sample id&gt;_freebayes.final.vcf.idx
+│   ├── &lt;sample id&gt;_freebayes.sorted.vcf
+│   ├── &lt;sample id&gt;_freebayes.sorted.vcf.idx
+│   ├── &lt;sample id&gt;_freebayes.vcf
+│   ├── &lt;sample id&gt;_merged.ann.vcf
+│   ├── &lt;sample id&gt;_merged.vcf
+│   ├── &lt;sample id&gt;_merged.vcf.idx
+│   ├── &lt;sample id&gt;_octopus.vcf
+│   └── &lt;sample id&gt;_octopus.vcf.idx
+├── identity.txt
+└── support
+    ├── &lt;chroomosome&gt;_&lt;location&gt;.html
+</pre></div>
+</div>
+</section>
+<section id="logging">
+<h3>Logging<a class="headerlink" href="#logging" title="Permalink to this headline">¶</a></h3>
+<p>Logging is being updated.</p>
+</section>
+</section>
+<section id="code-documentation">
+<h2>Code documentation<a class="headerlink" href="#code-documentation" title="Permalink to this headline">¶</a></h2>
+<p>Code documentation can be found on <a class="reference internal" href="code.html"><span class="doc">Code</span></a></p>
+<p>Data management code documentation can be found on <a class="reference internal" href="code_data_mgmt.html"><span class="doc">Code - Data Management</span></a></p>
+</section>
+<section id="validation">
+<h2>Validation<a class="headerlink" href="#validation" title="Permalink to this headline">¶</a></h2>
+<p>Validation data and information coming soon.</p>
+</section>
+<section id="indices-and-tables">
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+<span class="target" id="suds-jurko"><span id="cx-freeze"></span><span id="interop"></span><span id="vega-datasets"></span><span id="kafka"></span><span id="watchdog"></span><span id="requests"></span><span id="py2exe"></span><span id="psutil"></span><span id="altair"></span><span id="couchbase"></span><span id="graypy"></span><span id="setuptools"></span><span id="holoviews"></span><span id="matplotlib"></span><span id="bokeh"></span></span></section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Welcome to MDL’s NGS pipeline documentation!" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="running_north.html" class="btn btn-neutral float-right" title="Running the pipeline at GLS North" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2015-2019, Paulo Nuin.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
