@@ -58,7 +58,6 @@ def find_fastq(datadir, panel_samples, panel):
     """
 
     fastqs = glob.glob(f"{datadir}/*.fastq.gz")
-
     fastqs = sorted(fastqs)
 
     to_return = []
@@ -292,11 +291,15 @@ def analyse_pairs(config, datadir, samples, panel):
 
         if panel == "Cplus":
             to_return[sample]["cnv"] = extract_counts(
-                datadir, "/apps/data/src/BED/new/C+_ALL_IDPE_01JUN2021_Window.bed", sample
+                datadir,
+                "/apps/data/src/BED/new/C+_ALL_IDPE_01JUN2021_Window.bed",
+                sample,
             )
         else:
             to_return[sample]["cnv"] = extract_counts(
-                datadir, "/apps/data/src/BED/new/CardiacALL_29MAR2021_Window.bed", sample
+                datadir,
+                "/apps/data/src/BED/new/CardiacALL_29MAR2021_Window.bed",
+                sample,
             )
 
         to_return[sample]["variants_table"] = extract_info(
@@ -304,14 +307,12 @@ def analyse_pairs(config, datadir, samples, panel):
         )
         console.log(f"Processing {sample} completed")
 
-
     console.log("Compiling identity file")
     if not Path(f"{datadir}/identity.txt").exists():
         console.log("Identity file does not exist, creating it")
         compile_identity(datadir)
     else:
         console.log("Identity file exists")
-
 
     console.log("Compiling barcodes")
     compile_barcodes(datadir)
@@ -326,9 +327,6 @@ def analyse_pairs(config, datadir, samples, panel):
     console.log("Calculating enrichment")
     for pos, sample in enumerate(samples):
         get_enrichment(sample, datadir, panel)
-
-
-
 
     #
     # # ########################################### #
