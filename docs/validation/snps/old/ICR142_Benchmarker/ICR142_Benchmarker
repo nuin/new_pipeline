@@ -1,0 +1,2 @@
+#!/bin/bash
+/Library/Frameworks/R.framework/Versions/3.1/Resources/bin/Rscript top_level.R $*

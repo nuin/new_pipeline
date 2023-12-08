@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<head>
+    <!-- META -->
+    <title>:: Report for sample 82586_DS ::</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="" />
+    
+    <!-- CSS -->
+    <link href="https://fonts.googleapis.com/css?family=Catamaran|Mada|Montserrat|Noto+Sans|Nunito+Sans|Oxygen|PT+Sans+Caption|Quicksand|Roboto+Mono|Work+Sans" rel="stylesheet">
+    <script defer src="https://use.fontawesome.com/releases/v5.0.6/js/all.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="resources/bulma.css" media="all" />
+
+
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="resources/jquery.dataTables.min.css" media="all" />
+    <script type="text/javascript" src="resources/jquery.dataTables.js"></script>
+
+
+
+    <style type="text/css">
+    .header {
+        margin-top: 6rem;
+        text-align: Left;
+    }
+    
+    a {
+        color: black;
+    }
+    
+    a:hover {
+        color: blue;
+    }
+    body{
+        font-family: 'PT Sans', sans-serif;
+        padding-top: 50px;
+        background: #fff;
+        /*font-family: Menlo, 'Bitstream Vera Sans Mono', 'DejaVu Sans Mono', Monaco, Consolas, monospace;*/
+        font-size: 1.2rem;
+         padding: 2.5rem 3rem;
+        -webkit-font-smoothing: antialiased; 
+    }
+    </style>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#var_table').DataTable({
+                // "order": [[ 0, "asc" ]],
+                "lengthMenu": [[50, -1], [50, "All"]]
+            });
+            $('#cnv_table').DataTable({
+                // "order": [[ 0, "asc" ]],
+                "lengthMenu": [[50, -1], [50, "All"]]
+            });
+        });
+    </script>
+
+</head>
+
+<body>
+    
+    <section class="section">
+        <div class="container">
+            <h1 class="title">
+                82586_DS      
+            </h1>
+            <p class="subtitle">
+                Report generated on 2018-03-16 11:36:23.190824
+            </p>
+        </div>
+    </section>
+
+    <section class="section">
+        <h2 class="title">
+            Resources
+        </h2>
+        <div class="columns">
+            <div class="column is-4">
+                <p class="subtitle">
+                    <em>Software</em>
+                </p>
+                <table class="table table is-bordered is-striped is-narrow is-fullwidth">
+                    <thead>
+                        <tr>
+                            <th>Program</th>
+                            <th >Version</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>BWA</strong></td>
+                            <td style="text-align:right"><i>0.7.16a-r1181</i></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Picard</strong></td>
+                            <td style="text-align:right"><i>2.15.0</i></td>
+                        </tr>
+                        <tr>
+                            <td><strong>GATK</strong></td>
+                            <td style="text-align:right"><i>3.5-0-g36282e4</i></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Freebayes</strong></td>
+                            <td style="text-align:right"><i>v1.0.1-1-g683b3cc</i></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Platypus</strong></td>
+                            <td style="text-align:right"><i>0.8.1</i></td>
+                        </tr>
+                        <tr>
+                            <td><strong>snpEff</strong></td>
+                            <td style="text-align:right"><i>4.3p (2017-06-06)</i></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Annovar</strong></td>
+                            <td style="text-align:right"><i>Revision 2017-07-17</i></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="column is-4">
+                <p class="subtitle">
+                    <em>Annotation databases</em>
+                </p>
+                <table class="table table is-bordered is-striped is-narrow is-fullwidth">
+                    <thead>
+                        <tr>
+                            <th>DB</th>
+                            <th>Version</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>dbSNP</strong></td>
+                            <td>150</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Clinvar</strong></td>
+                            <td>20170905</td>
+                        </tr>
+                        <tr>
+                            <td><strong>1000 Genomes</strong></td>
+                            <td>Phase 3</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <h2 class="title">
+            Sample information
+        </h2>
+            <div class="column is-8">
+            <table class="table table is-bordered is-striped is-narrow is-fullwidth">
+                <tbody>
+                    <tr>
+                        <td><strong>Sample ID</strong></td>
+                        <td>82586_DS</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Sequencer</strong></td>
+                        <td>NextSeq NB551084</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Run ID</strong></td>
+                        <td>170825_NB551084_0017_AHKJYNAFXX_Cplus_2017_NGS_19</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Analysis completed</strong></td>
+                        <td>2018-03-16 11:36:06.319806</td>
+                    </tr>
+                </tbody>
+            </table>
+
+
+    </section>
+
+    <section class="section">
+        <h2 class="title">
+            Sample statistics
+        </h2>
+        <div class="column is-8">
+            <table class="table table is-bordered is-striped is-narrow is-fullwidth">
+                <tbody>
+                    <tr>
+                        <td><strong>Total number of reads</strong></td>
+                        <td>15,718,904</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Average Read Length (bp)</strong></td>
+                        <td>126.35</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Total Yield (bp)</strong></td>
+                        <td>1,986,072,313</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Subpanel</strong></td>
+                        <td>Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_GIPoly</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Panel target regions</strong></td>
+                        <td>58,126</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mean target coverage</strong></td>
+                        <td>890.68</td>
+                    </tr>
+                    <tr>
+                        <td><strong>% PF reads aligned</strong></td>
+                        <td>99.90</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mean overall coverage</strong></td>
+                        <td>946.5695385885834</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Coverage panel Max/Min</strong></td>
+                        <td>1681 / 22</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Qualimap QC report</strong></td>
+                        <td><a target="_blank" href='QC/qualimapReport.html'><i class="fas fa-external-link-alt"></i></a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="section">
+        <h2 class="title">
+            Regions under 25X
+        </h2>
+         <div class="column is-8">
+            <table class="table table is-bordered is-striped is-narrow is-fullwidth">
+                
+                <tbody>
+                    <tr>
+                        <td><strong>CDKN1C</strong>
+                        
+
+                        </td>
+                        <td><a target="_blank" href="QC/82586_DS_CDKN1C.html"><i class="fas fa-external-link-alt"></i></a></td>
+                    </tr>
+                </tbody>
+                
+                <tbody>
+                    <tr>
+                        <td><strong>PDE4D</strong>
+                        
+
+                        </td>
+                        <td><a target="_blank" href="QC/82586_DS_PDE4D.html"><i class="fas fa-external-link-alt"></i></a></td>
+                    </tr>
+                </tbody>
+                
+            </table>
+    </section>
+
+    <section class="section">
+        <h2 class="title">
+            Variants - 40 variants total
+        </h2>
+        <div class="column is-12">
+            <table class="table table is-bordered is-striped is-narrow is-fullwidth var_table" id="var_table">
+                <thead>
+                    <tr>
+                        <th>Chr</th>
+                        <th>Location</th>
+                        <th>Gene</th>
+                        <th>Reference</th>
+                        <th>Alternate</th>
+                        <th>c.</th>
+                        <th>p.</th>
+                        <th>Al. ratio</th>
+                        <th>Al. fraction</th>
+                        <th>Read depth</th>
+                        <th>MAF</th>
+                        <th>Impact</th>
+                        <th>Callers</th>
+                        <th>Local annotation</th>
+                        <td></td>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td>chr17</td>
+                        <td>74475975</td>
+                        <td>RHBDF2</td>
+                        <td>C</td>
+                        <td>A</td>
+                        <td>c.199G>T</td>
+                        <td>p.Ala67Ser</td>
+                        <td>0.43, 0.57</td>
+                        
+                            
+                                <td>1.045</td>
+                            
+                        
+                        <td>916</td>
+                        
+                            <td title="gnomad_amr_maf">0.65</td>
+                        
+                        
+                            <td style="text-align:center;background:#f77b00;color:white">MODERATE</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr17_74475975_C"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr12</td>
+                        <td>133219831</td>
+                        <td>POLE</td>
+                        <td>T</td>
+                        <td>C</td>
+                        <td>c.4530A>G</td>
+                        <td>p.Ala1510Ala</td>
+                        <td>0.51, 0.49</td>
+                        
+                            
+                                <td>1.019</td>
+                            
+                        
+                        <td>874</td>
+                        
+                            <td title="afr_maf">0.76</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr12_133219831_T"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr7</td>
+                        <td>6037057</td>
+                        <td>PMS2</td>
+                        <td>G</td>
+                        <td>T</td>
+                        <td>c.706-3C>A</td>
+                        <td></td>
+                        <td>N/A</td>
+                        
+                            
+                                <td style="background:red;color:white">0.007</td>
+                            
+                        
+                        <td>334</td>
+                        
+                            <td title="gnomad_amr_maf">0.09</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>freebayes</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr7_6037057_G"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr3</td>
+                        <td>37053568</td>
+                        <td>MLH1</td>
+                        <td>A</td>
+                        <td>G</td>
+                        <td>c.655A>G</td>
+                        <td>p.Ile219Val</td>
+                        <td>0.01, 0.99</td>
+                        
+                            
+                                <td>0.999</td>
+                            
+                        
+                        <td>1011</td>
+                        
+                            <td title="eur_maf">0.33</td>
+                        
+                        
+                            <td style="text-align:center;background:#f77b00;color:white">MODERATE</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr3_37053568_A"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr7</td>
+                        <td>6045627</td>
+                        <td>PMS2</td>
+                        <td>C</td>
+                        <td>T</td>
+                        <td>c.59G>A</td>
+                        <td>p.Arg20Gln</td>
+                        <td>0.50, 0.50</td>
+                        
+                            
+                                <td>0.967</td>
+                            
+                        
+                        <td>799</td>
+                        
+                            <td title="gnomad_eas_maf">0.09</td>
+                        
+                        
+                            <td style="text-align:center;background:#f77b00;color:white">MODERATE</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr7_6045627_C"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr19</td>
+                        <td>50905042</td>
+                        <td>POLD1</td>
+                        <td>G</td>
+                        <td>A</td>
+                        <td>c.324G>A</td>
+                        <td>p.Ala108Ala</td>
+                        <td>0.52, 0.48</td>
+                        
+                            
+                                <td>0.941</td>
+                            
+                        
+                        <td>421</td>
+                        
+                            <td title="afr_maf">0.32</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr19_50905042_G"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr12</td>
+                        <td>133252796</td>
+                        <td>POLE</td>
+                        <td>C</td>
+                        <td>G</td>
+                        <td>c.910-6G>C</td>
+                        <td></td>
+                        <td>0.00, 1.00</td>
+                        
+                            
+                                <td>0.999</td>
+                            
+                        
+                        <td>604</td>
+                        
+                            <td title="gnomad_asj_maf">0.77</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr12_133252796_C"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr2</td>
+                        <td>48010558</td>
+                        <td>MSH6</td>
+                        <td>C</td>
+                        <td>A</td>
+                        <td>c.186C>A</td>
+                        <td>p.Arg62Arg</td>
+                        <td>0.49, 0.51</td>
+                        
+                            
+                                <td>0.986</td>
+                            
+                        
+                        <td>949</td>
+                        
+                            <td title="gnomad_nfe_maf">0.21</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr2_48010558_C"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr2</td>
+                        <td>48018081</td>
+                        <td>MSH6</td>
+                        <td>A</td>
+                        <td>G</td>
+                        <td>c.276A>G</td>
+                        <td>p.Pro92Pro</td>
+                        <td>0.51, 0.49</td>
+                        
+                            
+                                <td>1.005</td>
+                            
+                        
+                        <td>1697</td>
+                        
+                            <td title="gnomad_nfe_maf">0.19</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr2_48018081_A"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr12</td>
+                        <td>133234020</td>
+                        <td>POLE</td>
+                        <td>A</td>
+                        <td>G</td>
+                        <td>c.3379-5T>C</td>
+                        <td></td>
+                        <td>0.53, 0.47</td>
+                        
+                            
+                                <td>1.026</td>
+                            
+                        
+                        <td>829</td>
+                        
+                            <td title="gnomad_amr_maf">0.16</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr12_133234020_A"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr2</td>
+                        <td>48030838</td>
+                        <td>FBXO11</td>
+                        <td>A</td>
+                        <td>T</td>
+                        <td>c.*4419T>A</td>
+                        <td></td>
+                        <td>0.49, 0.51</td>
+                        
+                            
+                                <td>1.095</td>
+                            
+                        
+                        <td>348</td>
+                        
+                            <td>NO MAF</td>
+                        
+                        
+                            <td style="text-align:center;background:yellow">MODIFIER</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr2_48030838_A"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr5</td>
+                        <td>112164561</td>
+                        <td>APC</td>
+                        <td>G</td>
+                        <td>A</td>
+                        <td>c.1635G>A</td>
+                        <td>p.Ala545Ala</td>
+                        <td>0.00, 1.00</td>
+                        
+                            
+                                <td>0.998</td>
+                            
+                        
+                        <td>1607</td>
+                        
+                            <td title="gnomad_eas_maf">0.82</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr5_112164561_G"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr12</td>
+                        <td>133237753</td>
+                        <td>POLE</td>
+                        <td>GAAAAAAAAAAAAAAG</td>
+                        <td>GAAAAAAAAAAAAAG</td>
+                        <td>c.2865-17delT</td>
+                        <td></td>
+                        <td>N/A</td>
+                        
+                            
+                                <td>0.833</td>
+                            
+                        
+                        <td>318</td>
+                        
+                            <td>NO MAF</td>
+                        
+                        
+                            <td style="text-align:center;background:yellow">MODIFIER</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr12_133237753_GAAAAAAAAAAAAAAG"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr12</td>
+                        <td>133208979</td>
+                        <td>POLE</td>
+                        <td>T</td>
+                        <td>C</td>
+                        <td>c.6252A>G</td>
+                        <td>p.Ser2084Ser</td>
+                        <td>0.01, 0.99</td>
+                        
+                            
+                                <td>1.000</td>
+                            
+                        
+                        <td>1507</td>
+                        
+                            <td title="gnomad_eas_maf">0.81</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr12_133208979_T"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr5</td>
+                        <td>112176325</td>
+                        <td>APC</td>
+                        <td>G</td>
+                        <td>A</td>
+                        <td>c.5034G>A</td>
+                        <td>p.Gly1678Gly</td>
+                        <td>0.00, 1.00</td>
+                        
+                            
+                                <td>1.000</td>
+                            
+                        
+                        <td>1385</td>
+                        
+                            <td title="gnomad_eas_maf">0.82</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr5_112176325_G"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr16</td>
+                        <td>68857441</td>
+                        <td>CDH1</td>
+                        <td>T</td>
+                        <td>C</td>
+                        <td>c.2076T>C</td>
+                        <td>p.Ala692Ala</td>
+                        <td>0.51, 0.49</td>
+                        
+                            
+                                <td>0.973</td>
+                            
+                        
+                        <td>883</td>
+                        
+                            <td title="afr_maf">0.94</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr16_68857441_T"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr5</td>
+                        <td>112176756</td>
+                        <td>APC</td>
+                        <td>T</td>
+                        <td>A</td>
+                        <td>c.5465T>A</td>
+                        <td>p.Val1822Asp</td>
+                        <td>0.01, 0.99</td>
+                        
+                            
+                                <td>1.000</td>
+                            
+                        
+                        <td>1539</td>
+                        
+                            <td title="afr_maf">0.99</td>
+                        
+                        
+                            <td style="text-align:center;background:#f77b00;color:white">MODERATE</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr5_112176756_T"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr17</td>
+                        <td>74475024</td>
+                        <td>RHBDF2</td>
+                        <td>G</td>
+                        <td>A</td>
+                        <td>c.623C>T</td>
+                        <td>p.Pro208Leu</td>
+                        <td>0.00, 1.00</td>
+                        
+                            
+                                <td>1.006</td>
+                            
+                        
+                        <td>651</td>
+                        
+                            <td title="gnomad_eas_maf">0.95</td>
+                        
+                        
+                            <td style="text-align:center;background:#f77b00;color:white">MODERATE</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr17_74475024_G"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr5</td>
+                        <td>112162854</td>
+                        <td>APC</td>
+                        <td>T</td>
+                        <td>C</td>
+                        <td>c.1458T>C</td>
+                        <td></td>
+                        <td>0.01, 0.99</td>
+                        
+                            
+                                <td>1.001</td>
+                            
+                        
+                        <td>785</td>
+                        
+                            <td title="gnomad_amr_maf">0.70</td>
+                        
+                        
+                            <td style="text-align:center;background:red;color:white">HIGH</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr5_112162854_T"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr5</td>
+                        <td>112177171</td>
+                        <td>APC</td>
+                        <td>G</td>
+                        <td>A</td>
+                        <td>c.5880G>A</td>
+                        <td>p.Pro1960Pro</td>
+                        <td>0.00, 1.00</td>
+                        
+                            
+                                <td>1.003</td>
+                            
+                        
+                        <td>1470</td>
+                        
+                            <td title="gnomad_eas_maf">0.82</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr5_112177171_G"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr12</td>
+                        <td>133236000</td>
+                        <td>POLE</td>
+                        <td>C</td>
+                        <td>T</td>
+                        <td>c.3156G>A</td>
+                        <td>p.Thr1052Thr</td>
+                        <td>0.48, 0.52</td>
+                        
+                            
+                                <td>1.021</td>
+                            
+                        
+                        <td>1530</td>
+                        
+                            <td title="afr_maf">0.76</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr12_133236000_C"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr12</td>
+                        <td>133220526</td>
+                        <td>POLE</td>
+                        <td>T</td>
+                        <td>C</td>
+                        <td>c.4187A>G</td>
+                        <td>p.Asn1396Ser</td>
+                        <td>0.55, 0.45</td>
+                        
+                            
+                                <td>0.993</td>
+                            
+                        
+                        <td>1486</td>
+                        
+                            <td title="sas_maf">0.19</td>
+                        
+                        
+                            <td style="text-align:center;background:#f77b00;color:white">MODERATE</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr12_133220526_T"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr7</td>
+                        <td>6036980</td>
+                        <td>PMS2</td>
+                        <td>G</td>
+                        <td>C</td>
+                        <td>c.780C>G</td>
+                        <td>p.Ser260Ser</td>
+                        <td>0.53, 0.47</td>
+                        
+                            
+                                <td>1.030</td>
+                            
+                        
+                        <td>928</td>
+                        
+                            <td title="gnomad_eas_maf">0.92</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr7_6036980_G"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr19</td>
+                        <td>50905074</td>
+                        <td>POLD1</td>
+                        <td>G</td>
+                        <td>A</td>
+                        <td>c.356G>A</td>
+                        <td>p.Arg119His</td>
+                        <td>0.51, 0.49</td>
+                        
+                            
+                                <td>1.027</td>
+                            
+                        
+                        <td>678</td>
+                        
+                            <td title="afr_maf">0.32</td>
+                        
+                        
+                            <td style="text-align:center;background:#f77b00;color:white">MODERATE</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr19_50905074_G"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr19</td>
+                        <td>50905189</td>
+                        <td>POLD1</td>
+                        <td>G</td>
+                        <td>T</td>
+                        <td>c.463+8G>T</td>
+                        <td></td>
+                        <td>0.55, 0.45</td>
+                        
+                            
+                                <td style="background:red;color:white">0.655</td>
+                            
+                        
+                        <td>507</td>
+                        
+                            <td title="afr_maf">0.32</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr19_50905189_G"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr16</td>
+                        <td>68771372</td>
+                        <td>CDH1</td>
+                        <td>C</td>
+                        <td>T</td>
+                        <td>c.48+6C>T</td>
+                        <td></td>
+                        <td>0.53, 0.47</td>
+                        
+                            
+                                <td>0.950</td>
+                            
+                        
+                        <td>1259</td>
+                        
+                            <td title="gnomad_asj_maf">0.93</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr16_68771372_C"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr5</td>
+                        <td>112178795</td>
+                        <td>APC</td>
+                        <td>G</td>
+                        <td>A</td>
+                        <td>c.7504G>A</td>
+                        <td>p.Gly2502Ser</td>
+                        <td>0.57, 0.43</td>
+                        
+                            
+                                <td>1.060</td>
+                            
+                        
+                        <td>569</td>
+                        
+                            <td>NO MAF</td>
+                        
+                        
+                            <td style="text-align:center;background:#f77b00;color:white">MODERATE</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr5_112178795_G"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr17</td>
+                        <td>7579472</td>
+                        <td>TP53</td>
+                        <td>G</td>
+                        <td>C</td>
+                        <td>c.215C>G</td>
+                        <td>p.Pro72Arg</td>
+                        <td>0.00, 1.00</td>
+                        
+                            
+                                <td>1.004</td>
+                            
+                        
+                        <td>945</td>
+                        
+                            <td title="ea_maf">0.75</td>
+                        
+                        
+                            <td style="text-align:center;background:#f77b00;color:white">MODERATE</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr17_7579472_G"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr2</td>
+                        <td>48010488</td>
+                        <td>MSH6</td>
+                        <td>G</td>
+                        <td>A</td>
+                        <td>c.116G>A</td>
+                        <td>p.Gly39Glu</td>
+                        <td>0.53, 0.47</td>
+                        
+                            
+                                <td>0.984</td>
+                            
+                        
+                        <td>1133</td>
+                        
+                            <td title="gnomad_asj_maf">0.30</td>
+                        
+                        
+                            <td style="text-align:center;background:#f77b00;color:white">MODERATE</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr2_48010488_G"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr2</td>
+                        <td>48023115</td>
+                        <td>MSH6</td>
+                        <td>T</td>
+                        <td>C</td>
+                        <td>c.540T>C</td>
+                        <td>p.Asp180Asp</td>
+                        <td>0.51, 0.49</td>
+                        
+                            
+                                <td>1.000</td>
+                            
+                        
+                        <td>1527</td>
+                        
+                            <td title="gnomad_nfe_maf">0.30</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr2_48023115_T"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr5</td>
+                        <td>112175770</td>
+                        <td>APC</td>
+                        <td>G</td>
+                        <td>A</td>
+                        <td>c.4479G>A</td>
+                        <td></td>
+                        <td>0.01, 0.99</td>
+                        
+                            
+                                <td>1.001</td>
+                            
+                        
+                        <td>1547</td>
+                        
+                            <td title="gnomad_eas_maf">0.82</td>
+                        
+                        
+                            <td style="text-align:center;background:red;color:white">HIGH</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr5_112175770_G"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr17</td>
+                        <td>74477620</td>
+                        <td>RHBDF2</td>
+                        <td>C</td>
+                        <td>T</td>
+                        <td>c.-14G>A</td>
+                        <td></td>
+                        <td>0.58, 0.42</td>
+                        
+                            
+                                <td style="background:red;color:white">1.189</td>
+                            
+                        
+                        <td>247</td>
+                        
+                            <td title="gnomad_sas_maf">0.24</td>
+                        
+                        
+                            <td style="text-align:center;background:yellow">MODIFIER</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr17_74477620_C"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr7</td>
+                        <td>6026775</td>
+                        <td>PMS2</td>
+                        <td>T</td>
+                        <td>C</td>
+                        <td>c.1621A>G</td>
+                        <td>p.Lys541Glu</td>
+                        <td>0.00, 1.00</td>
+                        
+                            
+                                <td>0.999</td>
+                            
+                        
+                        <td>1205</td>
+                        
+                            <td title="afr_maf">0.94</td>
+                        
+                        
+                            <td style="text-align:center;background:#f77b00;color:white">MODERATE</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr7_6026775_T"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr12</td>
+                        <td>133212582</td>
+                        <td>POLE</td>
+                        <td>G</td>
+                        <td>A</td>
+                        <td>c.5707C>T</td>
+                        <td>p.Leu1903Leu</td>
+                        <td>0.50, 0.50</td>
+                        
+                            
+                                <td>0.990</td>
+                            
+                        
+                        <td>1422</td>
+                        
+                            <td title="gnomad_amr_maf">0.22</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr12_133212582_G"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr5</td>
+                        <td>112176559</td>
+                        <td>APC</td>
+                        <td>T</td>
+                        <td>G</td>
+                        <td>c.5268T>G</td>
+                        <td>p.Ser1756Ser</td>
+                        <td>0.01, 0.99</td>
+                        
+                            
+                                <td>1.003</td>
+                            
+                        
+                        <td>1363</td>
+                        
+                            <td title="gnomad_eas_maf">0.82</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr5_112176559_T"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr7</td>
+                        <td>6022629</td>
+                        <td>PMS2</td>
+                        <td>G</td>
+                        <td>A</td>
+                        <td>c.2007-7C>T</td>
+                        <td></td>
+                        <td>0.57, 0.43</td>
+                        
+                            
+                                <td>1.041</td>
+                            
+                        
+                        <td>385</td>
+                        
+                            <td>NO MAF</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr7_6022629_G"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr7</td>
+                        <td>6026530</td>
+                        <td>PMS2</td>
+                        <td>C</td>
+                        <td>T</td>
+                        <td>c.1866G>A</td>
+                        <td>p.Met622Ile</td>
+                        <td>0.50, 0.50</td>
+                        
+                            
+                                <td>1.038</td>
+                            
+                        
+                        <td>1147</td>
+                        
+                            <td title="gnomad_fin_maf">0.04</td>
+                        
+                        
+                            <td style="text-align:center;background:#f77b00;color:white">MODERATE</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr7_6026530_C"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr19</td>
+                        <td>50918969</td>
+                        <td>SPIB</td>
+                        <td>A</td>
+                        <td>G</td>
+                        <td>c.-3251A>G</td>
+                        <td></td>
+                        <td>0.50, 0.50</td>
+                        
+                            
+                                <td>0.939</td>
+                            
+                        
+                        <td>480</td>
+                        
+                            <td>NO MAF</td>
+                        
+                        
+                            <td style="text-align:center;background:yellow">MODIFIER</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr19_50918969_A"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr19</td>
+                        <td>50919797</td>
+                        <td>SPIB</td>
+                        <td>C</td>
+                        <td>T</td>
+                        <td>c.-2423C>T</td>
+                        <td></td>
+                        <td>0.51, 0.49</td>
+                        
+                            
+                                <td style="background:red;color:white">1.391</td>
+                            
+                        
+                        <td>162</td>
+                        
+                            <td>NO MAF</td>
+                        
+                        
+                            <td style="text-align:center;background:yellow">MODIFIER</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr19_50919797_C"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr10</td>
+                        <td>89622938</td>
+                        <td>KLLN</td>
+                        <td>A</td>
+                        <td>C</td>
+                        <td>c.-694T>G</td>
+                        <td></td>
+                        <td>N/A</td>
+                        
+                            <td>NO AF</td>
+                        
+                        <td>768</td>
+                        
+                            <td>NO MAF</td>
+                        
+                        
+                            <td style="text-align:center;background:yellow">MODIFIER</td>
+                        
+                        <td>freebayes</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr10_89622938_A"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+
+    <section class="section">
+        <h2 class="title">
+            CNV
+        </h2>
+        <div class="column is-12">
+            <table class="table is-fullwidth is-bordered cnv_table" id="cnv_table">
+                <thead>
+                    <tr>
+                        <td width="20px">Gene</td>
+                        <td>Graph</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                        <tr>
+                            <td width="20px">APC</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">BAP1</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">BMPR1A</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">CDH1</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">CHEK2</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">EPCAM</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">MLH1</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">MSH2</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">MSH6</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">MUTYH</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">PMS2</td>
+                            
+                                <td>
+                                        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAB9AAAAGQCAYAAAD2sPsvAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAPYQAAD2EBqD+naQAAIABJREFUeJzs3X+QXXV9N/D33YRsgj6JXTVLsomFsbHjgyQ6MUawOGLjZCJEMj6jdBCChraCPyFqyRYNJX10RaxiBeWpTcQMWCmMEIqA7eBgxDAQopk4ERQkFMlPMUM1C26Svff5I+6GJZtsftyz9969r9fMzrAn5xw+5+y958f3/f2eU6pUKpUAAAAAAAAAQJNrqXUBAAAAAAAAAFAPBOgAAAAAAAAAEAE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoMOwWr16debPn5/JkyenVCrl9ttvH3KZm266KTNmzMjxxx+fSZMmZdGiRfntb387DNUCAAAAAABAcxGgwzDq7u7OjBkzct111x3W/D/+8Y+zcOHCXHjhhdm4cWNuueWWPPTQQ/mbv/mbgisFAAAAAACA5jO61gVAM5k3b17mzZt32PM/8MADOfHEE/Oxj30sSXLSSSflgx/8YK666qqiSgQAAAAAAICmZQQ61LFTTz01v/71r3PXXXelUqlk+/btufXWW/POd77zoMv09PTkd7/73YCfnp6eYawaAAAAAAAAGpMAHerYW97yltx0000555xzMmbMmJxwwgmZMGHCIR8B39XVlQkTJgz46erqGsaqAQAAAAAAoDGVKpVKpdZFQDMqlUq57bbbsmDBgoPO8/Of/zxz5szJpZdemrlz52br1q351Kc+lVmzZmX58uWDLtPT03PAiPPW1ta0trZWtX4AAAAAAAAYaQToUCOHE6Cff/75+cMf/pBbbrmlf9r999+f008/PVu2bMmkSZOGo1QAAAAAAABoCh7hDnXsueeeS0vLwK/pqFGjkiT6vgAAAAAAAEB1CdBhGO3atSvr16/P+vXrkySbNm3K+vXr89RTTyVJOjs7s3Dhwv7558+fn+9+97v5+te/nieeeCI//vGP87GPfSxvetObMnny5JpsAwAAAAAAAIxUHuEOw+i+++7LGWecccD0Cy64IDfccEPe//7358knn8x9993X/29f/epXc/3112fTpk152ctelre//e256qqr0tHRMYyVAwAAAAAAwMgnQAcAAAAAAACAeIQ7AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoAMAAAAAAABAEgE6AAAAAAAAACQRoMOwWr16debPn5/JkyenVCrl9ttvH3KZnp6eXH755fnTP/3TtLa25sQTT8yKFSuGoVoAAAAAAABoLqNrXQA0k+7u7syYMSOLFi3Ku9/97sNa5r3vfW+2b9+e5cuX58/+7M+ydevWlMvlgisFAAAAAACA5iNAh2E0b968zJs377Dnv+eee/LDH/4wTzzxRNra2pIkJ554YkHVAQAAAAAAQHPzCHeoY3fccUfe+MY35gtf+EI6Ojrymte8Jp/85Cfz/PPP17o0AAAAAAAAGHGMQIc69sQTT+T+++/P2LFjc9ttt+WZZ57Jhz70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"/><br>
+                                    <br>
+                                    
+                                        deletion: g.6,017,204-6,017,254<br> 
+                                    
+                                        deletion: g.6,017,254-6,017,304<br> 
+                                    
+                                        deletion: g.6,017,304-6,017,354<br> 
+                                    
+                                        deletion: g.6,017,354-6,017,404<br> 
+                                    
+                                        deletion: g.6,018,212-6,018,262<br> 
+                                    
+                                        deletion: g.6,018,262-6,018,312<br> 
+                                    
+                                        deletion: g.6,018,312-6,018,362<br> 
+                                    
+                                </td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">POLD1</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">POLE</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">PTEN</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">RHBDF2</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">SMAD4</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">STK11</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">TP53</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</body>
+</html>

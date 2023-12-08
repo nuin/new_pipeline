@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>count2 &mdash; MDL 1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> MDL
+          </a>
+              <div class="version">
+                Version 1.4.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../ngs_pipeline.html">NGS pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../running_north.html">Running the pipeline at GLS North</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../running_south.html">Running the pipeline at GLS South</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genes.html">Genes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands_ngs.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code.html">Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_data_mgmt.html">Code - Data Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_webapps.html">Code - Webapps</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">MDL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">Module code</a> &raquo;</li>
+      <li>count2</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for count2</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: count2.py</span>
+<span class="sd">    :platform: any</span>
+<span class="sd">    :synopsis: Module the generate a read count under each exon</span>
+<span class="sd">.. moduleauthor:: Paulo Nuin, October 2017</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pysam</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">graypy</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">graypy_handler</span> <span class="o">=</span> <span class="n">graypy</span><span class="o">.</span><span class="n">GELFUDPHandler</span><span class="p">(</span><span class="s1">&#39;192.168.1.169&#39;</span><span class="p">,</span> <span class="mi">12201</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">graypy_handler</span><span class="p">)</span>
+
+<div class="viewcode-block" id="extract_counts"><a class="viewcode-back" href="../code.html#count2.extract_counts">[docs]</a><span class="k">def</span> <span class="nf">extract_counts</span><span class="p">(</span><span class="n">datadir</span><span class="p">,</span> <span class="n">full_BED</span><span class="p">,</span> <span class="n">sample_id</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function that reads the BAM file and extract the read count for each window</span>
+
+<span class="sd">    :param datadir: Location of the BAM files</span>
+<span class="sd">    :param full_BED: BED file to guide the counts</span>
+<span class="sd">    :param sample_id: ID of the sdample</span>
+
+<span class="sd">    :type datadir: string</span>
+<span class="sd">    :type full_BED: string</span>
+<span class="sd">    :type sample_id: string</span>
+
+<span class="sd">    :return: no return yet</span>
+<span class="sd">    :todo: change BED file location from hardcoded</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">bedfile</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">full_BED</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">datadir</span> <span class="o">+</span> <span class="s1">&#39;/BAM/&#39;</span> <span class="o">+</span> <span class="n">sample_id</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">sample_id</span> <span class="o">+</span> <span class="s1">&#39;.bam&#39;</span><span class="p">):</span>
+        <span class="n">sample</span> <span class="o">=</span> <span class="n">datadir</span> <span class="o">+</span> <span class="s1">&#39;/BAM/&#39;</span> <span class="o">+</span> <span class="n">sample_id</span> <span class="o">+</span> <span class="s1">&#39;/BAM/&#39;</span> <span class="o">+</span> <span class="n">sample_id</span> <span class="o">+</span> <span class="s1">&#39;.bam&#39;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sample</span> <span class="o">=</span> <span class="n">datadir</span> <span class="o">+</span> <span class="s1">&#39;/BAM/&#39;</span> <span class="o">+</span> <span class="n">sample_id</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">sample_id</span> <span class="o">+</span> <span class="s1">&#39;.bam&#39;</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">datadir</span> <span class="o">+</span> <span class="s1">&#39;/BAM/&#39;</span> <span class="o">+</span> <span class="n">sample_id</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">sample_id</span> <span class="o">+</span> <span class="s1">&#39;.cnv&#39;</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Creating samples CNV file &#39;</span> <span class="o">+</span> <span class="n">datadir</span><span class="p">)</span>
+            <span class="n">cnv_out</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">datadir</span> <span class="o">+</span> <span class="s1">&#39;/BAM/&#39;</span> <span class="o">+</span> <span class="n">sample_id</span> <span class="o">+</span> <span class="s1">&#39;/&#39;</span> <span class="o">+</span> <span class="n">sample_id</span> <span class="o">+</span> <span class="s1">&#39;.cnv&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+            <span class="n">cnv_out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s1">&#39;Location</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">cnv_out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">sample_id</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Analysing BAM file &#39;</span> <span class="o">+</span> <span class="n">sample</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">datadir</span><span class="p">)</span>
+            <span class="n">samfile</span> <span class="o">=</span> <span class="n">pysam</span><span class="o">.</span><span class="n">AlignmentFile</span><span class="p">(</span><span class="n">sample</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">location</span> <span class="ow">in</span> <span class="n">bedfile</span><span class="p">:</span>
+                <span class="n">temp</span> <span class="o">=</span> <span class="n">location</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+                <span class="n">cnv_out</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">samfile</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">reference</span><span class="o">=</span><span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">start</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="n">end</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">2</span><span class="p">])))</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">cnv_out</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;BAM file analysed, CNV file created &#39;</span> <span class="o">+</span> <span class="n">sample</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">datadir</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;BAM file not found &#39;</span> <span class="o">+</span> <span class="n">sample</span> <span class="o">+</span> <span class="s1">&#39; &#39;</span> <span class="o">+</span> <span class="n">datadir</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;CNV file already exists&#39;</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+    <span class="c1"># runs = [&#39;171020_NB551084_0023_AHV2N2AFXX_Cplus_2017_NGS_24&#39;]</span>
+    <span class="c1"># for run in runs:</span>
+    <span class="c1">#     for sample_id in glob.glob(&#39;/Volumes/Jupiter/CancerPlusRuns/&#39; + run + &#39;/BAM/*&#39;):</span>
+    <span class="c1">#         patient = os.path.basename(sample_id)</span>
+    <span class="c1">#         extract_counts(&#39;/Volumes/Jupiter/CancerPlusRuns/&#39; + run,</span>
+    <span class="c1">#                        &#39;/opt/BED/Inherited_Cancer_panel_BED_Window_2.bed&#39;, patient)</span>
+    <span class="c1"># extract_counts(&#39;/Volumes/Venus/pipeline_validation/CNV/171020_NB551084_0023_AHV2N2AFXX_Cplus_2017_NGS_24&#39;,</span>
+    <span class="c1"># &#39;/opt/BED/Inherited_Cancer_panel_BED_Window_2.bed&#39;, &#39;83862_RP&#39;)</span>
+    <span class="n">extract_counts</span><span class="p">(</span><span class="s1">&#39;/Volumes/Venus/TestDevelopment/PARP/TD_02&#39;</span><span class="p">,</span> <span class="s1">&#39;/opt/BED/BRCA_amplicon.bed&#39;</span><span class="p">,</span> <span class="s1">&#39;HD-810_H&#39;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2015-2019, Paulo Nuin.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

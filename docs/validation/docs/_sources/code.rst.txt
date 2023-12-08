@@ -1,0 +1,204 @@
+Code
+****
+
+
+Code from the pipeline scripts
+==============================
+
+
+Main script
+-----------
+
+align.py
+^^^^^^^^
+.. automodule:: align
+	:members:
+
+
+Scripts in /lib
+---------------
+
+
+annovar.py
+^^^^^^^^^^
+
+.. automodule:: annovar
+	:members:
+
+
+bwa_align.py
+^^^^^^^^^^^^
+
+.. automodule:: bwa_align
+	:members:
+
+
+check_programs.py
+^^^^^^^^^^^^^^^^^
+
+.. automodule:: check_programs
+	:members:
+
+
+count2.py
+^^^^^^^^^
+
+.. automodule:: count2
+	:members:
+
+
+dup_indels.py
+^^^^^^^^^^^^^
+
+.. automodule:: dup_indels
+	:members:
+
+
+extract_identity.py
+^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: extract_identity
+	:members:
+
+
+GATK_vcf.py
+^^^^^^^^^^^
+
+.. automodule:: GATK_vcf
+	:members:
+
+
+generate_final_report.py
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: generate_final_report
+	:members:
+
+generate_full_final_report.py
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: generate_final_report
+	:members:
+
+merge_tables.py
+^^^^^^^^^^^^^^^
+
+.. automodule:: merge_tables
+	:members:
+
+
+metrics_parser.py
+^^^^^^^^^^^^^^^^^
+
+.. automodule:: metrics_parser
+	:members:
+
+
+mpileup.py
+^^^^^^^^^^
+
+.. automodule:: mpileup
+	:members:
+
+
+parse_annovar.py
+^^^^^^^^^^^^^^^^
+
+.. automodule:: parse_annovar
+	:members:
+
+
+parse_interop.py
+^^^^^^^^^^^^^^^^
+
+.. automodule:: parse_interop
+	:members:
+
+
+picard_actions.py
+^^^^^^^^^^^^^^^^^
+
+.. automodule:: picard_actions
+	:members:
+
+picard_metrics.py
+^^^^^^^^^^^^^^^^^
+
+.. automodule:: picard_metrics
+	:members:
+
+picard_parser.py
+^^^^^^^^^^^^^^^^
+
+.. automodule:: picard_parser
+	:members:
+
+
+picard_qc.py
+^^^^^^^^^^^^
+
+.. automodule:: picard_qc
+	:members:
+
+
+process_identity.py
+^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: process_identity
+	:members:
+
+
+recalibration.py
+^^^^^^^^^^^^^^^^
+
+.. automodule:: recalibration
+	:members:
+
+run_qualimap.py
+^^^^^^^^^^^^^^^
+
+.. automodule:: run_qualimap
+	:members:
+
+snpEff_ann.py
+^^^^^^^^^^^^^
+
+.. automodule:: snpEff_ann
+	:members:
+
+variants_freebayes.py
+^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: variants_freebayes
+	:members:
+
+variants_octopus.py
+^^^^^^^^^^^^^^^^^^^^^
+
+.. automodule:: variants_freebayes
+	:members:
+
+
+variants_GATK.py
+^^^^^^^^^^^^^^^^
+
+.. automodule:: variants_GATK
+	:members:
+
+variants_GATK3.py
+^^^^^^^^^^^^^^^^
+
+.. automodule:: variants_GATK
+	:members:
+
+variants_table.py
+^^^^^^^^^^^^^^^^^
+
+.. automodule:: variants_GATK
+	:members:
+
+vcf_parser.py
+^^^^^^^^^^^^^
+
+.. automodule:: vcf_parser
+	:members:

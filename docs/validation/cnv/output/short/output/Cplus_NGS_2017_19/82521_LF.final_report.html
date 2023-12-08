@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+
+<head>
+    <!-- META -->
+    <title>:: Report for sample 82521_LF ::</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="" />
+    
+    <!-- CSS -->
+    <link href="https://fonts.googleapis.com/css?family=Catamaran|Mada|Montserrat|Noto+Sans|Nunito+Sans|Oxygen|PT+Sans+Caption|Quicksand|Roboto+Mono|Work+Sans" rel="stylesheet">
+    <script defer src="https://use.fontawesome.com/releases/v5.0.6/js/all.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="resources/bulma.css" media="all" />
+
+
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="resources/jquery.dataTables.min.css" media="all" />
+    <script type="text/javascript" src="resources/jquery.dataTables.js"></script>
+
+
+
+    <style type="text/css">
+    .header {
+        margin-top: 6rem;
+        text-align: Left;
+    }
+    
+    a {
+        color: black;
+    }
+    
+    a:hover {
+        color: blue;
+    }
+    body{
+        font-family: 'PT Sans', sans-serif;
+        padding-top: 50px;
+        background: #fff;
+        /*font-family: Menlo, 'Bitstream Vera Sans Mono', 'DejaVu Sans Mono', Monaco, Consolas, monospace;*/
+        font-size: 1.2rem;
+         padding: 2.5rem 3rem;
+        -webkit-font-smoothing: antialiased; 
+    }
+    </style>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#var_table').DataTable({
+                // "order": [[ 0, "asc" ]],
+                "lengthMenu": [[50, -1], [50, "All"]]
+            });
+            $('#cnv_table').DataTable({
+                // "order": [[ 0, "asc" ]],
+                "lengthMenu": [[50, -1], [50, "All"]]
+            });
+        });
+    </script>
+
+</head>
+
+<body>
+    
+    <section class="section">
+        <div class="container">
+            <h1 class="title">
+                82521_LF      
+            </h1>
+            <p class="subtitle">
+                Report generated on 2018-03-16 11:36:36.037268
+            </p>
+        </div>
+    </section>
+
+    <section class="section">
+        <h2 class="title">
+            Resources
+        </h2>
+        <div class="columns">
+            <div class="column is-4">
+                <p class="subtitle">
+                    <em>Software</em>
+                </p>
+                <table class="table table is-bordered is-striped is-narrow is-fullwidth">
+                    <thead>
+                        <tr>
+                            <th>Program</th>
+                            <th >Version</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>BWA</strong></td>
+                            <td style="text-align:right"><i>0.7.16a-r1181</i></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Picard</strong></td>
+                            <td style="text-align:right"><i>2.15.0</i></td>
+                        </tr>
+                        <tr>
+                            <td><strong>GATK</strong></td>
+                            <td style="text-align:right"><i>3.5-0-g36282e4</i></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Freebayes</strong></td>
+                            <td style="text-align:right"><i>v1.0.1-1-g683b3cc</i></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Platypus</strong></td>
+                            <td style="text-align:right"><i>0.8.1</i></td>
+                        </tr>
+                        <tr>
+                            <td><strong>snpEff</strong></td>
+                            <td style="text-align:right"><i>4.3p (2017-06-06)</i></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Annovar</strong></td>
+                            <td style="text-align:right"><i>Revision 2017-07-17</i></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="column is-4">
+                <p class="subtitle">
+                    <em>Annotation databases</em>
+                </p>
+                <table class="table table is-bordered is-striped is-narrow is-fullwidth">
+                    <thead>
+                        <tr>
+                            <th>DB</th>
+                            <th>Version</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>dbSNP</strong></td>
+                            <td>150</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Clinvar</strong></td>
+                            <td>20170905</td>
+                        </tr>
+                        <tr>
+                            <td><strong>1000 Genomes</strong></td>
+                            <td>Phase 3</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <h2 class="title">
+            Sample information
+        </h2>
+            <div class="column is-8">
+            <table class="table table is-bordered is-striped is-narrow is-fullwidth">
+                <tbody>
+                    <tr>
+                        <td><strong>Sample ID</strong></td>
+                        <td>82521_LF</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Sequencer</strong></td>
+                        <td>NextSeq NB551084</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Run ID</strong></td>
+                        <td>170825_NB551084_0017_AHKJYNAFXX_Cplus_2017_NGS_19</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Analysis completed</strong></td>
+                        <td>2018-03-16 11:36:06.319806</td>
+                    </tr>
+                </tbody>
+            </table>
+
+
+    </section>
+
+    <section class="section">
+        <h2 class="title">
+            Sample statistics
+        </h2>
+        <div class="column is-8">
+            <table class="table table is-bordered is-striped is-narrow is-fullwidth">
+                <tbody>
+                    <tr>
+                        <td><strong>Total number of reads</strong></td>
+                        <td>11,961,928</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Average Read Length (bp)</strong></td>
+                        <td>127.99</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Total Yield (bp)</strong></td>
+                        <td>1,531,036,759</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Subpanel</strong></td>
+                        <td>Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_BRCAext_13genes</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Panel target regions</strong></td>
+                        <td>52,403</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mean target coverage</strong></td>
+                        <td>856.83</td>
+                    </tr>
+                    <tr>
+                        <td><strong>% PF reads aligned</strong></td>
+                        <td>99.88</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Mean overall coverage</strong></td>
+                        <td>889.4438677174971</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Coverage panel Max/Min</strong></td>
+                        <td>1636 / 76</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Qualimap QC report</strong></td>
+                        <td><a target="_blank" href='QC/qualimapReport.html'><i class="fas fa-external-link-alt"></i></a></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="section">
+        <h2 class="title">
+            Regions under 25X
+        </h2>
+         <div class="column is-8">
+            <table class="table table is-bordered is-striped is-narrow is-fullwidth">
+                
+                <tbody>
+                    <tr>
+                        <td><strong>CDKN1C</strong>
+                        
+
+                        </td>
+                        <td><a target="_blank" href="QC/82521_LF_CDKN1C.html"><i class="fas fa-external-link-alt"></i></a></td>
+                    </tr>
+                </tbody>
+                
+                <tbody>
+                    <tr>
+                        <td><strong>PDE4D</strong>
+                        
+
+                        </td>
+                        <td><a target="_blank" href="QC/82521_LF_PDE4D.html"><i class="fas fa-external-link-alt"></i></a></td>
+                    </tr>
+                </tbody>
+                
+            </table>
+    </section>
+
+    <section class="section">
+        <h2 class="title">
+            Variants - 19 variants total
+        </h2>
+        <div class="column is-12">
+            <table class="table table is-bordered is-striped is-narrow is-fullwidth var_table" id="var_table">
+                <thead>
+                    <tr>
+                        <th>Chr</th>
+                        <th>Location</th>
+                        <th>Gene</th>
+                        <th>Reference</th>
+                        <th>Alternate</th>
+                        <th>c.</th>
+                        <th>p.</th>
+                        <th>Al. ratio</th>
+                        <th>Al. fraction</th>
+                        <th>Read depth</th>
+                        <th>MAF</th>
+                        <th>Impact</th>
+                        <th>Callers</th>
+                        <th>Local annotation</th>
+                        <td></td>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td>chr13</td>
+                        <td>32913055</td>
+                        <td>BRCA2</td>
+                        <td>A</td>
+                        <td>G</td>
+                        <td>c.4563A>G</td>
+                        <td>p.Leu1521Leu</td>
+                        <td>0.00, 1.00</td>
+                        
+                            
+                                <td>1.000</td>
+                            
+                        
+                        <td>873</td>
+                        
+                            <td title="eas_maf">1.00</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr13_32913055_A"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr13</td>
+                        <td>32915005</td>
+                        <td>BRCA2</td>
+                        <td>G</td>
+                        <td>C</td>
+                        <td>c.6513G>C</td>
+                        <td>p.Val2171Val</td>
+                        <td>0.00, 1.00</td>
+                        
+                            
+                                <td>1.002</td>
+                            
+                        
+                        <td>1409</td>
+                        
+                            <td title="eas_maf">1.00</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr13_32915005_G"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr17</td>
+                        <td>59760996</td>
+                        <td>BRIP1</td>
+                        <td>A</td>
+                        <td>G</td>
+                        <td>c.3411T>C</td>
+                        <td>p.Tyr1137Tyr</td>
+                        <td>0.01, 0.99</td>
+                        
+                            
+                                <td>1.003</td>
+                            
+                        
+                        <td>1249</td>
+                        
+                            <td title="gnomad_amr_maf">0.79</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr17_59760996_A"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr19</td>
+                        <td>1222012</td>
+                        <td>STK11</td>
+                        <td>G</td>
+                        <td>C</td>
+                        <td>c.920+7G>C</td>
+                        <td></td>
+                        <td>0.55, 0.45</td>
+                        
+                            
+                                <td>0.966</td>
+                            
+                        
+                        <td>728</td>
+                        
+                            <td title="gnomad_eas_maf">0.33</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr19_1222012_G"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr13</td>
+                        <td>32929232</td>
+                        <td>BRCA2</td>
+                        <td>A</td>
+                        <td>G</td>
+                        <td>c.7242A>G</td>
+                        <td>p.Ser2414Ser</td>
+                        <td>0.50, 0.50</td>
+                        
+                            
+                                <td>0.974</td>
+                            
+                        
+                        <td>779</td>
+                        
+                            <td title="gnomad_eas_maf">0.38</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr13_32929232_A"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr8</td>
+                        <td>90967711</td>
+                        <td>NBN</td>
+                        <td>A</td>
+                        <td>G</td>
+                        <td>c.1197T>C</td>
+                        <td>p.Asp399Asp</td>
+                        <td>0.47, 0.53</td>
+                        
+                            
+                                <td>0.990</td>
+                            
+                        
+                        <td>947</td>
+                        
+                            <td title="afr_maf">0.85</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr8_90967711_A"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr17</td>
+                        <td>59763465</td>
+                        <td>BRIP1</td>
+                        <td>T</td>
+                        <td>C</td>
+                        <td>c.2637A>G</td>
+                        <td>p.Glu879Glu</td>
+                        <td>0.00, 1.00</td>
+                        
+                            
+                                <td>1.000</td>
+                            
+                        
+                        <td>793</td>
+                        
+                            <td title="afr_maf">0.94</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr17_59763465_T"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr10</td>
+                        <td>89622944</td>
+                        <td>KLLN</td>
+                        <td>G</td>
+                        <td>C</td>
+                        <td>c.-700C>G</td>
+                        <td></td>
+                        <td>N/A</td>
+                        
+                            <td>NO AF</td>
+                        
+                        <td>638</td>
+                        
+                            <td>NO MAF</td>
+                        
+                        
+                            <td style="text-align:center;background:yellow">MODIFIER</td>
+                        
+                        <td>freebayes</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr10_89622944_G"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr13</td>
+                        <td>32907535</td>
+                        <td>BRCA2</td>
+                        <td>CT</td>
+                        <td>C</td>
+                        <td>c.1909+22delT</td>
+                        <td></td>
+                        <td>0.79, 0.21</td>
+                        
+                            <td>NO AF</td>
+                        
+                        <td>735</td>
+                        
+                            <td>NO MAF</td>
+                        
+                        
+                            <td style="text-align:center;background:yellow">MODIFIER</td>
+                        
+                        <td>gatk</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr13_32907535_CT"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr11</td>
+                        <td>108224615</td>
+                        <td>ATM</td>
+                        <td>A</td>
+                        <td>C</td>
+                        <td>c.8786+8A>C</td>
+                        <td></td>
+                        <td>0.50, 0.50</td>
+                        
+                            
+                                <td>1.029</td>
+                            
+                        
+                        <td>495</td>
+                        
+                            <td title="gnomad_asj_maf">0.08</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr11_108224615_A"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr16</td>
+                        <td>68842480</td>
+                        <td>CDH1</td>
+                        <td>G</td>
+                        <td>C</td>
+                        <td>c.531+10G>C</td>
+                        <td></td>
+                        <td>0.49, 0.51</td>
+                        
+                            
+                                <td>0.964</td>
+                            
+                        
+                        <td>737</td>
+                        
+                            <td title="eur_maf">0.06</td>
+                        
+                        
+                            <td style="text-align:center;background:yellow">MODIFIER</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr16_68842480_G"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr13</td>
+                        <td>32929387</td>
+                        <td>BRCA2</td>
+                        <td>T</td>
+                        <td>C</td>
+                        <td>c.7397T>C</td>
+                        <td>p.Val2466Ala</td>
+                        <td>0.00, 1.00</td>
+                        
+                            
+                                <td>1.000</td>
+                            
+                        
+                        <td>1063</td>
+                        
+                            <td title="eas_maf">1.00</td>
+                        
+                        
+                            <td style="text-align:center;background:#f77b00;color:white">MODERATE</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr13_32929387_T"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr17</td>
+                        <td>59763347</td>
+                        <td>BRIP1</td>
+                        <td>A</td>
+                        <td>G</td>
+                        <td>c.2755T>C</td>
+                        <td>p.Ser919Pro</td>
+                        <td>0.01, 0.99</td>
+                        
+                            
+                                <td>0.997</td>
+                            
+                        
+                        <td>980</td>
+                        
+                            <td title="gnomad_amr_maf">0.80</td>
+                        
+                        
+                            <td style="text-align:center;background:#f77b00;color:white">MODERATE</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr17_59763347_A"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr16</td>
+                        <td>68771372</td>
+                        <td>CDH1</td>
+                        <td>C</td>
+                        <td>T</td>
+                        <td>c.48+6C>T</td>
+                        <td></td>
+                        <td>0.01, 0.99</td>
+                        
+                            
+                                <td>1.000</td>
+                            
+                        
+                        <td>1090</td>
+                        
+                            <td title="gnomad_asj_maf">0.93</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr16_68771372_C"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr17</td>
+                        <td>7579472</td>
+                        <td>TP53</td>
+                        <td>G</td>
+                        <td>C</td>
+                        <td>c.215C>G</td>
+                        <td>p.Pro72Arg</td>
+                        <td>0.46, 0.54</td>
+                        
+                            
+                                <td>1.027</td>
+                            
+                        
+                        <td>726</td>
+                        
+                            <td title="ea_maf">0.75</td>
+                        
+                        
+                            <td style="text-align:center;background:#f77b00;color:white">MODERATE</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr17_7579472_G"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr13</td>
+                        <td>32911888</td>
+                        <td>BRCA2</td>
+                        <td>A</td>
+                        <td>G</td>
+                        <td>c.3396A>G</td>
+                        <td>p.Lys1132Lys</td>
+                        <td>0.52, 0.48</td>
+                        
+                            
+                                <td>1.002</td>
+                            
+                        
+                        <td>858</td>
+                        
+                            <td title="gnomad_eas_maf">0.38</td>
+                        
+                        
+                            <td style="text-align:center;background:green;color:white">LOW</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr13_32911888_A"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr10</td>
+                        <td>89622938</td>
+                        <td>KLLN</td>
+                        <td>A</td>
+                        <td>C</td>
+                        <td>c.-694T>G</td>
+                        <td></td>
+                        <td>N/A</td>
+                        
+                            <td>NO AF</td>
+                        
+                        <td>620</td>
+                        
+                            <td>NO MAF</td>
+                        
+                        
+                            <td style="text-align:center;background:yellow">MODIFIER</td>
+                        
+                        <td>freebayes</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr10_89622938_A"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr11</td>
+                        <td>108183167</td>
+                        <td>ATM</td>
+                        <td>A</td>
+                        <td>G</td>
+                        <td>c.5948A>G</td>
+                        <td>p.Asn1983Ser</td>
+                        <td>0.00, 1.00</td>
+                        
+                            
+                                <td>1.000</td>
+                            
+                        
+                        <td>1398</td>
+                        
+                            <td title="afr_maf">1.00</td>
+                        
+                        
+                            <td style="text-align:center;background:#f77b00;color:white">MODERATE</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr11_108183167_A"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                    <tr>
+                        <td>chr13</td>
+                        <td>32936646</td>
+                        <td>BRCA2</td>
+                        <td>T</td>
+                        <td>C</td>
+                        <td>c.7806-14T>C</td>
+                        <td></td>
+                        <td>0.01, 0.99</td>
+                        
+                            
+                                <td>0.990</td>
+                            
+                        
+                        <td>530</td>
+                        
+                            <td title="afr_maf">0.58</td>
+                        
+                        
+                            <td style="text-align:center;background:yellow">MODIFIER</td>
+                        
+                        <td>Intersection</td>
+                        <td> LA </td>
+                        <td><a target="_blank" href="http://192.168.1.67:5050/varchr13_32936646_T"><i class="fas fa-external-link-alt"></i></a>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+
+    <section class="section">
+        <h2 class="title">
+            CNV
+        </h2>
+        <div class="column is-12">
+            <table class="table is-fullwidth is-bordered cnv_table" id="cnv_table">
+                <thead>
+                    <tr>
+                        <td width="20px">Gene</td>
+                        <td>Graph</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                        <tr>
+                            <td width="20px">ATM</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">BRCA1</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">BRCA2</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">BRIP1</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">CDH1</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">CHEK2</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">NBN</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">PALB2</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">PTEN</td>
+                            
+                                <td>
+                                        <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAB9AAAAGQCAYAAAD2sPsvAAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAPYQAAD2EBqD+naQAAIABJREFUeJzs3X+QXXV9P/7n3YRsQjvEbjVLsgmNU2Pr8COkELZgscWGYSKs5Ot8FAchKaG/EBXY6pAtGgY6daU6TGiNMNogZtDKwEDgI7/aiYMB4RMgmglFUSixkfwUMxnNikuy937/iLthk002wb337N77eMzs4L73HN/vzZ577znned6vd6lSqVQCAAAAAAAAAA2uqegBAAAAAAAAAMBoIEAHAAAAAAAAgAjQAQAAAAAAACCJAB0AAAAAAAAAkgjQAQAAAAAAACCJAB0AAAAAAAAAkgjQAQAAAAAAACCJAB0AAAAAAAAAkgjQAQAAAAAAACCJAB0AAAAAAAAAkgjQAQAAAAAAACCJAB0AAAAAAAAAkgjQAQAAAAAAACCJAB0AAAAAAAAAkgjQAQAAAAAAACCJAB0AAAAAAAAAkgjQAQAAAAAAACCJAB0AAAAAAAAAkgjQAQAAAAAAACCJAB0AAAAAAAAAkgjQAQAAAAAAACCJAB0AAAAAAAAAkgjQAQAAAAAAACCJAB0AAAAAAAAAkgjQAQAAAAAAACCJAB0AAAAAAAAAkgjQAQAAAAAAACCJAB0AAAAAAAAAkgjQAQAAAAAAACCJAB0AAAAAAAAAkgjQAQAAAAAAACCJAB0AAAAAAAAAkgjQAQAAAAAAACCJAB0AAAAAAAAAkgjQAQAAAAAAACCJAB0AAAAAAAAAkgjQAQAAAAAAACCJAB0AAAAAAAAAkgjQAQAAAAAAACCJAB0AAAAAAAAAkgjQAQAAAAAAACCJAB0AAAAAAAAAkgjQAQAAAAAAACCJAB1qas2aNeno6Mi0adNSKpWyatWqYff5+te/ntmzZ+fYY4/N1KlTs3jx4vz85z+vwWgBAAAAAACgsQjQoYZ6enoye/bsLF++/Ii2/+53v5uFCxfm8ssvz/PPP5+77747Tz/9dP7mb/6myiMFAAAAAACAxjO+6AFAI5k/f37mz59/xNs/9dRTmTlzZj7xiU8kSd7+9rfn7/7u73LTTTdVa4gAAAAAAADQsMxAh1HszDPPzE9/+tM89NBDqVQq2b59e+655568733vO+Q+vb29+cUvfjHoq7e3t4ajBgAAAAAAgLFJgA6j2Lvf/e58/etfz0UXXZQJEybk+OOPz+TJkw9bAr67uzuTJ08e9NXd3V3DUQMAAAAAAMDYVKpUKpWiBwGNqFQq5b777suCBQsOuc0PfvCDzJs3L9dcc03OO++8bN26NZ/61Kcyd+7crFixYsh9ent7D5px3tzcnObm5hEdPwAAAAAAANQbAToU5EgC9EsvvTS//vWvc/fddw+0PfHEEzn77LOzZcuWTJ06tRZDBQAAAAAAgIaghDuMYr/61a/S1DT4ZTpu3LgkiWdfAAAAAAAAYGQJ0KGGdu/enfXr12f9+vVJko0bN2b9+vXZtGlTkqSrqysLFy4c2L6joyP33ntvbr311rz88sv57ne/m0984hM544wzMm3atEJ+BwAAAAAAAKhXSrhDDT322GM555xzDmpftGhR7rjjjvzVX/1VfvKTn+Sxxx4b+Nm//du/5bbbbsvGjRvzlre8Je9973tz0003pa2trYYjBwAAAAAAgPonQAcAAAAAAACAKOEOAAAAAAAAAEkE6AAAAAAAAACQRIAOAAAAAAAAAEkE6AAAAAAAAACQRIAOAAAAAAAAAEkE6AAAAAAAAACQRIAOAAAAAAAAAEkE6AAAAAAAAACQRIAOAAAAAAAAAEkE6AAAAAAAAACQRIAOAAAAAAAAAEkE6AAAAAAAAACQRIAOAAAAAAAAAEkE6AAAAAAAAACQRIAOAAAAAAAAAEkE6AAAAAAAAACQRIAOAAAAAAAAAEkE6AAAAAAAAACQRIAOAAAAAAAAAEkE6AAAAAAAAACQRIAOAAAAAAAAAEkE6AAAAAAAAACQRIAOAAAAAAAAAEkE6AAAAAAAAACQRIAOAAAAAAAAAEkE6AAAAAAAAACQRIAOAAAAAAAAAEkE6FBTa9asSUdHR6ZNm5ZSqZRVq1YNu09vb2+uu+66/MEf/EGam5szc+bM3H777TUYLQAAAAAAADSW8UUPABpJT09PZs+encWLF+cDH/jAEe3zoQ99KNu3b8+KFSvyjne8I1u3bk25XK7ySAEAAAAAAKDxCNChhubPn5/58+cf8faPPPJIvvOd7+Tll19OS0tLkmTmzJlVGh0AAAAAAAA0NiXcYRR74IEHcvrpp+df/uVf0tbWlne+85355Cc/mddee63ooQEAAAAAAEDdMQMdRrGXX345TzzxRCZOnJj77rsvr776aj760Y/m5z//eb761a8OuU9vb296e3sHtTU3N6e5ubkWQwYAAAAAAIAxywx0GMXK5XJKpVK+/vWv54wzzsj73ve+3Hzzzfna1752yFno3d3dmTx58qCv7u7uGo8cAAAAAAAAxh4z0GEUmzp1atra2jJ58uSBtne9612pVCp55ZVXMmvWrIP26erqSmdn56A2s88BAAAAAABgeGagwyj27ne/O1u2bMnu3bsH2n784x+nqakp06dPH3Kf5ubmHHfccYO+BOgAAAAAAAAwPAE61NDu3buzfv36rF+/PkmycePGrF+/Pps2bUqyb/b4woULB7a/+OKL8/u///u57LLL8oMf/CBr1qzJpz71qSxevDiTJk0q5HcAAAAAAACAeiVAhxp69tlnM2fOnMyZMydJ0tnZmTlz5mTp0qVJkq1btw6E6Unyu7/7u/mv//qv7Nq1K6effno+8pGPpKOjI//6r/9ayPgBAAAAAACgnpUqlUql6EEAAAAAAAAAQNHMQAcAAAAAAACACNABAAAAAAAAIIkAHQAAAAAAAACSCNABAAAAAAAAIIkAHQAAAAAAAACSCNABAAAAAAAAIIkAHQAAAAAAAACSCNABAAAAAAAAIIkAHQAAAAAAAACSCNABAAAAAAAAIIkAHQAAAAAAAACSCNABAAAAAAAAIIkAHQAAAAAAAACSCNABAAAAAAAAIIkAHQAAAAAAAACSCNABAAAAAAAAIIkAHQAAAAAAAACSCNABAAAAAAAAIIkAHQAAAAAAAACSCNABAAAAAAAAIIkAHQAAAAAAAACSCNABAAAAAAAAIIkAHQAAAAAAAACSCNABAAAAAAAAIIkAHQAAAAAAAACSCNABAAAAAAAAIIkAHQAAAAAAAACSCNChptasWZOOjo5MmzYtpVIpq1atOuJ9v/vd72b8+PE59dRTqzhCAAAAAAAAaFwCdKihnp6ezJ49O8uXLz+q/Xbt2pWFCxfmL//yL6s0MgAAAAAAAKBUqVQqRQ8CGlGpVMp9992XBQsWDLvthz/84cyaNSvjxo3LqlWrsn79+hqMEAAAAAAAABqLGegwyn31q1/Nyy+/nOuvv77ooQAAAAAAAEBdG1/0AIBDe/HFF7NkyZI8/vjjGT/+yF6uvb296e3tHdTW3Nyc5ubmagwRAAAAAAAA6oYZ6DBK9fX15eKLL84NN9yQd77znUe8X3d3dyZPnjzoq7u7u4ojBQAAAAAAgPpgDXQoyHBroO/atSu/93u/l3Hjxg20lcvlVCqVjBs3Lv/5n/+Z9773vQftZwY6AAAAAAAAvDlKuMModdxxx+W5554b1PalL30p3/72t3PPPffk7W9/+5D7CcsBAAAAAADgzRGgQw3t3r07L7300sD3GzduzPr169PS0pITTjghXV1d2bx5c1auXJmmpqacdNJJg/afMmVKJk6ceFA7AAAAAAAA8NsToEMNPfvssznnnHMGvu/s7EySLFq0KHfccUe2bt2aTZs2FTU8AAAAAAAAaGjWQAcAAAAAAACAJE1FDwAAAAAAAAAARgMBOgAAAAAAAABEgA4AAAAAAAAASQToAAAAAAAAAJBEgA4AAAAAAAAASQToAAAAAAAAAJBEgA4AAAAAAAAASQToAAAAAAAAAJBEgA4AAAAAAAAASQToAAAAAAAAAJBEgA4AAAAAAAAASQToAAAAAAAAAJBEgA4AAAAAAAAASQToAAAAAAAAAJBEgA4AAAAAAAAASQToAAAAAAAAAJBEgA4AAAAAAAAASQToAAAAAAAAAJBEgA4AAAAAAAAASQToAAAAAAAAAJBEgA4AAAAAAAAASZLxRQ8AAIDGUin3JTseT17bmkyamkw5O6WmcUUPCwAAAABAgA4AQO1UNt2bPHNV8qtX9jceOz2VubekdMIHqtev0B4AAAAAOAKlSqVSKXoQAADUv8qme5Pv/J8kB55+lvb958/vqUqIfqjQPlUO7QEAAACAsUeADgBA1VXKfcl9MweH2IOU9oXa/9/GEZ0ZXlRoDwAAAACMTU1FDwAAgAaw4/HDhOdJUkl+9dN9242QSrlv38zzg8Lz7G975up92wEAAAAARIAOAEAtvLZ1ZLc7EgWE9gAAAADA2CZABwCg+iZNHdntjkQRoT0AAAAAMKYJ0KGG1qxZk46OjkybNi2lUimrVq067Pb33ntvzj333LztbW/LcccdlzPPPDOPPvpojUYLACNoytn71jjvX3v8IKXk2Bn7thspRYT2AAAAAMCYJkCHGurp6cns2bOzfPnyI9p+zZo1Offcc/PQQw9l3bp1Oeecc9LR0ZHvf//7VR4pAIysUtO4ZO4t/d8d+NN9/5m7bN92I6WI0B4AAAAAGNNKlUqlUvQgoBGVSqXcd999WbBgwVHtd+KJJ+aiiy7K0qVLqzQyAKieyqZ7k2euGrw2+bEz9oXnJ3ygOv195//0f/eGn/wmVP/ze6rSLwAAAAAwNo0vegDAkSuXy/nlL3+ZlpaWoocCQJ3Yu6cvj//f57L1p7/K1BnH5uyOkzP+mBGcBX6A0gkfSGX6hcmOx/etPT5pajLl7JGdeX5gf39+zxCh/fSqhfYAAAAAwNglQIcx5Atf+EJ2796dD33oQ4fcpre3N729vYPaJkyYkAkTJlR7eACMMfd+eW06PzMjr/z8lIG26b+/JTf/00/zgb9tr2LPpWTKewa1VMrl6nU3fUEq0zqSHU+8IbT/s5SaxlW3XwAAAIBRqqnJKs9wKAJ0GCO+8Y1v5IYbbsj999+fKVOmHHK77u7u3HDDDYParrvuunR1dVV7iACMIf/3a+ty+SfnpJJk4sTXBtp/3jM5izonZ2/5iXQsOq24AVbD5DOSyb/5372vFzoUAAAAgCL9zu/8TtFDgFHLGuhQkKNZA/2b3/xmFi9enLvvvjvnn3/+Ybcdagb63r17M3HixJRKpd9qzADUh717+nLqH+/I5p2tSQ5+2riUctpatuX7L7RWtZw7AAAAALVXqVRy7LHHFj0MGLXMQIdR7j/+4z+yePHifPOb3xw2PE+S5ubmNDc3D2rr6elJqVRSkgWAJMn/e/S/B5VtP1AlTfnpz6fn/z26Ie95/6G3AwAAAGDsKVvSDg5LgA41tHv37rz00ksD32/cuDHr169PS0tLTjjhhHR1dWXz5s1ZuXJlkn1l2xctWpRbbrkl7e3t2bZtW5Jk0qRJmTx58pB9AMBwtm9+bfiNjmI7AAAAAIB6YToq1NCzzz6bOXPmZM6cOUmSzs7OzJkzJ0uXLk2SbN26NZs2bRrY/stf/nL27t2bK6+8MlOnTh34uuqqqwoZPwD1obVt0ohuBwAAAABQL6yBDg2gp6cnTU1NSrgDkGTfGugnz9qRLTtbUznMGugbXrQGOgAAAEC9KZfLmTTJxAk4FGkaAECDGX/MuHxu6StJ9oXlb9T/fffSzcJzAAAAAKDhCNABABrQhYvnZuWydZnWsn1Qe1vLtqxcti4XLp5b0MgAAAAAAIqjhDs0ACXcATiUvXv68uTDz2f75tfS2jYpZ80/0cxzAAAAgDqmhDscngAdGoAAHQAAAAAASAToMBxpGgAAAAAAAABEgA4AAAAAAAAASZLxRQ8AAGA0KmJtcOuRAwAAAAAUS4AOAHCA+29/JktunJ7NO08ZaGtr2ZrPLX0lFy6eWzd9AgAAAAAwWKlSqVSKHgRQXT09PWlqakpTk1UbAIZz/+3PZOHVp2XfCdL+981SykmSlcvWjXigXUSfAAAAADSmcrmcSZMmFT0MGLUE6NAABOhQn5T7Hnl79/Tl5Fk7snlna94YZPcrpZy2lm3Z8GLriP1bF9EnAADASHFtCjD2CNDh8KRpADAG3X/7Mzl51o5ccMkpufza9lxwySk5edaO3H/7M0UPbUx78uHns3nn1BzqFKmSpryyc1qefPj5Md0nAADASHBtCgDUI2ugA8AYM7jc935bdrZm4dWtWZlnqlbuu4iZBbXsc/vm10Z0u9HaJwDAm2GWKfBGRV6bAgBUkwAdAMaQvXv6suTG6QetlZ3sm6lcSjldN7bl/Ev7Rvxm5v23P5MlN07P5p2nDLS1tWzN55a+UrWbIrXus7XtyEpXHel2o7VPAICjVcS5IDB6FXltCgBQbUq4A8AYUlS57/6ZBfvW6d5v38yC06pSnq+IPs+af2LaWramlPKQPy+lnOktW3LW/BPHdJ8AAEejiPMyYHSzFBUAUM8E6AANYu+evqx5YEPuvnVt1jywIXv39BU9JN6EIsp9DzezIEm6bmwb0WOqiD6TZPwx4/K5pa8kyUGBdv/33Us3j+gMiiL6BAA4UkWdlwGjm6WoAIB6JkAHaAD33/5MTp61Ixdcckouv7Y9F1xySk6etcNMkTGoiHLfRcwsKHI2w4WL52blsnWZ1rJ9UHtby7asXLauKiVKi+gTAOBImGUKDMVSVABAPbMGOkCd6y+3WDmgfV+5xdaszDPCuTGkv9z3lp2tAzN+3qiUctpato1oue8iZhYUPZvhwsVzc/6lfXny4Q3Zvvm1tLZNylnzT8z4Y6ZVpb+i+gQAGE7R52XA6FTEtSkAQK0I0AHq2HDlFkspp+vGtpx/aZ/y0GNEf7nvhVe3ppTyoBsVg8t9j1zoWsTMgtEwm2H8MePynvefUrX//9HSJwAwNu3d05cnH37+gAfvRv6cfjSclwGjTxHXpgAAtVKqVCoHTkoE6kxPT0+amprS1GTVhkaz5oENueCS4cO4b925QWg3xtx/+zNZcuP035TT3Gd6y5Z0L9084hUF9u7py8mzdgw7s2DDi60jdtO2iD4BAMaKoc4F21q25nNLX6mLc0Fg7Kjltekb1eohIoB6VS6XM2mSByDhUMxAB6hjyi3Wr1qW+y5iZoHZDADFclMaRq9aL9HkvAw4nCKWotof2u+fCFCth4gAgMZkBjo0ADPQR59a3ZQ2A52RVMTMgqJmMwA0slrObAWOTv9s8M07W3PgEk1JdWeDOy+rTx6YYqwZ/BDRwQ/0rFy2zsx3gCNgBjocngAdGoAAfXRRbpGxrIibBW5QANRO0TelgcMr+gFZ52X1xQNTjDVFPkSUeM1Um88YqC0BOhyeAB0agAB99CjipnR/n0mGLLfoRjgAkBR/UxoY3t23rs3l17YPu92Km9bmg1cMvx2NywNTjEVFPkTkNVNdHk6A2hOgw+FJ0wBqZO+eviy5cfpBF1vJ/mC768a27N3TN6L9Xrh4blYuW5dpLdsHtbe1bHOBBwAMePLh539z03Loy8RKmvLKzml58uHnq9L/3j19WfPAhtx969qseWDDiJ8TQT1obTuym5xHut1Y4L1h5BV1bUpt1PNrZvvm10Z0uyPViK+ZWh5H/Q8n7HuIc78tO1uz8OrTcv/tz1StbwA4lPFFDwCgUey7KX3oJ6D335Qe+SelL1w8N+df2pcnH95wQCmsaSPaDwAwdhV1Uzp546yj/edAZh3Bwc6af2LaWrYOu0TTWfNPLGB0I897Q3UUeW1KddX7a6aoh4iKfs3UurR5LY+j4R5OKKWcrhvbcv6lfSogAVBTAnSAGinypnSSjD9mnJsfANQNaySOvKJuSg8uibrfvllHrVmZZ+ripj+MhPHHjMvnlr6ShVe3ppTykEs0dS/dXBcPyhb93lDPnzNFX5tSHUW/ZmqhqIeIGukhw1ofR0U/nAAAh6KEO9DQalmSqhHLLTaSei6TBzDa3H/7Mzl51o5ccMkpufza9lxwySk5edYO5R1/S/03pftDuAOVUs70li0jelO6EUuiUp9qeS7YCEs0Ff3eUNTnTK2OI9em9afo10yt9D9ElOSg85XBDxGN7MMuRT9kWKvS5kUcRx7oAWC0KlUqlQMfKAPqTE9PT5qamtLU5JmZN9r/FO/UgbZqPsW7d09fTp61Y9gnpTe82Fo3MxsaRa2PJYBGNnhWzMEzL6sdHtXzjMRk/79vkiFnto70v++aBzbkgkuGn030rTvNOmL0KupcsJ7fj4p8byjqc6aWx5Fr0/rTaJ+nQ71eprdsSffSzXVzP6e/z33heW36LOI4arRjF0aTcrmcSZM8LAeHIk2DGlqzZk06Ojoybdq0lEqlrFq1ath9HnvssfzJn/xJmpub8453vCN33HFH9QfaAGr9FG9S3JPSRSpiVnat+yziWAJoVEXPrmqEme+1ntlq1hFjXZHngv1LNH3wiva85/2n1NV1RFHvDUV9ztT6OGrEa9N612ifpxcunpvnXpySb925IStuWptv3bkhG15srdpDS0W8ZvaVNp+aQ92+31/a/PkR67OI46iICkgHaoR7VwAcPQE61FBPT09mz56d5cuXH9H2GzduzPnnn59zzjkn69evz9VXX52//uu/zqOPPlrlkda3Im++N0K5xX5FhAy17rPoIAeg0RRxI7FfIz0wVcub0soIM5Y5F6yeot4bivicKeo4aqRr00bQiJ+ntX6IqBEeMiziOCr6gZ5GuHcFwJujhDsUpFQq5b777suCBQsOuc21116bBx98MP/93/890PbhD384u3btyiOPPHLEfSnhPthoKA9Vz+UWk2LKHhbR52g4lgAayd23rs3l17YPu92Km9bmg1cMv92RKqKEZqNQRpixzLlg9RT13lDE50zRx1G9X5s2Cp+ntVOr10wR7w1FHke1Lsvf32cj3LuCQ1HCHQ5Pmgaj2FNPPZV58+YNajvvvPPy1FNPHXKf3t7e/OIXvxj01dvbW+2hjimjobRZPZdbLGIGRVGzNkbDsQTQSBppRmKjKHrWEfWnliVRnQtWT1HvDUV8zhR9HNXztWkj8XlaO7V6zRRR2rzI46jWZfkb6d4VAG+OAB1GsW3btqW1dXCZ0NbW1vziF7/Ia68NffHc3d2dyZMnD/r6whe+UIvhjhmNWNqslooIGYoKNhxLwHCspzeyilojsehwo57/pokywoycWpdEdS5YXUW8NxTxOeM4YqT4PK0vRYXZRR5HtXygp5HuXfVrpGvTer9+AmpjfNEDAEZWV1dXOjs7B7Xt3bu3oNGMTv03RYYrSTXSN98bRREhQ1HBhmMJOJz9ZQj3l1Rsa9mazy19paplCGvdZy3130hceHVrSikPeu8dfCNx2oj2W2S4Ue9/034XLp6b8y/ty5MPbzigJOrI/i2pX4NLou63ZWdrFl7dmpV5ZsRfM84Fq6/W7w1FfM44jupbrUvk+zytLxcunpuVObi0eVvLtqqWNm+E46iR7l0ljXVt2ijXT0D1CdBhFDv++OOzffvgJz63b9+e44477pDrkzQ3N6e5uXlQW09PT9XGOBYVdfO9URQRMhQVbDiWgEMpIsgpos8iFHEjsahwo1H+pv36Zx3B0RquJGop5XTd2JbzL+0b0eDKuWBt1Pq9odafM46j+lVUiOPztL4UFWbX+3HUSPeuGunatNGun4DqKlUqlQPfT4AaKJVKue+++7JgwYJDbnPttdfmoYceynPPPTfQdvHFF2fnzp155JFHjrivnp6eNDU1panJqg1vtP9idv9NkektW6r6FG8j2LunLyfP2jFsyLDhxdYRu4FZRJ9v5FgC3qj/PWnzztYMVZ6vmu+DteyzaLWe0dV/MybJkOHGSJe0bMS/KbxZax7YkAsuGf4m/7fu3FCVMMC5YH0q4nPGcVQ/Boc41T9vAI5Oo9y7aqRrU9dPR69cLh9ykh4gQIea2r17d1566aUkyZw5c3LzzTfnnHPOSUtLS0444YR0dXVl8+bNWblyZZJk48aNOemkk3LllVdm8eLF+fa3v51PfOITefDBB3Peeecdcb8C9EOr9U2RRlHrkKGoPt/IsQT0KyLIKTo8ahS1DDf8TWvHZ/jYd/eta3P5te3DbrfiprX54BXDb/dmOI4YCY6j+iDEgbGhEe5dNdK1qeunoydAh8NTwh1q6Nlnn80555wz8H3/WuWLFi3KHXfcka1bt2bTpk0DP3/729+eBx98MNdcc01uueWWTJ8+Pf/+7/9+VOE5h1fvJamKUkR53aLWBuvnWAL6Ndp6eo2kliU0/U1ro6jyukKykVVUSdQ3ci7ISHAcVVet3nuffPj5QZ8rB6qkKa/snJYnHxbiQJEa4d5VI12bun4CRpoAHWroL/7iL3K4og933HHHkPt8//vfr+KooDqKWKerqLXBAN6okdbTa0S1Cjf8TauvyLUZiwjt69lZ809MW8vWYUuinjX/xAJGB4wGtXzvFeLA2FHv964a6drU9RMw0pRwhwaghDsA1E6jrKdHdfmbVldR5XUbbU3cWs60L3o5H2D0qvV7rzLCwGjRSNemrp+OnhLucHjSNAAAGEHjjxmXzy19Jcn+G7P9+r/vXrp5RC/ai+jzjfbu6cuaBzbk7lvXZs0DG7J3T19V+mkkRf9N692+8rpTc6hL4v3ldZ8fsT737unLkhunHxTg9PeXJF03ttXN6+f+25/JybN25IJLTsnl17bngktOycmzduT+25+pSn8XLp6blcvWZVrL9kHtbS3bhOcwytTyvKGI997+qhgHfn73K6Wc6S1bVMUAqq6Rrk1dPwEjTYAOAAAjrIggp6jwqNYhWSMRCFZPEeV1iwjti9I/23PfDP/99pXHP62qIfpzL07Jt+7ckBU3rc237tyQDS+2eq3AKFLr84Yi3nuFOMD6ESmcAAAS3klEQVRo0kjXpq6fgJGkhDs0ACXcAaAYtSxfXESfjVaOuihFHEf1rojyunffujaXX9s+7HYrblqbD14x/HZHq1bHUVHl8YHRr4jzhiLfe/evuz51oG16y5Z0L93s/AiouXq/Nh0N/Y41SrjD4QnQoQEI0AGAkSYkYywrYo3EItfEHSrEaWvZms8tfWXEQxxr/wJDKeq8oej3JCEOAKOVAB0OT5oGAAActUYqR039KaK8blFr4ta6nHoR5fGB0a+o84ai1yMff8y4vOf9p+SDV7TnPe8/RXgOADBGCNABAICjJiRjrKv1GolFhPZ79/RlyY3TDyqXnGRg5n3XjW3Zu6dvxPpsbTuyWSxHuh1QH4o6b7AeOQAAb4YAHQAAOGpCMurBhYvn5rkXp+Rbd27IipvW5lt3bsiGF1urtjZtrUP7ImZ8Fj3bExidijxvqPV7LwAAY5810KEBWAMdABhpRawhDfWiVmvi3n3r2lx+bfuw2624aW0+eMXw2x2p/rLxSQa9P/SH6gIraDyj4bzBeuQAsJ810OHwxhc9AAAAYOzpL4m68OrWlFIeMiTbVxJ1WlFDhFGrf03caitqxueFi+dmZZ7Jkhun/2YG/D5tLdvSvXSz8Bwa0Gg4b6jVey8AAGOfGejQAMxABwCq5f7bDw7JprdsEZLBKFD0jE+zPYEDOW8AgNHBDHQ4PAE6NAABOgBQTUIyGL2UUwdGG+cNAFA8ATocngAdGoAAHQAAGpcZnwAAwBsJ0OHwBOjQAAToAADQ2Mz4BAAA+gnQ4fAE6NAABOgAAAAAAEAiQIfhSNMAAAAAAAAAIAJ0AAAAAAAAAEgiQAcAAAAAAACAJAJ0AAAAAAAAAEgiQAcAAAAAAACAJAJ0AAAAAAAAAEgiQAcAAAAAAACAJAJ0AAAAAAAAAEgiQAcAAAAAAACAJAJ0AAAAAAAAAEgiQAcAAAAAAACAJAJ0AAAAAAAAAEgiQIeaW758eWbOnJmJEyemvb09Tz/99GG3X7ZsWf7oj/4okyZNyowZM3LNNdfk17/+dY1GCwAAAAAAAI1DgA41dNddd6WzszPXX399vve972X27Nk577zzsmPHjiG3/8Y3vpElS5bk+uuvzw9/+MOsWLEid911V/7xH/+xxiMHAAAAAACA+leqVCqVogcBjaK9vT1z587NF7/4xSRJuVzOjBkz8vGPfzxLliw5aPuPfexj+eEPf5jVq1cPtP3DP/xD1q5dmyeeeOKI++3p6UlTU1OamjwzAwAAAAAAjaxcLmfSpElFDwNGLWka1Mjrr7+edevWZd68eQNtTU1NmTdvXp566qkh9znrrLOybt26gTLvL7/8ch566KG8733vq8mYAQAAAAAAoJGML3oA0CheffXV9PX1pbW1dVB7a2trXnjhhSH3ufjii/Pqq6/mz/7sz1KpVLJ37978/d///WFLuPf29qa3t3dQ2969ezNx4sSUy+Xf/hcBAAAAAADGLMWp4fAE6DCKPfbYY/nsZz+bL33pS2lvb89LL72Uq666Kv/0T/+Uz3zmM0Pu093dnRtuuGFQ23XXXZeuri4figAAAAAAAHAY1kCHGnn99ddz7LHH5p577smCBQsG2hctWpRdu3bl/vvvP2ifs88+O3/6p3+az3/+8wNtd955Z/72b/82u3fvHnJN86FmoE+YMCETJkwYwd8GAAAAAAAYq4bKF4B9zECHGpkwYUJOO+20rF69eiBAL5fLWb16dT72sY8Nuc+vfvWrgz7Exo0bl+TQJVaam5vT3Nw8giMHAAAAAACAxiBAhxrq7OzMokWLcvrpp+eMM87IsmXL0tPTk8suuyxJsnDhwrS1taW7uztJ0tHRkZtvvjlz5swZKOH+mc98Jh0dHQNBOgAAAAAAADAyBOhQQxdddFF+9rOfZenSpdm2bVtOPfXUPPLII2ltbU2SbNq0adCM809/+tMplUr59Kc/nc2bN+dtb3tbOjo68s///M9F/QoAAAAAAABQt6yBDgAAAAAAAABJmobfBAAAAAAAAADqnwAdAAAAAAAAACJABwAAAAAAAIAkAnQAAAAAAAAASCJABwAAAAAAAIAkAnQAAAAAAAAASCJABwAAAAAAAIAkAnQAAAAAAAAASCJABwAAAAAAAIAkAnQAAAAAAAAASCJABwAAAAAAAIAkAnQAAAAAAAAASCJABwAAAAAAAIAkAnQAAAAAAAAASCJABwAAAAAAAIAkAnQAAAAAAAAASCJABwAAAAAAAIAkAnQAAAAAAAAASCJABwAAAAAAAIAkAnQAAAAAAAAASCJABwAAAAAAAIAkAnQAAAAAAAAASCJABwAAAAAAAIAkAnQAAAAAAAAASCJABwAAAAAAAIAkAnQAAAAAAAAASCJABwAAAAAAAIAkAnSoueXLl2fmzJmZOHFi2tvb8/TTTx92+127duXKK6/M1KlT09zcnHe+85156KGHajRaAAAAAAAAaBzjix4ANJK77rornZ2due2229Le3p5ly5blvPPOy49+9KNMmTLloO1ff/31nHvuuZkyZUruueeetLW15X//93/zlre8pYDRAwAAAAAAQH0rVSqVStGDgEbR3t6euXPn5otf/GKSpFwuZ8aMGfn4xz+eJUuWHLT9bbfdls9//vN54YUXcswxx9R6uAAAAAAAANBQlHCHGnn99dezbt26zJs3b6Ctqakp8+bNy1NPPTXkPg888EDOPPPMXHnllWltbc1JJ52Uz372s+nr66vVsAEAAAAAAKBhKOEONfLqq6+mr68vra2tg9pbW1vzwgsvDLnPyy+/nG9/+9v5yEc+koceeigvvfRSPvrRj2bPnj25/vrrh9ynt7c3vb29g9qam5vT3Nw8Mr8IAAAAAAAA1Ckz0GEUK5fLmTJlSr785S/ntNNOy0UXXZTrrrsut9122yH36e7uzuTJkwd9dXd313DUAAAAAAAAMDaZgQ418ta3vjXjxo3L9u3bB7Vv3749xx9//JD7TJ06Ncccc0zGjRs30Paud70r27Zty+uvv54JEyYctE9XV1c6OzsHtZl9DgAAAAAAAMMzAx1qZMKECTnttNOyevXqgbZyuZzVq1fnzDPPHHKfd7/73XnppZdSLpcH2n784x9n6tSpQ4bnyb6w/Ljjjhv0JUAHAAAAAACA4QnQoYY6Ozvzla98JV/72tfywx/+MFdccUV6enpy2WWXJUkWLlyYrq6uge2vuOKK7Ny5M1dddVV+/OMf58EHH8xnP/vZXHnllUX9CgAAAAAAAFC3lHCHGrrooovys5/9LEuXLs22bdty6qmn5pFHHklra2uSZNOmTWlq2v9cy4wZM/Loo4/mmmuuySmnnJK2trZcddVVufbaa4v6FQAAAAAAAKBulSqVSqXoQQAAAAAAAABA0ZRwBwAAAAAAAIAI0AEAAAAAAAAgiQAdAAAAAAAAAJII0AEAAAAAAAAgiQAdAAAAAAAAAJII0AEAAAAAAAAgiQAdAAAAAAAAAJII0AEAAAAAAAAgiQAdAAAAAAAAAJII0AEAAAAAAAAgiQAdAAAAAAAAAJII0AEAAAAAAAAgiQAdAAAAAAAAAJII0AEAAAAAAAAgiQAdAAAAAAAAAJII0AEAAAAAAAAgiQAdAAAAAAAAAJII0AEAAAAAAAAgiQAdAAAAAAAAAJII0AEAAAAAAAAgiQAdAAAAAAAAAJII0AEAAAAAAAAgiQAdAAAAAAAAAJII0AEAAAAAAAAgiQAdAAAAAAAAAJII0AEAAAAAAAAgiQAdAAAAAAAAAJII0AEAAAAAAAAgiQAdam758uWZOXNmJk6cmPb29jz99NNHtN83v/nNlEqlLFiwoMojBAAAAAAAgMYkQIcauuuuu9LZ2Znrr78+3/ve9zJ79uycd9552bFjx2H3+8lPfpJPfvKTOfvss2s0UgAAAAAAAGg8pUqlUil6ENAo2tvbM3fu3Hzxi19MkpTL5cyYMSMf//jHs2TJkiH36evry3ve854sXrw4jz/+eHbt2pVVq1bVctgAAAAAAADQEMxAhxp5/fXXs27dusybN2+grampKfPmzctTTz11yP1uvPHGTJkyJZdffnkthgkAAAAAAAANa3zRA4BG8eqrr6avry+tra2D2ltbW/PCCy8Muc8TTzyRFStWZP369UfcT29vb3p7ewe1NTc3p7m5+egHDQAAAAAAAA3EDHQYpX75y1/m0ksvzVe+8pW89a1vPeL9uru7M3ny5EFf3d3dVRwpAAAAAAAA1Acz0KFG3vrWt2bcuHHZvn37oPbt27fn+OOPP2j7//mf/8lPfvKTdHR0DLSVy+Ukyfjx4/OjH/0of/iHf3jQfl1dXens7BzUZvY5AAAAAAAADE+ADjUyYcKEnHbaaVm9enUWLFiQZF8gvnr16nzsYx87aPs//uM/znPPPTeo7dOf/nR++ctf5pZbbsmMGTOG7Ee5dgAAAAAAAHhzBOhQQ52dnVm0aFFOP/30nHHGGVm2bFl6enpy2WWXJUkWLlyYtra2dHd3Z+LEiTnppJMG7f+Wt7wlSQ5qBwAAAAAAAH57AnSooYsuuig/+9nPsnTp0mzbti2nnnpqHnnkkbS2tiZJNm3alKampoJHCQAAAAAAAI2pVKlUKkUPAgAAAAAAAACKZqorAAAAAAAAAESADgAAAAAAAABJBOgAAAAAAAAAkESADgAAwP/f3h2rdrHmARh+T1xMioBEhIgSyBWoYDRY2AW9AUFsIl6ATRq1SQSLRLGwiFjYi95BCoPpAoJehCAkaiUoJJLkdC5ZVlfO4fxl9Xlgmo/vG35Tv8wMAAAAAJWADgAAAAAAAACVgA4AAAAAAAAAlYAOAAAAAAAAAJWADgAAAAAAAACVgA4AAAAAAAAAlYAOAAAAAAAAAJWADgAAAAAAAACVgA4AAAAAAAAAlYAOAAAAAAAAAJWADgAAAAAAAACVgA4AAAAAAAAAlYAOAAAAAAAAAJWADgAAAAAAAACVgA4AAAAAAAAAlYAOAAAAAAAAAJWADgAAAAAAAACVgA4AAAAAAAAAlYAOAAAAAAAAAJWADgAAAAAAAACVgA4AAAAAAAAAlYAOAAAAAAAAAJWADgAAAAAAAACVgA4AAAAAAAAAlYAOAAAAAAAAAJWADgP38OHDJicnGxkZaXp6upcvX35z7+PHjzt//nxjY2ONjY01MzPz3f0AAAAAAADAXyegwwA9e/asubm5FhYWev36dSdPnuzixYu9e/fuv+5fW1vrypUrvXjxovX19SYmJrpw4UJv374d8OQAAAAAAADw6/tjb29v72cPAb+L6enpzpw50/LyclW7u7tNTEx0/fr1bt68+T/P7+zsNDY21vLycrOzs//0uAAAAAAAAPBb8QY6DMj29navXr1qZmbm69rQ0FAzMzOtr6//0D0+f/7cly9fOnz48Df3bG1t9fHjx33X1tbW354fAAAAAAAAfnUCOgzIhw8f2tnZaXx8fN/6+Ph4GxsbP3SPGzdudOzYsX0R/j8tLi526NChfdfi4uLfmh0AAAAAAAB+B//62QMAP2ZpaamnT5+2trbWyMjIN/fdunWrubm5fWvDw8P/9HgAAAAAAADwf09AhwE5cuRIBw4caHNzc9/65uZmR48e/e7Z+/fvt7S01PPnzztx4sR39w4PDwvmAAAAAAAA8Bf4hDsMyMGDBzt9+nSrq6tf13Z3d1tdXe3cuXPfPHfv3r3u3LnTyspKU1NTgxgVAAAAAAAAfkveQIcBmpub6+rVq01NTXX27NkePHjQp0+funbtWlWzs7MdP3786z/L79692/z8fE+ePGlycvLrv9JHR0cbHR39ac8BAAAAAAAAvyIBHQbo8uXLvX//vvn5+TY2Njp16lQrKyuNj49X9ebNm4aG/v1hiEePHrW9vd2lS5f23WdhYaHbt28PcnQAAAAAAAD45f2xt7e397OHAAAAAAAAAICfzT/QAQAAAAAAACABHQAAAAAAAAAqAR0AAAAAAAAAKgEdAAAAAAAAACoBHQAAAAAAAAAqAR0AAAAAAAAAKgEdAAAAAAAAACoBHQAAAAAAAAAqAR0AAAAAAAAAKgEdAAAAAAAAACoBHQAAAAAAAAAqAR0AAAAAAAAAKgEdAAAAAAAAACoBHQAAAAAAAAAqAR0AAAAAAAAAKgEdAAAAAAAAACoBHQAAAAAAAAAqAR0AAAAAAAAAKgEdAAAAAAAAACoBHQAAAAAAAAAqAR0AAAAAAAAAKgEdAAAAAAAAACoBHQAAAAAAAAAqAR0AAAAAAAAAKgEdAAAAAAAAACoBHQAAAAAAAAAqAR0AAAAAAAAAKgEdAAAAAAAAACoBHQAAAAAAAAAqAR0AAAAAAAAAKgEdAAAAAAAAACoBHQAAAAAAAAAqAR0AAAAAAAAAKgEdAAAAAAAAACoBHQAAAAAAAAAqAR0AAAAAAAAAKgEdAAAAAAAAAKr6EyHcyeAYcMPOAAAAAElFTkSuQmCC"/><br>
+                                    <br>
+                                    
+                                        borderline: g.89,623,523-89,623,573<br> 
+                                    
+                                        borderline: g.89,623,573-89,623,623<br> 
+                                    
+                                </td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">RAD51C</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">RAD51D</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">STK11</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                        <tr>
+                            <td width="20px">TP53</td>
+                            
+                                <td style="width=1000px">No CNV found</td>
+                            
+
+                        </tr>
+                    
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+</body>
+</html>
