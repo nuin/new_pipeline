@@ -1,0 +1,219 @@
+=================================
+Running the pipeline at GLS North 
+=================================
+
+
+Hardware infrastructure
+-----------------------
+
+Currently GLS North has two sequencers and five computers to run the analysis of NGS samples. Changes will be made when a dedicated task manager is incorporated in the system, but at the moment these are the main actors:
+
+Sequencers
+^^^^^^^^^^
+
+The two sequences are:
+
+* NextSeq
+* MiSeq
+
+Analysis of MiSeq data takes roughly one hour per sample, while NextSeq takes around 4 hours in total.
+
+
+Computers
+^^^^^^^^^
+
+The computers used for the analysis are:
+
+* 192.168.1.27 - Weinberg (soon to be dedicated to MiSeq)
+* 192.168.1.169 - Knuth - regular analysis box
+* 192.168.1.171 - Kimura - regular analysis box
+* 192.168.1.170 - SequenceKing, bcl2fastq processor 
+* 192.168.1.172 - Nei - regular analysis box
+* 192.168.1.173 - Felsenstein - regular analysis box
+* 192.168.1.106 - ProteinKing - Linux box, to be used for peptide analysis
+
+
+Another machine, 192.168.1.67, the development box hosts a couple of scripts for automation.
+
+Location of programs/files in each machine
+------------------------------------------
+
+
+All machines (.27, .169, .171, .172, .173) have identical configuration regarding applications and required files. All are stored in ``/opt`` with this structure::
+
+	BED
+	bin
+	bundle
+	cancerplus
+	qualimap
+	reference
+
+where
+
+* BED contains all the ``BED`` and ``BAIT`` and some ``list`` files::
+
+	Inherited_Cancer_panel.picard.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL.picard.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_APC.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_APC.picard.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_BRCAcore_6genes.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_BRCAcore_6genes.picard.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_BRCAext_13genes.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_BRCAext_13genes.picard.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_BRCAext_Lynch_17genes.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_BRCAext_Lynch_17genes.picard.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_BRCApanel.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_BRCApanel.picard.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_DNArepair_5genes.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_DNArepair_5genes.picard.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_FA_15genes.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_FA_15genes.picard.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_FA_20genes.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_FA_20genes.picard.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_GIPoly.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_GIPoly.picard.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_HNPCC_4genes.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_HNPCC_4genes.picard.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_HNPCC_4genes_PMS2_1_10.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_HNPCC_4genes_PMS2_1_10.picard.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_HNPCC_PMS2FULL.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_HNPCC_PMS2FULL.picard.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_HNPCCpanel.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_HNPCCpanel.picard.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_PMS2_Ex11_15.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_PMS2_Ex11_15.picard.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_PTEN.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_PTEN.picard.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_Pancreatic_14genes.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_Pancreatic_14genes.picard.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_STK11.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_STK11.picard.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_TP53.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_TP53.picard.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_both.bed
+	Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_both.picard.bed
+	Inherited_Cancer_panel_FINAL-sorted.bed
+	Inherited_Cancer_panel_FINAL.bed
+	Inherited_Cancer_panel_FINAL.list
+	Inherited_Cancer_panel_FINAL.picard.bed
+
+
+* bin (should) contains all the executable programs
+* bundle contains all the GATK related bundle files
+* cancerplus is a git repository with the whole pipeline code, ready to run
+* qualimap has Qualimap's executable (Java)
+* reference contains all hg19 files and related indexes and other files::
+
+	glist-hg19
+	glist-hg19_2
+	hg19.1.bt2
+	hg19.2.bt2
+	hg19.3.bt2
+	hg19.4.bt2
+	hg19.dict
+	hg19.fasta
+	hg19.fasta.amb
+	hg19.fasta.ann
+	hg19.fasta.bwt
+	hg19.fasta.fai
+	hg19.fasta.pac
+	hg19.fasta.sa
+	hg19.rev.1.bt2
+	hg19.rev.2.bt2
+	hg19_index.1.ebwt
+	hg19_index.2.ebwt
+	hg19_index.3.ebwt
+	hg19_index.4.ebwt
+	hg19_index.rev.1.ebwt
+	hg19_index.rev.2.ebwt
+
+
+Current status of the automation
+--------------------------------
+
+A script ``watch_bcl.py`` is currently running on SequenceKing (192.168.1.170) and is resposible for the FASTQ generation. MiSeq and NextSeq are already saving BCL files in this machine and conversion is automatic. At the moment, data is being transferred only to 192.168.1.171, more specifically to ``/Volumes/Bradbury/CancerPlusRuns/<run ID>/BaseCalls``.
+
+
+A script, ``watch_sequences.py``, will be set in all analysis boxes and is responsible for automatically starting the pipeline analysis of MiSeq samples. This scripts monitors directories created on ``/Volumes/<external_storage`` with a ``Cplus_201*`` tag. When a new folder is found, the script will get the configuration file created by NGSRunSetup.exe 
+
+Results are automatically generated on the same directtory ``/Volumes/Bradbury/CancerPlusRuns/<run ID>/`` under the ``BAM`` directory.
+
+
+Manually setting up a pipeline run
+----------------------------------
+
+It is pretty simple to setup a run following these instructions:
+
+* scp the ``run configuration file`` created by NGSRunSetup to ``/Volumes/Bradbury/CancerPlusRuns/<run_ID>``
+* ssh into 192.168.1.171 using the ``pipeline`` user (contact me for password)
+
+
+* Structure of the configuration file::
+
+	BAIT: /opt/BED/Inherited_Cancer_panel_FINAL.picard.bed
+	BED:
+	  <sample ID>: <bed file>
+	  <sample ID>: <bed file>
+	  <sample ID>: <bed file>
+	  <sample ID>: <bed file>
+	  <sample ID>: <bed file>
+	  <sample ID>: <bed file>
+	  <sample ID>: <bed file>
+	  <sample ID>: <bed file>
+	  <sample ID>: <bed file>
+	  <sample ID>: <bed file>
+	  <sample ID>: <bed file>
+	  <sample ID>: <bed file>
+	  <sample ID>: <bed file>
+	  <sample ID>: <bed file>
+	  <sample ID>: <bed file>
+	  <sample ID>: <bed file>
+	  <sample ID>: <bed file>
+	  <sample ID>: <bed file>
+	  <sample ID>: <bed file>
+	Datadir: /Volumes/Jupiter/CancerPlusRuns/<run dir>
+	Panel: CancerPlus
+	Reference: /opt/reference/hg19.fasta
+	VCF: /opt/bundle/dbsnp_138.hg19.vcf
+
+
+*  <bed file> should have the corresponding BED file to be used for that sample, for instance::
+
+       HNPCC: /opt/BED/Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_HNPCC_4genes.bed
+       BRCA: /opt/BED/Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_BRCApanel.bed
+       BRCA/HNPCC: /opt/BED/Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_both.bed
+       Cplus: /opt/BED/Inherited_Cancer_panel_FINAL.bed
+       ...
+
+* cd to ``/opt/bin/cancerplus/code/pipeline``
+* to start the pipeline enter ``python align.py /Volumes/Bradbury/CancerPlusRuns/<run_ID>/<configuration_file_name>``
+
+* you will have to keep the terminal open for the pipeline to run. To be able to close the terminal window, after changing to the pipeline directory, enter ``tmux`` in the CLI to open a background processor
+
+* with ``tmux`` you can close the temrinal window and reattach later: after sshing into the machine, just type ``tmux at``.
+
+* You can also Remote Desktop (tightVNC, VNCviewer, etc) into the machine
+* Connect to the selected one and use the ``Pipeline Runner`` user and enter the password (contact for password)
+
+* On the terminal enter these commands::
+
+	> cd /opt/cancerplus/code/pipeline
+	> tmux
+	> python align.py /Volumes/Jupiter/CancerPlusRuns/<run id>/<configuration file name>
+
+where the run id is the run you want to analyse, i.e. ``161207_M02619_0072_000000000-ATMCN_Cplus_2016_NGS_10``, and the YAML file name for this run is ``Cplus_2016_NGS_10.yaml``
+
+You should see messages coming on the screen and BWA will start the alignment. If unsuccessful, please email support via SysAid or direct message.
+
+
+.. toctree::
+   :maxdepth: 5
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

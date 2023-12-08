@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>extract_identity &mdash; MDL 1 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> MDL
+          </a>
+              <div class="version">
+                Version 1.4.5
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../ngs_pipeline.html">NGS pipeline</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../running_north.html">Running the pipeline at GLS North</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../running_south.html">Running the pipeline at GLS South</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../genes.html">Genes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../applications.html">Applications</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands_ngs.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code.html">Code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_data_mgmt.html">Code - Data Management</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../code_webapps.html">Code - Webapps</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">MDL</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="index.html">Module code</a> &raquo;</li>
+      <li>extract_identity</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for extract_identity</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">.. module:: extract_identity</span>
+<span class="sd">    :platform: Any</span>
+<span class="sd">    :synopsis: This module extracts information on the nucleotide in the 16 locations that determine identity</span>
+<span class="sd">.. moduleauthor:: Paulo Nuin, August 2016</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">graypy</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">graypy_handler</span> <span class="o">=</span> <span class="n">graypy</span><span class="o">.</span><span class="n">GELFUDPHandler</span><span class="p">(</span><span class="s1">&#39;192.168.1.169&#39;</span><span class="p">,</span> <span class="mi">12201</span><span class="p">)</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">graypy_handler</span><span class="p">)</span>
+
+<span class="c1"># GENES = {&#39;ALK&#39;: (&#39;chr2&#39;, 29416481),</span>
+<span class="c1">#          &#39;APC&#39;: (&#39;chr5&#39;, 112164561),</span>
+<span class="c1">#          &#39;BARD1&#39;: (&#39;chr2&#39;, 215645464),</span>
+<span class="c1">#          &#39;BRCA2&#39;: (&#39;chr13&#39;, 32936646),</span>
+<span class="c1">#          &#39;BRIP1&#39;: (&#39;chr17&#39;, 59763347),</span>
+<span class="c1">#          &#39;EGFR&#39;: (&#39;chr7&#39;, 55214348),</span>
+<span class="c1">#          &#39;FANCA&#39;: (&#39;chr16&#39;, 89849480),</span>
+<span class="c1">#          &#39;FANCI&#39;: (&#39;chr15&#39;, 89858602),</span>
+<span class="c1">#          &#39;MET&#39;: (&#39;chr7&#39;, 116435768),</span>
+<span class="c1">#          &#39;MET2&#39;: (&#39;chr7&#39;, 116436022),</span>
+<span class="c1">#          &#39;NBN&#39;: (&#39;chr8&#39;, 90967711),</span>
+<span class="c1">#          &#39;POLE&#39;: (&#39;chr12&#39;, 133208979),</span>
+<span class="c1">#          &#39;PTCH1&#39;: (&#39;chr9&#39;, 98209594),</span>
+<span class="c1">#          &#39;RECQL4&#39;: (&#39;chr8&#39;, 145742879),</span>
+<span class="c1">#          &#39;WRN&#39;: (&#39;chr8&#39;, 30999280),</span>
+<span class="c1">#          &#39;XPC&#39;: (&#39;chr3&#39;, 14187449)}</span>
+
+
+<div class="viewcode-block" id="mpileup"><a class="viewcode-back" href="../code.html#extract_identity.mpileup">[docs]</a><span class="k">def</span> <span class="nf">mpileup</span><span class="p">(</span><span class="n">sample_id</span><span class="p">,</span> <span class="n">datadir</span><span class="p">,</span> <span class="n">identity</span><span class="p">,</span> <span class="n">samtools</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function that call sammtool to generate the pileup</span>
+<span class="sd">    file that can be searched for the nucleotide state in</span>
+<span class="sd">    the locations of interest</span>
+
+<span class="sd">    :param sample_id: ID of the patient/sample being analysed</span>
+<span class="sd">    :param datadir: Location of the BAM files</span>
+<span class="sd">    :param identity: Indentity file name with defined location</span>
+<span class="sd">    :param samtools: Samtools executable location</span>
+
+<span class="sd">    :type sample_id: string</span>
+<span class="sd">    :type datadir: string</span>
+<span class="sd">    :type identity: string</span>
+<span class="sd">    :type samtools: string</span>
+
+<span class="sd">    :return: returns success or exists</span>
+
+<span class="sd">    :todo: return error</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># argument2 = datadir + &#39;/BAM/&#39; + sample_id</span>
+
+    <span class="n">argument</span> <span class="o">=</span> <span class="n">datadir</span> <span class="o">+</span> <span class="s1">&#39;/BAM/&#39;</span> <span class="o">+</span> <span class="n">sample_id</span> <span class="o">+</span> <span class="s1">&#39;/BAM/&#39;</span> <span class="o">+</span> <span class="n">sample_id</span>
+    <span class="n">argument2</span> <span class="o">=</span> <span class="n">datadir</span> <span class="o">+</span> <span class="s1">&#39;/BAM/&#39;</span> <span class="o">+</span> <span class="n">sample_id</span> <span class="o">+</span> <span class="s1">&#39;/BAM/&#39;</span>
+
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">argument2</span> <span class="o">+</span> <span class="s1">&#39;/identity.mpileup&#39;</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Identity mpileup file exists &#39;</span> <span class="o">+</span> <span class="n">sample_id</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s1">&#39;exists&#39;</span>
+
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Starting mpileup process for identity file &#39;</span> <span class="o">+</span> <span class="n">sample_id</span><span class="p">)</span>
+    <span class="n">mpileup_string</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> mpileup -l </span><span class="si">%s</span><span class="s1"> </span><span class="si">%s</span><span class="s1">.recal_reads.bam &gt; </span><span class="si">%s</span><span class="s1">/identity.mpileup&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">samtools</span><span class="p">,</span> <span class="n">identity</span><span class="p">,</span> <span class="n">argument</span><span class="p">,</span> <span class="n">argument2</span><span class="p">)</span>
+    <span class="n">proc</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">mpileup_string</span><span class="p">,</span> <span class="n">shell</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">subprocess</span><span class="o">.</span><span class="n">PIPE</span><span class="p">)</span>
+    <span class="n">proc</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;mpileup generation completed &#39;</span> <span class="o">+</span> <span class="n">sample_id</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s1">&#39;success&#39;</span></div>
+
+
+<div class="viewcode-block" id="get_nucleotides"><a class="viewcode-back" href="../code.html#extract_identity.get_nucleotides">[docs]</a><span class="k">def</span> <span class="nf">get_nucleotides</span><span class="p">(</span><span class="n">pileup</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function that returns nucleotide counts for the region</span>
+
+<span class="sd">    :param pileup: reads under a defined location</span>
+
+<span class="sd">    :type pileup: string</span>
+
+<span class="sd">    :returns: returns the number of A, C, G and T</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">reads</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">e</span> <span class="k">for</span> <span class="n">e</span> <span class="ow">in</span> <span class="n">pileup</span> <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">isalnum</span><span class="p">())</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">reads</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">&#39;A&#39;</span><span class="p">),</span> <span class="n">reads</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">&#39;C&#39;</span><span class="p">),</span> <span class="n">reads</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">&#39;G&#39;</span><span class="p">),</span> <span class="n">reads</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="s1">&#39;T&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="create_identity_table"><a class="viewcode-back" href="../code.html#extract_identity.create_identity_table">[docs]</a><span class="k">def</span> <span class="nf">create_identity_table</span><span class="p">(</span><span class="n">sample_id</span><span class="p">,</span> <span class="n">datadir</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Function that creates the identity table in the sample</span>
+<span class="sd">    datadir</span>
+
+<span class="sd">    :param sample_id: patient id to be analyses</span>
+<span class="sd">    :param datadir: datadir where the table will be saved</span>
+
+<span class="sd">    :type sample_id: string</span>
+<span class="sd">    :type datadir: string</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">mpileup</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">datadir</span> <span class="o">+</span> <span class="s1">&#39;/BAM/&#39;</span> <span class="o">+</span> <span class="n">sample_id</span> <span class="o">+</span> <span class="s1">&#39;/BAM/identity.mpileup&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">read</span><span class="p">()</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">datadir</span> <span class="o">+</span> <span class="s1">&#39;/BAM/&#39;</span> <span class="o">+</span> <span class="n">sample_id</span> <span class="o">+</span> <span class="s1">&#39;/identity.txt&#39;</span><span class="p">):</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Identity file exists &#39;</span> <span class="o">+</span> <span class="n">sample_id</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Starting creation of identity file&#39;</span><span class="p">)</span>
+        <span class="n">identity</span> <span class="o">=</span> <span class="nb">open</span><span class="p">(</span><span class="n">datadir</span> <span class="o">+</span> <span class="s1">&#39;/BAM/&#39;</span> <span class="o">+</span> <span class="n">sample_id</span> <span class="o">+</span> <span class="s1">&#39;/identity.txt&#39;</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">mpileup</span><span class="p">:</span>
+            <span class="n">temp</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+            <span class="n">nucleotides</span> <span class="o">=</span> <span class="n">get_nucleotides</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+            <span class="n">identity</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">temp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">temp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nucleotides</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">identity</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">nucleotides</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nucleotides</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\t</span><span class="s1">&#39;</span><span class="p">)</span>
+            <span class="n">identity</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">nucleotides</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Identity file creation complete &#39;</span> <span class="o">+</span> <span class="n">sample_id</span><span class="p">)</span></div>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+
+    <span class="n">datadir</span> <span class="o">=</span> <span class="s1">&#39;/Users/nuin/New_projects/Data/Illumina/&#39;</span>
+    <span class="n">sample_id</span> <span class="o">=</span> <span class="s1">&#39;NA12877_1&#39;</span>
+    <span class="n">identity_file</span> <span class="o">=</span> <span class="s1">&#39;identity.txt&#39;</span>
+    <span class="n">samtools</span> <span class="o">=</span> <span class="s1">&#39;samtools&#39;</span>
+    <span class="n">mpileup</span><span class="p">(</span><span class="n">sample_id</span><span class="p">,</span> <span class="n">datadir</span><span class="p">,</span> <span class="n">identity_file</span><span class="p">,</span> <span class="n">samtools</span><span class="p">)</span>
+    <span class="n">create_identity_table</span><span class="p">(</span><span class="n">sample_id</span><span class="p">,</span> <span class="n">datadir</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2015-2019, Paulo Nuin.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

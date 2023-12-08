@@ -1,0 +1,31 @@
+.. MDL documentation master file, created by Paulo Nuin
+   sphinx-quickstart on Fri Mar 14 11:56:37 2014.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+Welcome to MDL's NGS pipeline documentation!
+============================================
+
+Contents:
+
+.. toctree::
+   :maxdepth: 2
+
+   ngs_pipeline
+   running_north
+   running_south
+   genes
+   applications
+   commands_ngs
+   code
+   code_data_mgmt
+   code_webapps
+
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
+

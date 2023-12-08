@@ -63,14 +63,3 @@ def vcf_comparison(datadir, sample_id, reference, gatk):
     console.log("Merge GATK, Freebayes and Octopus VCFs: done")
 
     return "success"
-
-
-# if __name__ == '__main__':
-
-#     data_datadir = '/Users/nuin/Projects/Data/Test_dataset'
-#     sample_id = 'NA12877_1'
-#     vcf_comparison(sample_id, data_datadir, '/opt/reference/hg19.fasta',
-#                    'java -jar /usr/local/bin/GenomeAnalysisTK.jar', '/Volumes/diagonalley/2017_Data/Cplus/NGS_test/')
-
-#     # vcf_comparison('19-017-020284C_KC_OS', '/Volumes/Jupiter/CancerPlusRuns/190207_NB551084_0058_AH2J7FAFXY_Cplus_2019_NGS_05_TEST', '/opt/reference/hg19.fasta',
-#     #                'java -jar /usr/local/bin/GenomeAnalysisTK.jar', '/Volumes/diagonalley/2017_Data/Cplus/NGS_test/')

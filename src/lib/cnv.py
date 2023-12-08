@@ -16,7 +16,7 @@ from rich.console import Console
 
 console = Console()
 
-XLINKED = ["FANCB", "DMD", "EMD", "FHL1", "GLA", "LAMP2", "TAZ"]
+XLINKED = ["FANCB", "DMD", "EMD", "FHL1", "GLA", "LAMP2", "TAZ", "GPC3"]
 
 
 def print_full(x):
