@@ -151,7 +151,7 @@ def align_files(config, datadir: Path, samples: list, fastqs: list) -> bool:
         run_bwa(sample, fastq_files, datadir, reference, bwa, samtools)
 
 
-def process_dir(config, datadir, samples, panel):
+def process_dir(config, datadir, samples, panel, reanalysis):
     """
     Function that runs all the steps of the pipeline, usually calling
     functions from other modules
@@ -190,16 +190,18 @@ def process_dir(config, datadir, samples, panel):
     console.log(f"Using SAMTOOLS: {samtools}")
     console.log(f"Using reference: {reference}")
 
-    create_directories(datadir, sample_ids, panel)
+    if not reanalysis:
+        create_directories(datadir, sample_ids, panel)
+        align_files(config, datadir, sample_ids, fastqs)
+    else:
+        console.log(f"Reanalysing {samples[0]} {reanalysis}")
 
-    align_files(config, datadir, sample_ids, fastqs)
-
-    analyse_pairs(config, datadir, sample_ids, panel)
+    analyse_pairs(config, datadir, sample_ids, panel, reanalysis)
 
     return True
 
 
-def analyse_pairs(config, datadir, samples, panel):
+def analyse_pairs(config, datadir, samples, panel, reanalysis):
     """
     Main function of the file. Gets all pairs (samples) to
     be analysed and guide the whole process, step by step
@@ -345,7 +347,7 @@ def analyse_pairs(config, datadir, samples, panel):
     return to_return
 
 
-def generate_analysis(config, datadir, samples, panel):
+def generate_analysis(config, datadir, samples, panel, reanalysis):
     """
     Main function of the script, find input files, start alignemt and processing
 
@@ -367,7 +369,7 @@ def generate_analysis(config, datadir, samples, panel):
     else:
         console.log(f"Samples: {' '.join(samples)}")
 
-    s = process_dir(config, datadir, samples, panel)
+    s = process_dir(config, datadir, samples, panel, reanalysis)
 
     return s
 
@@ -386,7 +388,8 @@ def generate_analysis(config, datadir, samples, panel):
 )
 @click.option("-d", "--datadir", "datadir", help="run directory", required=True)
 @click.option("-p", "--panel", "panel", help="panel to be used", required=True)
-def run_analysis(configuration_file, datadir, panel, samples):
+@click.option("-r", "--reanalysis", "reanalysis", help="Reanalyse one sample, panel needs to be provided", required=False)
+def run_analysis(configuration_file, datadir, panel, samples, reanalysis):
     """
 
     :param configuration_file:
@@ -400,7 +403,7 @@ def run_analysis(configuration_file, datadir, panel, samples):
     console.log("Pipeline current version is " + VERSION)
     console.log("All requirements found, starting analysis")
 
-    sample_dict = generate_analysis(configuration_file, datadir, samples, panel)
+    sample_dict = generate_analysis(configuration_file, datadir, samples, panel, reanalysis)
 
     return sample_dict
 
