@@ -15,7 +15,7 @@ from pathlib import Path
 import click
 import yaml
 from rich.console import Console
-
+from typing import List
 
 from dotenv import dotenv_values
 
@@ -38,7 +38,6 @@ from lib.variants_freebayes import edit_freebayes_vcf, freebayes_caller
 from lib.variants_GATK import haplotype_caller
 from lib.variants_GATK3 import haplotype_caller as haplotype_caller3
 from lib.variants_octopus import octopus_caller
-from lib.variants_table import extract_info
 
 # main configuration file
 # couch_credentials = open('lib/config/couchdb').read().splitlines()
@@ -49,6 +48,17 @@ VERSIONFILE = "VERSION"
 VERSION = open(VERSIONFILE).read().strip()
 
 console = Console()
+
+
+def split_string(ctx, param, value):
+    """
+    """
+
+    if value is None:
+        return []
+    else:
+        return [item.strip() for item in value.split(',')]
+
 
 def find_fastq(datadir, panel_samples, panel):
     """
@@ -115,7 +125,7 @@ def create_directories(datadir, sample_ids, panel):
             console.log(f"Creating {datadir}/BAM/{sample}/Metrics/")
             os.makedirs(f"{datadir}/BAM/{sample}/Metrics/")
 
-    console.log("Directories created")
+    console.log("Directories created/existed")
 
 
 def align_files(config, datadir: Path, samples: list, fastqs: list) -> bool:
@@ -164,6 +174,13 @@ def process_dir(config, datadir, samples, panel):
     panel_samples = list(configuration["BED"].keys())
     fastqs = find_fastq(datadir, panel_samples, panel)
     sample_ids = get_ids(fastqs)
+
+    console.log(f"Found {len(sample_ids)} samples")
+    console.log(f"Found {' '.join(sample_ids)}")
+
+    if len(samples) >= 1:
+        console.log(f"Samples to be analysed: {' '.join(samples)}")
+        sample_ids = samples
 
     bwa = env["BWA"]
     samtools = env["SAMTOOLS"]
@@ -302,9 +319,6 @@ def analyse_pairs(config, datadir, samples, panel):
                 sample,
             )
 
-        to_return[sample]["variants_table"] = extract_info(
-            sample, datadir, configuration
-        )
         console.log(f"Processing {sample} completed")
 
     console.log("Compiling identity file")
@@ -328,43 +342,6 @@ def analyse_pairs(config, datadir, samples, panel):
     for pos, sample in enumerate(samples):
         get_enrichment(sample, datadir, panel)
 
-    #
-    # # ########################################### #
-    # #                                             #
-    # #                Run DB creation              #
-    # #                                             #
-    # # ########################################### #
-    #
-    # process_folder(datadir)
-    # add_samples.create_db_items(datadir, VERSION)
-
-    #
-    # # add metrics information to DB
-    # try:
-    #     # run_metrics_interop.insert_into_db(datadir)
-    #     run_metrics_interop_couch.insert_into_db(datadir)
-    # except Exception as e:
-    #     logger.warning("Problems adding info to db " + str(e))
-    #
-    # # ########################################### #
-    # #                                             #
-    # #                  Samples DB                 #
-    # #                                             #
-    # # ########################################### #
-    # try:
-    #     add_samples.create_db_items(datadir)
-    # except Exception as e:
-    #     logger.warning("Problems adding samples to DB " + str(e))
-    #
-
-    #
-    # # ########################################### #
-    # #                                             #
-    # #                  Gather Metrics             #
-    # #                                             #
-    # # ########################################### #
-    # gather_metrics.process_all_metrics(datadir)
-
     return to_return
 
 
@@ -380,9 +357,11 @@ def generate_analysis(config, datadir, samples, panel):
     :rtype: dictionary
     """
 
+
     console.log("Starting analysis and qc report generation")
     console.log(f"Configuration file: {config}")
     console.log(f"Datadir: {datadir}")
+    console.log(f"Panel: {panel}")
     if samples == []:
         console.log("Samples: ALL")
     else:
@@ -391,7 +370,6 @@ def generate_analysis(config, datadir, samples, panel):
     s = process_dir(config, datadir, samples, panel)
 
     return s
-
 
 
 @click.command()
@@ -403,12 +381,12 @@ def generate_analysis(config, datadir, samples, panel):
     "--sample",
     "samples",
     help="sample to be analysed (it can be multiple, each with a -s)",
-    multiple=True,
+    callback=split_string,
     required=False,
 )
 @click.option("-d", "--datadir", "datadir", help="run directory", required=True)
 @click.option("-p", "--panel", "panel", help="panel to be used", required=True)
-def run_analysis(configuration_file, samples, datadir, panel):
+def run_analysis(configuration_file, datadir, panel, samples):
     """
 
     :param configuration_file:
@@ -416,9 +394,9 @@ def run_analysis(configuration_file, samples, datadir, panel):
     :param datadir:
     :return:
     """
-
-    samples = list(samples)
-
+    if not samples:
+        console.log("No samples provided, will analyse all samples in the run")
+        samples = []
     console.log("Pipeline current version is " + VERSION)
     console.log("All requirements found, starting analysis")
 
