@@ -38,6 +38,7 @@ from lib.variants_freebayes import edit_freebayes_vcf, freebayes_caller
 from lib.variants_GATK import haplotype_caller
 from lib.variants_GATK3 import haplotype_caller as haplotype_caller3
 from lib.variants_octopus import octopus_caller
+from lib.log_api import log_to_api
 
 # main configuration file
 # couch_credentials = open('lib/config/couchdb').read().splitlines()
@@ -73,6 +74,7 @@ def find_fastq(datadir, panel_samples, panel):
     to_return = []
     for fastq in fastqs:
         console.log(f"Found {fastq}")
+        log_to_api(f"Found {fastq}", "INFO", "pipeline", "NA", Path(datadir).name)
         to_return.append(Path(fastq).name)
 
     return fastqs
@@ -209,6 +211,7 @@ def analyse_pairs(config, datadir, samples, panel):
     :param software_conf yaml file that list the software to be used
     :param pairs list of samples in the run
     :param yaml_file run configuration file (required for CNV, needs checking)
+    
 
     :type config: string
     :type datadir: string
