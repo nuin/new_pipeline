@@ -11,6 +11,9 @@ from pathlib import Path
 
 from rich.console import Console
 
+from .log_api import log_to_api
+
+
 console = Console()
 
 
@@ -39,16 +42,20 @@ def mpileup(sample_id, datadir, identity, samtools):
 
     if Path(f"{bam_dir}/identity.mpileup").exists():
         console.log(f"Identity mpileup file exists {sample_id}")
+        log_to_api("Identity mpileup file exists", "INFO", "mpileup", sample_id, Path(datadir).name)
         return "exists"
 
     console.log(f"Starting mpileup process for identity file {sample_id}")
+    log_to_api("Starting mpileup process for identity file", "INFO", "mpileup", sample_id, Path(datadir).name))
     mpileup_string = f"{samtools} mpileup -l {identity} {bam_dir}{sample_id}.bam > {bam_dir}/identity.mpileup"
     console.log(mpileup_string)
+    log_to_api(mpileup_string, "INFO", "mpileup", sample_id, Path(datadir).name)
     proc = subprocess.Popen(
         mpileup_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     proc.wait()
     console.log(f"mpileup generation completed {sample_id}")
+    log_to_api("mpileup generation completed", "INFO", "mpileup", sample_id, Path(datadir).name)
     return "success"
 
 
@@ -88,8 +95,10 @@ def create_identity_table(sample_id, datadir):
 
     if os.path.isfile(datadir + "/BAM/" + sample_id + "/identity.txt"):
         console.log(f"Identity file exists {sample_id}")
+        log_to_api("Identity file exists", "INFO", "mpileup", sample_id, Path(datadir).name)
     else:
         console.log(f"Creating identity file {sample_id}")
+        log_to_api("Creating identity file", "INFO", "mpileup", sample_id, Path(datadir).name)
         identity = open(f"{datadir}/BAM/{sample_id}/identity.txt", "w")
         for line in mpileup:
             temp = line.split()
@@ -98,7 +107,8 @@ def create_identity_table(sample_id, datadir):
             identity.write(f"{str(nucleotides[1])}\t{str(nucleotides[2])}\t")
             identity.write(f"{str(nucleotides[3])}\n")
         console.log(f"Identity file creation complete {sample_id}")
-
+        log_to_api("Identity file creation complete", "INFO", "mpileup", sample_id, Path(datadir).name)
+        
 
 if __name__ == "__main__":
 
