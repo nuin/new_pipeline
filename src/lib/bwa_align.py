@@ -16,6 +16,8 @@ from lib.utils import move_bam
 
 from pathlib import Path
 
+from .log_api import log_to_api
+
 
 console = Console()
 
