@@ -218,7 +218,7 @@ def process_identity(sample_id, datadir, sample_identity):
     )
     console.log(f"Full identity file generated {sample_id}")
     log_to_api(
-        f"Full identity file generated",
+        "Full identity file generated",
         "INFO",
         "identity",
         sample_id,

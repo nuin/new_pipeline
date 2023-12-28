@@ -86,7 +86,7 @@ def remove_duplicates(sample_id, datadir, picard):
     if Path(f"{bam_dir}/{sample_id}.dedup.bam").exists():
         console.log(f"Picard - done duplicate marking {sample_id}")
         log_to_api(
-            f"Picard - done duplicate marking",
+            "Picard - done duplicate marking",
             "INFO",
             "dup_indels",
             sample_id,
@@ -96,7 +96,7 @@ def remove_duplicates(sample_id, datadir, picard):
 
     console.log(f"dedup.bam, duplicate removal failed {sample_id}", style="bold red")
     log_to_api(
-        f"dedup.bam, duplicate removal failed",
+        "dedup.bam, duplicate removal failed",
         "ERROR",
         "dup_indels",
         sample_id,

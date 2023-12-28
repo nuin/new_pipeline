@@ -52,7 +52,7 @@ def extract_counts(datadir, full_BED, sample_id):
             cnv_out.write(f"{sample_id}\n")
             console.log(f"Analysing BAM file {sample_id} {datadir}")
             log_to_api(
-                f"Analysing BAM file", "INFO", "count2", sample_id, Path(datadir).name
+                "Analysing BAM file", "INFO", "count2", sample_id, Path(datadir).name
             )
             samfile = pysam.AlignmentFile(bam_file, "rb")
             for location in bedfile:
@@ -63,7 +63,7 @@ def extract_counts(datadir, full_BED, sample_id):
             cnv_out.close()
             console.log(f"BAM file analysed, CNV file created {sample_id} {datadir}")
             log_to_api(
-                f"BAM file analysed, CNV file created",
+                "BAM file analysed, CNV file created",
                 "INFO",
                 "count2",
                 sample_id,
@@ -74,10 +74,10 @@ def extract_counts(datadir, full_BED, sample_id):
             log_to_api(str(e), "ERROR", "count2", sample_id, Path(datadir).name)
             console.log(f"BAM file not found {sample_id} {datadir}")
             log_to_api(
-                f"BAM file not found", "ERROR", "count2", sample_id, Path(datadir).name
+                "BAM file not found", "ERROR", "count2", sample_id, Path(datadir).name
             )
     else:
         console.log(f"CNV file already exists {sample_id} {datadir}")
         log_to_api(
-            f"CNV file already exists", "INFO", "count2", sample_id, Path(datadir).name
+            "CNV file already exists", "INFO", "count2", sample_id, Path(datadir).name
         )

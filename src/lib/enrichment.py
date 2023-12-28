@@ -71,7 +71,7 @@ def get_enrichment(sample_id, datadir, panel):
         proc.wait()
         console.log(f"Enrichment file generated {sample_id}")
         log_to_api(
-            f"Enrichment file generated",
+            "Enrichment file generated",
             "INFO",
             "extract_identity",
             sample_id,
@@ -80,7 +80,7 @@ def get_enrichment(sample_id, datadir, panel):
     else:
         console.log(f"Enrichment file already exists {sample_id}")
         log_to_api(
-            f"Enrichment file already exists",
+            "Enrichment file already exists",
             "INFO",
             "extract_identity",
             sample_id,

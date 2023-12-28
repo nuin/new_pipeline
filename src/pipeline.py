@@ -11,7 +11,6 @@ import glob
 import os
 from collections import defaultdict
 from pathlib import Path
-from typing import List
 
 import click
 import yaml
@@ -325,20 +324,15 @@ def analyse_pairs(config, datadir, samples, panel):
         to_return[sample]["recalibrate"] = recalibration_final
         move_bam(datadir, sample, "recal_reads")
 
-        GATKvariants = haplotype_caller(
-            datadir, sample, reference, bed_file[sample], gatk
-        )
+        haplotype_caller(datadir, sample, reference, bed_file[sample], gatk)
 
-        GATK3variants = haplotype_caller3(
-            datadir, sample, reference, bed_file[sample], gatk3
-        )
+        haplotype_caller3(datadir, sample, reference, bed_file[sample], gatk3)
 
-        freebayesvariants = freebayes_caller(
-            datadir, sample, reference, bed_file[sample], freebayes
-        )
+        freebayes_caller(datadir, sample, reference, bed_file[sample], freebayes)
         to_return[sample]["picard_sort"] = picard_sort(
             datadir, sample, reference, picard
         )
+
         to_return[sample]["freebayes_edit"] = edit_freebayes_vcf(sample, datadir)
 
         to_return[sample]["variants_octopus"] = octopus_caller(
