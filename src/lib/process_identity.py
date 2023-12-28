@@ -15,6 +15,9 @@ import os
 import numpy as np
 import pandas as pd
 from rich.console import Console
+from pathlib import Path
+
+from log_api import log_to_api
 
 console = Console()
 
@@ -177,6 +180,7 @@ def generate_barcode(sample_id, datadir, sample_identity):
 
     barcode_file.write(barcode)
     console.log(f"Barcode for {sample_id} is {barcode}")
+    log_to_api(f"Barcode for {sample_id} is {barcode}", "INFO", "barcode", sample_id, Path(datadir).name)
 
 
 def process_identity(sample_id, datadir, sample_identity):
@@ -209,6 +213,7 @@ def process_identity(sample_id, datadir, sample_identity):
         index=False,
     )
     console.log(f"Full identity file generated {sample_id}")
+    log_to_api(f"Full identity file generated", "INFO", "identity", sample_id, Path(datadir).name)
 
     return sample_identity
 
