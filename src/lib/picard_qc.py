@@ -14,7 +14,6 @@ from pathlib import Path
 from rich.console import Console
 from suds.client import Client
 
-
 from .log_api import log_to_api
 
 console = Console()
@@ -102,11 +101,23 @@ def get_coverage(
     if panel == "full":
         if Path(f"{metrics_dir}/{sample_id}.nucl.out").exists():
             console.log(f"Picard coverage file exists {sample_id}")
-            log_to_api("Picard coverage file exists", "INFO", "picard_coverage", sample_id, Path(datadir).name)
+            log_to_api(
+                "Picard coverage file exists",
+                "INFO",
+                "picard_coverage",
+                sample_id,
+                Path(datadir).name,
+            )
             return "exists"
 
         console.log(f"Starting Picard's CollectHsMetrics {sample_id}")
-        log_to_api("Starting Picard's CollectHsMetrics", "INFO", "picard_coverage", sample_id, Path(datadir).name)
+        log_to_api(
+            "Starting Picard's CollectHsMetrics",
+            "INFO",
+            "picard_coverage",
+            sample_id,
+            Path(datadir).name,
+        )
         picard_string = (
             f"{picard} CollectHsMetrics BI={bait_file} I={bam_dir}/{sample_id}.bam PER_BASE_COVERAGE={metrics_dir}/{sample_id}.nucl.out "
             f"MINIMUM_MAPPING_QUALITY=0 MINIMUM_BASE_QUALITY=0 TARGET_INTERVALS={bait_file} OUTPUT={metrics_dir}/{sample_id}.out R={reference} QUIET=true"
@@ -115,7 +126,9 @@ def get_coverage(
             picard_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
         console.log(f"Picard command: {picard_string}")
-        log_to_api(picard_string, "INFO", "picard_coverage", sample_id, Path(datadir).name)
+        log_to_api(
+            picard_string, "INFO", "picard_coverage", sample_id, Path(datadir).name
+        )
         proc.wait()
         while True:
             output = proc.stderr.readline().strip()
@@ -124,16 +137,34 @@ def get_coverage(
             else:
                 console.log(output.decode("utf-8"))
         console.log(f"Picard coverage file created {sample_id}")
-        log_to_api("Picard coverage file created", "INFO", "picard_coverage", sample_id, Path(datadir).name)
+        log_to_api(
+            "Picard coverage file created",
+            "INFO",
+            "picard_coverage",
+            sample_id,
+            Path(datadir).name,
+        )
         return "success"
 
     if Path(f"{metrics_dir}/{sample_id}.nucl.panel.out").exists():
         console.log(f"Picard panel coverage file exists {sample_id}")
-        log_to_api("Picard panel coverage file exists", "INFO", "picard_coverage", sample_id, Path(datadir).name)
+        log_to_api(
+            "Picard panel coverage file exists",
+            "INFO",
+            "picard_coverage",
+            sample_id,
+            Path(datadir).name,
+        )
         return "exists"
 
     console.log(f"Starting Picard's CollectHsMetrics for panel {sample_id}")
-    log_to_api("Starting Picard's CollectHsMetrics for panel", "INFO", "picard_coverage", sample_id, Path(datadir).name)
+    log_to_api(
+        "Starting Picard's CollectHsMetrics for panel",
+        "INFO",
+        "picard_coverage",
+        sample_id,
+        Path(datadir).name,
+    )
     bait_file = bait_file.replace(".bed", ".picard.bed")
     picard_string = (
         f"{picard} CollectHsMetrics BI={bait_file} I={bam_dir}/{sample_id}.bam PER_BASE_COVERAGE={metrics_dir}/{sample_id}.nucl.panel.out "

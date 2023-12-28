@@ -55,11 +55,19 @@ def octopus_caller(datadir, sample_id, reference, bed_file, octopus):
 
     if Path(f"{vcf_dir}/{sample_id}_octopus.vcf").exists():
         console.log(f"{vcf_dir}/{sample_id}_octopus.vcf file exists")
-        log_to_api("Octopus VCF file exists", "info", "octopus", sample_id, Path(datadir).name)
+        log_to_api(
+            "Octopus VCF file exists", "info", "octopus", sample_id, Path(datadir).name
+        )
         return "exists"
 
     console.log(f"Start variant calling with Octopus {sample_id}")
-    log_to_api("Start variant calling with Octopus", "info", "octopus", sample_id, Path(datadir).name)
+    log_to_api(
+        "Start variant calling with Octopus",
+        "info",
+        "octopus",
+        sample_id,
+        Path(datadir).name,
+    )
     octopus_string = (
         f"{octopus} -R {reference} -I {bam_dir}/{sample_id}.bam --regions-file {bed_file} "
         f"--threads 16 -o {vcf_dir}/{sample_id}_octopus.vcf"
@@ -79,7 +87,9 @@ def octopus_caller(datadir, sample_id, reference, bed_file, octopus):
     proc.wait()
 
     console.log("Octopus VCF file created " + sample_id)
-    log_to_api("Octopus VCF file created", "info", "octopus", sample_id, Path(datadir).name)
+    log_to_api(
+        "Octopus VCF file created", "info", "octopus", sample_id, Path(datadir).name
+    )
     change_vcf_version(f"{vcf_dir}{sample_id}_octopus.vcf")
     return "success"
 

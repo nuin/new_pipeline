@@ -13,7 +13,6 @@ from rich.console import Console
 
 from .log_api import log_to_api
 
-
 console = Console()
 
 
@@ -47,7 +46,13 @@ def vcf_comparison(datadir, sample_id, reference, gatk):
         return "exists"
 
     console.log(f"Starting merge GATK, Freebayes and Octopus VCFs {sample_id}")
-    log_to_api("Starting merge GATK, Freebayes and Octopus VCFs", "INFO", "GATK_vcf", sample_id, Path(datadir).name)
+    log_to_api(
+        "Starting merge GATK, Freebayes and Octopus VCFs",
+        "INFO",
+        "GATK_vcf",
+        sample_id,
+        Path(datadir).name,
+    )
     GATK_string = (
         f"{gatk} -T CombineVariants -R {reference} --variant:freebayes {vcf_dir}_freebayes.final.vcf"
         f" --variant:gatk {vcf_dir}_GATK.vcf --variant:gatk3 {vcf_dir}_GATK3.vcf "
@@ -67,6 +72,12 @@ def vcf_comparison(datadir, sample_id, reference, gatk):
             console.log(output.decode("utf-8"))
     proc.wait()
     console.log("Merge GATK, Freebayes and Octopus VCFs: done")
-    log_to_api("Merge GATK, Freebayes and Octopus VCFs: done", "INFO", "GATK_vcf", sample_id, Path(datadir).name)
+    log_to_api(
+        "Merge GATK, Freebayes and Octopus VCFs: done",
+        "INFO",
+        "GATK_vcf",
+        sample_id,
+        Path(datadir).name,
+    )
 
     return "success"

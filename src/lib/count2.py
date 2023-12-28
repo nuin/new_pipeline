@@ -33,17 +33,27 @@ def extract_counts(datadir, full_BED, sample_id):
 
     bedfile = open(full_BED).read().splitlines()
     console.log(f"Using BED file {full_BED}")
-    log_to_api(f"Using BED file {full_BED}", "INFO", "count2", sample_id, Path(datadir).name)
+    log_to_api(
+        f"Using BED file {full_BED}", "INFO", "count2", sample_id, Path(datadir).name
+    )
     bam_file = f"{datadir}/BAM/{sample_id}/BAM/{sample_id}.bam"
     if not Path(f"{datadir}/BAM/{sample_id}/{sample_id}.cnv").exists():
         try:
             console.log(f"Creating samples CNV file {datadir}")
-            log_to_api(f"Creating samples CNV file {datadir}", "INFO", "count2", sample_id, Path(datadir).name)
+            log_to_api(
+                f"Creating samples CNV file {datadir}",
+                "INFO",
+                "count2",
+                sample_id,
+                Path(datadir).name,
+            )
             cnv_out = open(f"{datadir}/BAM/{sample_id}/{sample_id}.cnv", "w")
             cnv_out.write("Location\t")
             cnv_out.write(f"{sample_id}\n")
             console.log(f"Analysing BAM file {sample_id} {datadir}")
-            log_to_api(f"Analysing BAM file", "INFO", "count2", sample_id, Path(datadir).name)
+            log_to_api(
+                f"Analysing BAM file", "INFO", "count2", sample_id, Path(datadir).name
+            )
             samfile = pysam.AlignmentFile(bam_file, "rb")
             for location in bedfile:
                 temp = location.split("\t")
@@ -52,12 +62,22 @@ def extract_counts(datadir, full_BED, sample_id):
                 )
             cnv_out.close()
             console.log(f"BAM file analysed, CNV file created {sample_id} {datadir}")
-            log_to_api(f"BAM file analysed, CNV file created", "INFO", "count2", sample_id, Path(datadir).name)
+            log_to_api(
+                f"BAM file analysed, CNV file created",
+                "INFO",
+                "count2",
+                sample_id,
+                Path(datadir).name,
+            )
         except Exception as e:
             console.log(str(e))
             log_to_api(str(e), "ERROR", "count2", sample_id, Path(datadir).name)
             console.log(f"BAM file not found {sample_id} {datadir}")
-            log_to_api(f"BAM file not found", "ERROR", "count2", sample_id, Path(datadir).name)
+            log_to_api(
+                f"BAM file not found", "ERROR", "count2", sample_id, Path(datadir).name
+            )
     else:
         console.log(f"CNV file already exists {sample_id} {datadir}")
-        log_to_api(f"CNV file already exists", "INFO", "count2", sample_id, Path(datadir).name)
+        log_to_api(
+            f"CNV file already exists", "INFO", "count2", sample_id, Path(datadir).name
+        )

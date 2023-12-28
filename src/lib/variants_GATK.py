@@ -14,7 +14,6 @@ from pathlib import Path
 
 from rich.console import Console
 
-
 from .log_api import log_to_api
 
 console = Console()
@@ -47,11 +46,15 @@ def haplotype_caller(datadir, sample_id, reference, bed_file, gatk):
 
     if Path(f"{vcf_dir}/{sample_id}_GATK.vcf").exists():
         console.log(f"{vcf_dir}/{sample_id}_GATK.vcf file exists")
-        log_to_api("GATK VCF file exists", "info", "GATK", sample_id, Path(datadir).name)
+        log_to_api(
+            "GATK VCF file exists", "info", "GATK", sample_id, Path(datadir).name
+        )
         return "exists"
 
     console.log(f"Start variant calling with GATK {sample_id}")
-    log_to_api("Start variant calling with GATK", "info", "GATK", sample_id, Path(datadir).name)
+    log_to_api(
+        "Start variant calling with GATK", "info", "GATK", sample_id, Path(datadir).name
+    )
 
     GATK_string = (
         f"{gatk} HaplotypeCaller -R {reference} -I {bam_dir}/{sample_id}.bam -O {vcf_dir}/{sample_id}_GATK.vcf "
@@ -71,6 +74,8 @@ def haplotype_caller(datadir, sample_id, reference, bed_file, gatk):
             console.log(output.decode("utf-8"))
     proc.wait()
     console.log("GATK variants determined " + sample_id)
-    log_to_api("GATK variants determined", "info", "GATK", sample_id, Path(datadir).name)
+    log_to_api(
+        "GATK variants determined", "info", "GATK", sample_id, Path(datadir).name
+    )
 
     return "success"

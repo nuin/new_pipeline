@@ -30,7 +30,9 @@ def move_bam(datadir: Path, sample: str, bam_file: str) -> bool:
             console.log(str(e))
             log_to_api(str(e), "ERROR", "move_bam", sample, datadir)
             console.log("Index file does not exist")
-            log_to_api("Index file does not exist", "ERROR", "move_bam", sample, datadir)
+            log_to_api(
+                "Index file does not exist", "ERROR", "move_bam", sample, datadir
+            )
         console.log("Files moved")
         log_to_api("Files moved", "INFO", "move_bam", sample, datadir)
     else:

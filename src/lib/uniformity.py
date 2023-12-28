@@ -9,11 +9,10 @@
 import glob
 import os
 import sys
+from pathlib import Path
 
 import pandas as pd
 from rich.console import Console
-
-from pathlib import Path
 
 from .log_api import log_to_api
 
@@ -67,6 +66,7 @@ def get_coverage_values(datadir, panel):
         "NA",
         Path(datadir).name,
     )
+
 
 if __name__ == "__main__":
 

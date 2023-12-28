@@ -11,11 +11,11 @@
 
 import glob
 import os
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
 from rich.console import Console
-from pathlib import Path
 
 from .log_api import log_to_api
 
@@ -128,9 +128,7 @@ CODES = {
     "BRIP1_E19A0G0": 2,
     "BRIP1_E1900G0": 3,
     "BRIP1_E19": 5,
-
     "MET_E210CG0": "U",
-
 }
 
 
@@ -180,7 +178,13 @@ def generate_barcode(sample_id, datadir, sample_identity):
 
     barcode_file.write(barcode)
     console.log(f"Barcode for {sample_id} is {barcode}")
-    log_to_api(f"Barcode for {sample_id} is {barcode}", "INFO", "barcode", sample_id, Path(datadir).name)
+    log_to_api(
+        f"Barcode for {sample_id} is {barcode}",
+        "INFO",
+        "barcode",
+        sample_id,
+        Path(datadir).name,
+    )
 
 
 def process_identity(sample_id, datadir, sample_identity):
@@ -213,7 +217,13 @@ def process_identity(sample_id, datadir, sample_identity):
         index=False,
     )
     console.log(f"Full identity file generated {sample_id}")
-    log_to_api(f"Full identity file generated", "INFO", "identity", sample_id, Path(datadir).name)
+    log_to_api(
+        f"Full identity file generated",
+        "INFO",
+        "identity",
+        sample_id,
+        Path(datadir).name,
+    )
 
     return sample_identity
 

@@ -41,12 +41,22 @@ def picard_sort(datadir, sample_id, reference, picard):
     if Path(f"{vcf_dir}/{sample_id}_freebayes.final.vcf").exists():
         console.log(f"{vcf_dir}/{sample_id}_freebayes.sorted.vcf file exists")
         log_to_api(
-            "Freebayes sorted VCF file exists", "INFO", "picard_sort", sample_id, Path(datadir).name
+            "Freebayes sorted VCF file exists",
+            "INFO",
+            "picard_sort",
+            sample_id,
+            Path(datadir).name,
         )
         return "exists"
 
     console.log(f"Sorting Freebayes VCF result {sample_id}")
-    log_to_api("Sorting Freebayes VCF result", "INFO", "picard_sort", sample_id, Path(datadir).name)
+    log_to_api(
+        "Sorting Freebayes VCF result",
+        "INFO",
+        "picard_sort",
+        sample_id,
+        Path(datadir).name,
+    )
     picard_string = (
         f"{picard} SortVcf I={vcf_dir}/{sample_id}_freebayes.vcf "
         f"O={vcf_dir}/{sample_id}_freebayes.sorted.vcf "
@@ -65,7 +75,13 @@ def picard_sort(datadir, sample_id, reference, picard):
             console.log(output)
     proc.wait()
     console.log(f"Freebayes sorted VCF file file created {sample_id}")
-    log_to_api("Freebayes sorted VCF file created", "INFO", "picard_sort", sample_id, Path(datadir).name)
+    log_to_api(
+        "Freebayes sorted VCF file created",
+        "INFO",
+        "picard_sort",
+        sample_id,
+        Path(datadir).name,
+    )
 
     return "success"
 

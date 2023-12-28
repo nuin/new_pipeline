@@ -9,15 +9,13 @@ import logging
 import os
 import subprocess
 import time
+from pathlib import Path
 
 from rich.console import Console
 
 from lib.utils import move_bam
 
-from pathlib import Path
-
 from .log_api import log_to_api
-
 
 console = Console()
 

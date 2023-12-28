@@ -35,15 +35,33 @@ def remove_duplicates(sample_id, datadir, picard):
 
     if Path(f"{bam_dir}/{sample_id}.dedup.bam").exists():
         console.log(f"{bam_dir}/{sample_id}.dedup.bam file exists")
-        log_to_api(f"{bam_dir}/{sample_id}.dedup.bam file exists", "INFO", "dup_indels", sample_id, Path(datadir).name)
+        log_to_api(
+            f"{bam_dir}/{sample_id}.dedup.bam file exists",
+            "INFO",
+            "dup_indels",
+            sample_id,
+            Path(datadir).name,
+        )
         return "exists"
     elif Path(f"{bam_dir}/{sample_id}.dedup.bam.md5").exists():
         console.log(f"{bam_dir}/{sample_id}.dedup.bam.md5 file exists")
-        log_to_api(f"{bam_dir}/{sample_id}.dedup.bam.md5 file exists", "INFO", "dup_indels", sample_id, Path(datadir).name)
+        log_to_api(
+            f"{bam_dir}/{sample_id}.dedup.bam.md5 file exists",
+            "INFO",
+            "dup_indels",
+            sample_id,
+            Path(datadir).name,
+        )
         return "exists"
 
     console.log("Picard - Starting duplicate removal")
-    log_to_api("Picard - Starting duplicate removal", "INFO", "dup_indels", sample_id, Path(datadir).name)
+    log_to_api(
+        "Picard - Starting duplicate removal",
+        "INFO",
+        "dup_indels",
+        sample_id,
+        Path(datadir).name,
+    )
 
     picard_string = (
         f"{picard} MarkDuplicates -I {bam_dir}/{sample_id}.bam -O {bam_dir}/{sample_id}.dedup.bam"
@@ -52,7 +70,9 @@ def remove_duplicates(sample_id, datadir, picard):
     )
 
     console.log(f"Command {picard_string} {sample_id}")
-    log_to_api(f"Command {picard_string}", "INFO", "dup_indels", sample_id, Path(datadir).name)
+    log_to_api(
+        f"Command {picard_string}", "INFO", "dup_indels", sample_id, Path(datadir).name
+    )
     proc = subprocess.Popen(
         picard_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
@@ -65,9 +85,21 @@ def remove_duplicates(sample_id, datadir, picard):
     proc.wait()
     if Path(f"{bam_dir}/{sample_id}.dedup.bam").exists():
         console.log(f"Picard - done duplicate marking {sample_id}")
-        log_to_api(f"Picard - done duplicate marking", "INFO", "dup_indels", sample_id, Path(datadir).name)
+        log_to_api(
+            f"Picard - done duplicate marking",
+            "INFO",
+            "dup_indels",
+            sample_id,
+            Path(datadir).name,
+        )
         return "success"
 
     console.log(f"dedup.bam, duplicate removal failed {sample_id}", style="bold red")
-    log_to_api(f"dedup.bam, duplicate removal failed", "ERROR", "dup_indels", sample_id, Path(datadir).name)
+    log_to_api(
+        f"dedup.bam, duplicate removal failed",
+        "ERROR",
+        "dup_indels",
+        sample_id,
+        Path(datadir).name,
+    )
     return "error - process"

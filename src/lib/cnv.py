@@ -8,12 +8,13 @@
 import glob
 import os
 import sys
+from pathlib import Path
 
 import pandas as pd
 import requests
 import yaml
 from rich.console import Console
-from pathlib import Path
+
 from .log_api import log_to_api
 
 console = Console()
@@ -70,7 +71,13 @@ def compile_samples(datadir):
     all_cnvs = pd.DataFrame()
     for sample in glob.glob(datadir + "/BAM/*"):
         console.log(f"Getting CNV information from {sample}")
-        log_to_api(f"Getting CNV information from {sample}", "INFO", "CNV", "NA", Path(datadir).name)
+        log_to_api(
+            f"Getting CNV information from {sample}",
+            "INFO",
+            "CNV",
+            "NA",
+            Path(datadir).name,
+        )
         sample_id = os.path.basename(sample)
         # if not check_file_size(f"{sample}/{sample_id}.cnv", panel, expected_lines):
         cnv_sample = pd.read_csv(
@@ -83,7 +90,13 @@ def compile_samples(datadir):
         all_cnvs[sample_id] = cnv_sample
 
     console.log("CNV information from all samples collected")
-    log_to_api("CNV information from all samples collected", "INFO", "CNV", "NA", Path(datadir).name)
+    log_to_api(
+        "CNV information from all samples collected",
+        "INFO",
+        "CNV",
+        "NA",
+        Path(datadir).name,
+    )
 
     all_cnvs["Location"] = location
     # saves file, just in case
@@ -117,14 +130,22 @@ def cnv_calculation(datadir, cnvs, yaml_file):
 
     # reads configuration
     console.log(f"Reading configuration file {yaml_file}")
-    log_to_api(f"Reading configuration file {yaml_file}", "INFO", "CNV", "NA", Path(datadir).name)
+    log_to_api(
+        f"Reading configuration file {yaml_file}",
+        "INFO",
+        "CNV",
+        "NA",
+        Path(datadir).name,
+    )
     configuration = yaml.load(open(yaml_file).read(), Loader=yaml.FullLoader)
     # split the genders for X-linked calculation
     males, females = split_genders(configuration["Gender"])
 
     # remove some columns from the DataFrame
     console.log("Removing columns from the DataFrame")
-    log_to_api("Removing columns from the DataFrame", "INFO", "CNV", "NA", Path(datadir).name)
+    log_to_api(
+        "Removing columns from the DataFrame", "INFO", "CNV", "NA", Path(datadir).name
+    )
     cnvs = cnvs.loc[:, ~cnvs.columns.str.contains("^Unnamed")]
 
     # intra-sample normalization
@@ -146,7 +167,9 @@ def cnv_calculation(datadir, cnvs, yaml_file):
 
     # calculating overall standard deviation
     console.log("Calculating standard deviation")
-    log_to_api("Calculating standard deviation", "INFO", "CNV", "NA", Path(datadir).name)
+    log_to_api(
+        "Calculating standard deviation", "INFO", "CNV", "NA", Path(datadir).name
+    )
     cnvs3["std"] = cnvs3.std(axis=1)
     # calculating female standard deviation
     console.log("Calculating female std deviation")

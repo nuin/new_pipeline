@@ -48,11 +48,23 @@ def base_recal1(datadir, sample_id, bed_file, vcf_file, reference, gatk):
 
     if Path(f"{bam_dir}/recal_data.table").exists():
         console.log(f"{bam_dir}/recal_data.table file exists")
-        log_to_api("recal_data.table file exists", "INFO", "base_recal1", sample_id, Path(datadir).name)
+        log_to_api(
+            "recal_data.table file exists",
+            "INFO",
+            "base_recal1",
+            sample_id,
+            Path(datadir).name,
+        )
         return "exists"
 
     console.log("Starting step one of base recalibration for {sample_id}")
-    log_to_api("Starting step one of base recalibration", "INFO", "base_recal1", sample_id, Path(datadir).name)
+    log_to_api(
+        "Starting step one of base recalibration",
+        "INFO",
+        "base_recal1",
+        sample_id,
+        Path(datadir).name,
+    )
 
     GATK_string = (
         f"{gatk} BaseRecalibrator -R {reference}  "
@@ -73,7 +85,13 @@ def base_recal1(datadir, sample_id, bed_file, vcf_file, reference, gatk):
             console.log(output.decode("utf-8"))
     proc.wait()
     console.log(f"Recalibration step one completed successfully {sample_id}")
-    log_to_api("Recalibration step one completed successfully", "INFO", "base_recal1", sample_id, Path(datadir).name)
+    log_to_api(
+        "Recalibration step one completed successfully",
+        "INFO",
+        "base_recal1",
+        sample_id,
+        Path(datadir).name,
+    )
 
     return "success"
 
@@ -98,15 +116,29 @@ def recalibrate(datadir, sample_id, reference, gatk):
 
     if Path(f"{bam_dir}/{sample_id}.recal_reads.bam").exists():
         console.log(f"{bam_dir}/{sample_id}.recal_reads.bam file exists")
-        log_to_api("recal_reads.bam file exists", "INFO", "recalibrate", sample_id, Path(datadir).name)
+        log_to_api(
+            "recal_reads.bam file exists",
+            "INFO",
+            "recalibrate",
+            sample_id,
+            Path(datadir).name,
+        )
         return "exists"
     elif Path(f"{bam_dir}/recalibration.txt").exists():
         console.log(f"{bam_dir}/recalibration.txt file exists")
-        log_to_api("recalibration.txt file exists", "INFO", "recalibrate", sample_id, Path(datadir).name)
+        log_to_api(
+            "recalibration.txt file exists",
+            "INFO",
+            "recalibrate",
+            sample_id,
+            Path(datadir).name,
+        )
         return "exists"
 
     console.log(f"Starting recalibration {sample_id}")
-    log_to_api("Starting recalibration", "INFO", "recalibrate", sample_id, Path(datadir).name)
+    log_to_api(
+        "Starting recalibration", "INFO", "recalibrate", sample_id, Path(datadir).name
+    )
     GATK_string = (
         f"{gatk} ApplyBQSR -R {reference} -I {bam_dir}/{sample_id}.bam "
         f"--bqsr-recal-file {bam_dir}/recal_data.table -O {bam_dir}/{sample_id}.recal_reads.bam"
@@ -125,7 +157,9 @@ def recalibrate(datadir, sample_id, reference, gatk):
     proc.wait()
 
     console.log(f"Recalibration completed {sample_id}")
-    log_to_api("Recalibration completed", "INFO", "recalibrate", sample_id, Path(datadir).name)
+    log_to_api(
+        "Recalibration completed", "INFO", "recalibrate", sample_id, Path(datadir).name
+    )
 
     recal_file = open(f"{bam_dir}/recalibration.txt", "w")
     recal_file.write(f"{GATK_string}\n")

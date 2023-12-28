@@ -13,7 +13,6 @@ from rich.console import Console
 
 from .log_api import log_to_api
 
-
 console = Console()
 
 
@@ -43,10 +42,10 @@ def annotate_merged(sample_id, datadir, snpEff):
         return "exists"
 
     console.log(f"Starting snpEff annotation {sample_id}")
-    log_to_api("Starting snpEff annotation", "INFO", "snpEff", sample_id, Path(datadir).name)
-    snpeff_string = (
-        f"{snpEff} hg19 {vcf_dir}_merged.vcf -onlyTr /apps/data/src/bundle/transcripts_only.txt"
+    log_to_api(
+        "Starting snpEff annotation", "INFO", "snpEff", sample_id, Path(datadir).name
     )
+    snpeff_string = f"{snpEff} hg19 {vcf_dir}_merged.vcf -onlyTr /apps/data/src/bundle/transcripts_only.txt"
     console.log(snpeff_string)
     log_to_api(snpeff_string, "INFO", "snpEff", sample_id, Path(datadir).name)
     proc = subprocess.Popen(
@@ -66,7 +65,9 @@ def annotate_merged(sample_id, datadir, snpEff):
     merged_ann.write(to_write)
     merged_ann.close()
     console.log("Annotated VCF file generated")
-    log_to_api("Annotated VCF file generated", "INFO", "snpEff", sample_id, Path(datadir).name)
+    log_to_api(
+        "Annotated VCF file generated", "INFO", "snpEff", sample_id, Path(datadir).name
+    )
 
     return "success"
 
