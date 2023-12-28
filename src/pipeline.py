@@ -130,7 +130,7 @@ def create_directories(datadir, sample_ids, panel):
             os.makedirs(f"{datadir}/BAM/{sample}/QC/")
         if not Path(f"{datadir}/BAM/{sample}/Metrics/").exists():
             console.log(f"Creating {datadir}/BAM/{sample}/Metrics/")
-            log_to_api(f"Creating {datadir}/BAM/{sample}/Metrics/", "INFO", "pipeline", sample, Path(datadir).name
+            log_to_api(f"Creating {datadir}/BAM/{sample}/Metrics/", "INFO", "pipeline", sample, Path(datadir).name)
             os.makedirs(f"{datadir}/BAM/{sample}/Metrics/")
 
     console.log("Directories created/existed")

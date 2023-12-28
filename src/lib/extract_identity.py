@@ -46,7 +46,7 @@ def mpileup(sample_id, datadir, identity, samtools):
         return "exists"
 
     console.log(f"Starting mpileup process for identity file {sample_id}")
-    log_to_api("Starting mpileup process for identity file", "INFO", "mpileup", sample_id, Path(datadir).name))
+    log_to_api("Starting mpileup process for identity file", "INFO", "mpileup", sample_id, Path(datadir).name)
     mpileup_string = f"{samtools} mpileup -l {identity} {bam_dir}{sample_id}.bam > {bam_dir}/identity.mpileup"
     console.log(mpileup_string)
     log_to_api(mpileup_string, "INFO", "mpileup", sample_id, Path(datadir).name)

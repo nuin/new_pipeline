@@ -149,7 +149,7 @@ def cnv_calculation(datadir, cnvs, yaml_file):
     log_to_api("Calculating standard deviation", "INFO", "CNV", "NA", Path(datadir).name)
     cnvs3["std"] = cnvs3.std(axis=1)
     # calculating female standard deviation
-    console.log("Calculating female std deviation"))
+    console.log("Calculating female std deviation")
     cnvs3["stdF"] = cnvs3[females].std(axis=1)
     # calculating male standard deviation
     console.log("Calculating male std deviation")

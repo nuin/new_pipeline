@@ -17,7 +17,7 @@ import pandas as pd
 from rich.console import Console
 from pathlib import Path
 
-from log_api import log_to_api
+from .log_api import log_to_api
 
 console = Console()
 
