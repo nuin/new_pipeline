@@ -13,6 +13,8 @@ import sys
 import pandas as pd
 from rich.console import Console
 
+from .log_api import log_to_api
+
 console = Console()
 
 
@@ -25,6 +27,13 @@ def get_coverage_values(datadir, panel):
         panel_length = 725631
 
     console.log(f"Saving uniformity file to {datadir}/uniformity.txt")
+    log_to_api(
+        f"Saving uniformity file to {datadir}/uniformity.txt",
+        "INFO",
+        "uniformity",
+        "NA",
+        Path(datadir).name,
+    )
     uniformity_file = open(f"{datadir}/uniformity.txt", "w")
     uniformity_file.write("Sample ID\t0.2*mean\t0.5*mean\t1.0*mean\tMean\n")
     for nucl_file in glob.glob(f"{datadir}/BAM/*/Metrics/*.nucl.out"):
@@ -48,7 +57,14 @@ def get_coverage_values(datadir, panel):
         )
         uniformity_file.write(str(cov_mean) + "\n")
     uniformity_file.close()
-
+    console.log(f"Uniformity file saved to {datadir}/uniformity.txt")
+    log_to_api(
+        f"Uniformity file saved to {datadir}/uniformity.txt",
+        "INFO",
+        "uniformity",
+        "NA",
+        Path(datadir).name,
+    )
 
 if __name__ == "__main__":
 
