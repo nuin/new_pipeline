@@ -6,6 +6,8 @@ from shutil import move
 
 from rich.console import Console
 
+from .log_api import log_to_api
+
 console = Console()
 
 
@@ -26,11 +28,23 @@ def move_bam(datadir: Path, sample: str, bam_file: str) -> bool:
             move(f"{bam_location}.{bam_file}.bai", f"{bam_location}.bam.bai")
         except Exception as e:
             console.log(str(e))
+            log_to_api(str(e), "ERROR", "move_bam", sample, datadir)
             console.log("Index file does not exist")
+            log_to_api(
+                "Index file does not exist", "ERROR", "move_bam", sample, datadir
+            )
         console.log("Files moved")
+        log_to_api("Files moved", "INFO", "move_bam", sample, datadir)
     else:
         console.log(
             f"BAM file {bam_file}.bam does not exist, but process might havbe been completed"
+        )
+        log_to_api(
+            f"BAM file {bam_file}.bam does not exist, but process might havbe been completed",
+            "WARNING",
+            "move_bam",
+            sample,
+            datadir,
         )
 
 
