@@ -12,6 +12,8 @@ from pathlib import Path
 from dotenv import dotenv_values
 from rich.console import Console
 
+from .log_api import log_to_api
+
 console = Console()
 
 
@@ -28,6 +30,13 @@ def get_enrichment(sample_id, datadir, panel):
     console.log(
         f"Saving enrichment file to {datadir}/BAM/{sample_id}/BAM/enrichment.enr"
     )
+    log_to_api(
+        f"Saving enrichment file to {datadir}/BAM/{sample_id}/BAM/enrichment.enr",
+        "INFO",
+        "extract_identity",
+        sample_id,
+        Path(datadir).name,
+    )
 
     bam_dir = f"{datadir}/BAM/{sample_id}/BAM/"
 
@@ -42,7 +51,17 @@ def get_enrichment(sample_id, datadir, panel):
         console.log(
             f"Saving enrichment file to {datadir}/BAM/{sample_id}/BAM/enrichment.enr"
         )
+        log_to_api(
+            f"Saving enrichment file to {datadir}/BAM/{sample_id}/BAM/enrichment.enr",
+            "INFO",
+            "extract_identity",
+            sample_id,
+            Path(datadir).name,
+        )
         console.log(enrichment_string)
+        log_to_api(
+            enrichment_string, "INFO", "extract_identity", sample_id, Path(datadir).name
+        )
         proc = subprocess.Popen(
             enrichment_string,
             shell=True,
@@ -51,5 +70,19 @@ def get_enrichment(sample_id, datadir, panel):
         )
         proc.wait()
         console.log(f"Enrichment file generated {sample_id}")
+        log_to_api(
+            "Enrichment file generated",
+            "INFO",
+            "extract_identity",
+            sample_id,
+            Path(datadir).name,
+        )
     else:
         console.log(f"Enrichment file already exists {sample_id}")
+        log_to_api(
+            "Enrichment file already exists",
+            "INFO",
+            "extract_identity",
+            sample_id,
+            Path(datadir).name,
+        )

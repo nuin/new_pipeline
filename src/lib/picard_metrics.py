@@ -12,6 +12,8 @@ from pathlib import Path
 
 from rich.console import Console
 
+from .log_api import log_to_api
+
 console = Console()
 
 
@@ -39,6 +41,7 @@ def get_yield(sample_id, datadir, picard):
 
     if Path(f"{metrics_dir}{sample_id}.yield.out").exists():
         console.log(f"Picard CollectQualityYieldMetrics file exists {sample_id}")
+        log_to_api
         return "exists"
     console.log(f"Starting Picard CollectQualityYieldMetrics creation {sample_id}")
     picard_string = (
@@ -161,18 +164,43 @@ def get_align_summary(sample_id, datadir, reference, picard):
 
     if Path(f"{metrics_dir}{sample_id}.align_metrics.out").exists():
         console.log(f"Picard  AlignSummary file exists {sample_id}")
+        log_to_api(
+            "Picard  AlignSummary file exists",
+            "INFO",
+            "picard_align_summary",
+            sample_id,
+            Path(datadir).name,
+        )
         return "exists"
 
     console.log(f"Generating Picard CollectAlignmentSummaryMetrics {sample_id}")
+    log_to_api(
+        "Generating Picard CollectAlignmentSummaryMetrics",
+        "INFO",
+        "picard_align_summary",
+        sample_id,
+        Path(datadir).name,
+    )
     picard_string = (
         f"{picard} CollectAlignmentSummaryMetrics I={bam_dir}{sample_id}.bam"
         f" O={metrics_dir}{sample_id}.align_metrics.out R={reference}"
+    )
+    console.log(f"{picard_string} {sample_id}")
+    log_to_api(
+        picard_string, "INFO", "picard_align_summary", sample_id, Path(datadir).name
     )
     proc = subprocess.Popen(
         picard_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
     )
     proc.wait()
     console.log(f"CollectAlignmentSummaryMetrics file created {sample_id}")
+    log_to_api(
+        "CollectAlignmentSummaryMetrics file created",
+        "INFO",
+        "picard_align_summary",
+        sample_id,
+        Path(datadir).name,
+    )
     return "success"
 
 
