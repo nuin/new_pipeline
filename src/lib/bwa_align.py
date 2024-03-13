@@ -24,7 +24,14 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def run_bwa(sample_id: str, fastq_files: List[str], datadir: str, reference: str, bwa: str, samtools: str) -> int:
+def run_bwa(
+    sample_id: str,
+    fastq_files: List[str],
+    datadir: str,
+    reference: str,
+    bwa: str,
+    samtools: str,
+) -> int:
     """
     Performs the alignment/mapping for each pair/sample_id.
 
