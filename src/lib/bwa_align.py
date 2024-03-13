@@ -10,6 +10,7 @@ import os
 import subprocess
 import time
 from pathlib import Path
+from typing import List
 
 from rich.console import Console
 
@@ -23,17 +24,20 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def run_bwa(sample_id, fastq_files, datadir, reference, bwa, samtools):
+def run_bwa(sample_id: str, fastq_files: List[str], datadir: str, reference: str, bwa: str, samtools: str) -> int:
     """
-    function that performs the alignment/mapping, it is run iteratively for each pair/sample_id
+    Performs the alignment/mapping for each pair/sample_id.
 
-    :param sample_id:
-    :param fastq_files:
-    :param datadir:
-    :param reference:
-    :param bwa:
-    :param samtools:
-    :return:
+    Parameters:
+    sample_id (str): The ID of the sample to be analysed.
+    fastq_files (List[str]): The list of FASTQ files for the sample.
+    datadir (str): The directory of the run.
+    reference (str): The reference genome.
+    bwa (str): The path to the BWA software.
+    samtools (str): The path to the Samtools software.
+
+    Returns:
+    int: A flag indicating whether the BAM file exists (1) or was created (0).
     """
 
     console.log(f"Starting bwa processing for file {sample_id}")
@@ -161,17 +165,4 @@ def run_bwa(sample_id, fastq_files, datadir, reference, bwa, samtools):
 
 
 if __name__ == "__main__":
-    data_datadir = "/Users/nuin/Projects/Data/Test_dataset"
-    sample_id = "NA12877_1"
-    reference = "/opt/reference/hg19.fasta"
-    run_bwa(
-        sample_id,
-        [
-            "/Users/nuin/Projects/Data/Test_dataset/BaseCalls/NA12877_1_S1_L001_R1_001.fastq.gz",
-            "/Users/nuin/Projects/Data/Test_dataset/BaseCalls/NA12877_1_S1_L001_R2_001.fastq.gz",
-        ],
-        data_datadir,
-        reference,
-        "bwa",
-        "samtools",
-    )
+    pass
