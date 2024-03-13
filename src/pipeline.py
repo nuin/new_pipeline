@@ -11,7 +11,7 @@ import glob
 import os
 from collections import defaultdict
 from pathlib import Path
-
+from typing import List
 import click
 import yaml
 from dotenv import dotenv_values
@@ -38,9 +38,6 @@ from lib.variants_GATK import haplotype_caller
 from lib.variants_GATK3 import haplotype_caller as haplotype_caller3
 from lib.variants_octopus import octopus_caller
 
-# main configuration file
-# couch_credentials = open('lib/config/couchdb').read().splitlines()
-# run configuration file - should be moved to some argument parsing lib
 
 # checks current version
 VERSIONFILE = "VERSION"
@@ -49,121 +46,127 @@ VERSION = open(VERSIONFILE).read().strip()
 console = Console()
 
 
-def split_string(ctx, param, value):
-    """ """
+def split_string(ctx: object, param: object, value: Optional[str]) -> List[str]:
+    """
+    Splits a string into a list of items. If the input string is None, returns an empty list.
+    Each item in the list is stripped of leading and trailing whitespace.
 
+    Parameters:
+    ctx: The context in which the function is called. Not used in this function.
+    param: The parameter being processed. Not used in this function.
+    value (str): The string to be split. If None, an empty list is returned.
+
+    Returns:
+    list: A list of items obtained by splitting the input string by comma.
+    """
+
+    # If value is None, return an empty list
     if value is None:
         return []
     else:
+        # Split the value by comma and return a list of stripped items
         return [item.strip() for item in value.split(",")]
 
 
-def find_fastq(datadir, panel_samples, panel):
+def find_fastq(datadir: str, panel_samples: List[str], panel: str) -> List[str]:
+    """
+    Finds all the FASTQ files in the given directory.
+
+    Parameters:
+    datadir (str): The directory in which to search for FASTQ files.
+    panel_samples (list): The list of panel samples. Not used in this function.
+    panel (str): The panel to be used. Not used in this function.
+
+    Returns:
+    list: A list of found FASTQ files.
     """
 
-    :param datadir:
-    :return:
-    """
+    # Use glob to find all files that match the pattern "*.fastq.gz"
+    # fastqs = glob.glob(f"{datadir}/*.fastq.gz")
+    fastqs = list(Path(datadir).glob("*.fastq.gz"))
 
-    fastqs = glob.glob(f"{datadir}/*.fastq.gz")
+    # Sort the found files
     fastqs = sorted(fastqs)
 
     to_return = []
     for fastq in fastqs:
+        # Log each found file
         console.log(f"Found {fastq}")
         log_to_api(f"Found {fastq}", "INFO", "pipeline", "NA", Path(datadir).name)
         to_return.append(Path(fastq).name)
 
+    # Return the list of found FASTQ files
     return fastqs
 
 
-def get_ids(fastqs):
+def get_ids(fastqs: List[Path]) -> List[str]:
     """
+    Extracts the sample IDs from the list of FASTQ files.
 
-    :param fastqs:
-    :return:
+    Parameters:
+    fastqs (List[Path]): The list of FASTQ files.
+
+    Returns:
+    List[str]: A sorted list of unique sample IDs.
     """
 
     sample_ids = []
     for fastq in fastqs:
+        # Split the file name on underscore and take the first part as the sample ID
         sample_ids.append(Path(fastq).name.split("_")[0])
 
+    # Remove duplicates and sort the sample IDs
     sample_ids = sorted(set(sample_ids))
 
     return sample_ids
 
 
-def create_directories(datadir, sample_ids, panel):
+from typing import List
+from pathlib import Path
+
+def create_directories(datadir: str, sample_ids: List[str], panel: str) -> None:
+    """
+    Creates necessary directories for each sample in the given directory.
+
+    Parameters:
+    datadir (str): The directory in which to create sample directories.
+    sample_ids (List[str]): The list of sample IDs for which directories are to be created.
+    panel (str): The panel to be used. Not used in this function.
+
+    Returns:
+    None
     """
 
-    :param datadir:
-    :param fastqs:
-    :return:
-    """
-
+    # Try to create a directory for BAM files
     try:
         os.makedirs(f"{datadir}/BAM/")
     except FileExistsError:
+        # If the directory already exists, log a message and continue
         console.log(f"{datadir}/BAM/ already exists")
+
     console.log(f"Creating directories in {panel} directory")
+
+    # For each sample ID, create necessary directories
     for sample in sample_ids:
         console.log(f"Processing {sample}")
         log_to_api(
             f"Processing {sample}", "INFO", "pipeline", sample, Path(datadir).name
         )
-        if not Path(f"{datadir}/BAM/{sample}").exists():
-            console.log(f"Creating {datadir}/BAM/{sample}")
+
+        # Create directories for each sample if they do not exist
+        for sub_dir in ["", "BAM", "VCF", "QC", "Metrics"]:
+            path = Path(datadir) / "BAM" / sample / sub_dir
+            path.mkdir(parents=True, exist_ok=True)
+            console.log(f"Creating {path}")
             log_to_api(
-                f"Creating {datadir}/BAM/{sample}",
+                f"Creating {path}",
                 "INFO",
                 "pipeline",
                 sample,
                 Path(datadir).name,
             )
-            os.makedirs(f"{datadir}/BAM/{sample}")
-        if not Path(f"{datadir}/BAM/{sample}/BAM/").exists():
-            console.log(f"Creating {datadir}/BAM/{sample}/BAM/")
-            log_to_api(
-                f"Creating {datadir}/BAM/{sample}/BAM/",
-                "INFO",
-                "pipeline",
-                sample,
-                Path(datadir).name,
-            )
-            os.makedirs(f"{datadir}/BAM/{sample}/BAM/")
-        if not Path(f"{datadir}/BAM/{sample}/VCF/").exists():
-            console.log(f"Creating {datadir}/BAM/{sample}/VCF/")
-            log_to_api(
-                f"Creating {datadir}/BAM/{sample}/VCF/",
-                "INFO",
-                "pipeline",
-                sample,
-                Path(datadir).name,
-            )
-            os.makedirs(f"{datadir}/BAM/{sample}/VCF/")
-        if not Path(f"{datadir}/BAM/{sample}/QC/").exists():
-            console.log(f"Creating {datadir}/BAM/{sample}/QC/")
-            log_to_api(
-                f"Creating {datadir}/BAM/{sample}/QC/",
-                "INFO",
-                "pipeline",
-                sample,
-                Path(datadir).name,
-            )
-            os.makedirs(f"{datadir}/BAM/{sample}/QC/")
-        if not Path(f"{datadir}/BAM/{sample}/Metrics/").exists():
-            console.log(f"Creating {datadir}/BAM/{sample}/Metrics/")
-            log_to_api(
-                f"Creating {datadir}/BAM/{sample}/Metrics/",
-                "INFO",
-                "pipeline",
-                sample,
-                Path(datadir).name,
-            )
-            os.makedirs(f"{datadir}/BAM/{sample}/Metrics/")
 
     console.log("Directories created/existed")
-
 
 def align_files(config, datadir: Path, samples: list, fastqs: list) -> bool:
     """
