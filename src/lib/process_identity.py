@@ -285,7 +285,6 @@ def compile_barcodes(datadir):
 
 
 if __name__ == "__main__":
-
     # for sample_id in ['17-291-021140B_DM_OR',
     #                   '17-293-019731B_TL_DF',
     #                   '17-298-020323B_HM_DF',

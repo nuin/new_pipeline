@@ -87,7 +87,6 @@ def picard_sort(datadir, sample_id, reference, picard):
 
 
 if __name__ == "__main__":
-
     datadir = "/Users/nuin/Projects/Data/Test_dataset"
     sample_id = "NA12877_1"
     reference = "/opt/reference/hg19.fasta"

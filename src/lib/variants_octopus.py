@@ -25,7 +25,6 @@ console = Console()
 
 
 def get_code(sample_id):
-
     return sample_id[-2:]
 
 

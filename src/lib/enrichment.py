@@ -5,7 +5,6 @@
 .. moduleauthor:: Paulo Nuin, August 2020
 """
 
-
 import subprocess
 from pathlib import Path
 

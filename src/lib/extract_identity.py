@@ -134,7 +134,6 @@ def create_identity_table(sample_id, datadir):
 
 
 if __name__ == "__main__":
-
     datadir = "/nfs/mgn_dna/NGS/230825_NB551084_0261_AHHK2GAFX5/Cardiac_2023_NGS_36/"
     sample_id = "23GN-191G00031"
     identity_file = "identity.txt"

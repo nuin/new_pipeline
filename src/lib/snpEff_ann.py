@@ -73,7 +73,6 @@ def annotate_merged(sample_id, datadir, snpEff):
 
 
 if __name__ == "__main__":
-
     datadir = "/Volumes/Juggernaut/200320_NB551084_0089_AH2YWNAFX2_Cplus_2020_NGS_07"
     # sample_id = '20GN-011G00002_PJ_DF'
     sample_id = "19-252-017170B_LL_FC"

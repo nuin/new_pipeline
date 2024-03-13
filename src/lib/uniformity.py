@@ -69,5 +69,4 @@ def get_coverage_values(datadir, panel):
 
 
 if __name__ == "__main__":
-
     get_coverage_values(sys.argv[1])

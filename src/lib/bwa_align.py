@@ -161,7 +161,6 @@ def run_bwa(sample_id, fastq_files, datadir, reference, bwa, samtools):
 
 
 if __name__ == "__main__":
-
     data_datadir = "/Users/nuin/Projects/Data/Test_dataset"
     sample_id = "NA12877_1"
     reference = "/opt/reference/hg19.fasta"

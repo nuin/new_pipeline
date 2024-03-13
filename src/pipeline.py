@@ -532,7 +532,3 @@ def run_analysis(configuration_file, datadir, panel, samples):
 
 if __name__ == "__main__":
     run_analysis()
-
-# 23GN-135G00063
-# 23GN-135G00072
-# 23GN-125G00029
