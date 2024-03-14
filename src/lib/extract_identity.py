@@ -16,15 +16,14 @@ from .log_api import log_to_api
 console = Console()
 
 
-def mpileup(sample_id, datadir, identity, samtools):
+def mpileup(sample_id: str, datadir: str, identity: str, samtools: str) -> str:
     """
-    Function that call sammtool to generate the pileup
-    file that can be searched for the nucleotide state in
-    the locations of interest
+    Function that calls samtools to generate the pileup file that can be searched for the nucleotide state in
+    the locations of interest.
 
     :param sample_id: ID of the patient/sample being analysed
     :param datadir: Location of the BAM files
-    :param identity: Indentity file name with defined location
+    :param identity: Identity file name with defined location
     :param samtools: Samtools executable location
 
     :type sample_id: string
@@ -32,7 +31,7 @@ def mpileup(sample_id, datadir, identity, samtools):
     :type identity: string
     :type samtools: string
 
-    :return: returns success or exists
+    :return: returns 'success' if the pileup file is successfully generated, 'exists' if the file already exists.
 
     :todo: return error
     """
@@ -72,7 +71,7 @@ def mpileup(sample_id, datadir, identity, samtools):
     return "success"
 
 
-def get_nucleotides(pileup):
+def get_nucleotides(pileup: str) -> tuple:
     """
     Function that returns nucleotide counts for the region
 
@@ -81,7 +80,6 @@ def get_nucleotides(pileup):
     :type pileup: string
 
     :returns: returns the number of A, C, G and T
-
     """
 
     reads = "".join(e for e in pileup if e.isalnum()).upper()
@@ -89,17 +87,17 @@ def get_nucleotides(pileup):
     return reads.count("A"), reads.count("C"), reads.count("G"), reads.count("T")
 
 
-def create_identity_table(sample_id, datadir):
+def create_identity_table(sample_id: str, datadir: str) -> None:
     """
-    Function that creates the identity table in the sample
-    datadir
+    Function that creates the identity table in the sample data directory.
 
-    :param sample_id: patient id to be analyses
-    :param datadir: datadir where the table will be saved
+    :param sample_id: ID of the patient/sample being analysed
+    :param datadir: Location where the table will be saved
 
     :type sample_id: string
     :type datadir: string
 
+    :return: None
     """
 
     mpileup = (
@@ -134,9 +132,4 @@ def create_identity_table(sample_id, datadir):
 
 
 if __name__ == "__main__":
-    datadir = "/nfs/mgn_dna/NGS/230825_NB551084_0261_AHHK2GAFX5/Cardiac_2023_NGS_36/"
-    sample_id = "23GN-191G00031"
-    identity_file = "identity.txt"
-    samtools = "/apps/data/src/bin/samtools"
-    mpileup(sample_id, datadir, identity_file, samtools)
-    create_identity_table(sample_id, datadir)
+    pass

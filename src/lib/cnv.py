@@ -200,8 +200,6 @@ def cnv_calculation(datadir: str, cnvs: pd.DataFrame, yaml_file: str) -> str:
     return "done"
 
 
-
-
 def split_genders(samples: Dict[str, str]) -> Tuple[List[str], List[str]]:
     """
     Function that returns a list of males and females for X-linked and other gender related checks
@@ -222,7 +220,6 @@ def split_genders(samples: Dict[str, str]) -> Tuple[List[str], List[str]]:
     males = [k for k, v in samples.items() if v == "Male" or v == "M"]
 
     return males, females
-
 
 
 def get_xlinked() -> Any:
@@ -247,7 +244,10 @@ def get_xlinked() -> Any:
 
 from typing import Any
 
-def cnvs_calculation_xlinked(datadir: str, cnvs_xlinked: pd.DataFrame, cnv_sum: pd.DataFrame, yaml_file: str) -> str:
+
+def cnvs_calculation_xlinked(
+    datadir: str, cnvs_xlinked: pd.DataFrame, cnv_sum: pd.DataFrame, yaml_file: str
+) -> str:
     """
     Function that calculates CNVs for x-linked genes. There are 4 DataFrames used in this function
     cnv and cnv2 and 3: normalization intra-gender
