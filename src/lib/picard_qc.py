@@ -68,29 +68,31 @@ function = MyTemplate(
 
 
 def get_coverage(
-    sample_id,
-    datadir,
-    reference,
-    bait_file,
-    picard,
-    panel="full",
-):
+    sample_id: str,
+    datadir: str,
+    reference: str,
+    bait_file: str,
+    picard: str,
+    panel: str = "full",
+) -> str:
     """
     Function that calls Picard to generate nucleotide coverage
 
     :param sample_id: ID of the patient/sample being analysed using Picard
-    :param directory: Location of the BAM files
+    :param datadir: Location of the BAM files
     :param reference: Reference genome
     :param bait_file: Picard specific BED file
     :param picard: Picard jar file location
+    :param panel: Panel type, default is "full"
 
     :type sample_id: string
-    :type directory: string
+    :type datadir: string
     :type reference: string
     :type bait_file: string
     :type picard: string
+    :type panel: string
 
-    :return: returns success or exists
+    :return: returns 'success' if the Picard coverage file is successfully created, 'exists' if the file already exists.
 
     :todo: fix argument
     """
@@ -186,9 +188,11 @@ def get_coverage(
     return "success"
 
 
-def get_coverage_parp(sample_id, directory, reference, bait_file, picard):
+def get_coverage_parp(
+    sample_id: str, directory: str, reference: str, bait_file: str, picard: str
+) -> str:
     """
-    Function that calls Picard to generate nucleotide coverage
+    Function that calls Picard to generate nucleotide coverage for PARP.
 
     :param sample_id: ID of the patient/sample being analysed using Picard
     :param directory: Location of the BAM files
@@ -202,7 +206,9 @@ def get_coverage_parp(sample_id, directory, reference, bait_file, picard):
     :type bait_file: string
     :type picard: string
 
-    :return: returns success or exists
+    :return: returns 'success' if the Picard coverage file is successfully created, 'exists' if the file already exists.
+
+    :todo: return error
     """
 
     if os.path.isdir(directory + "/BAM/" + sample_id + "/Metrics/"):
@@ -235,11 +241,17 @@ def get_coverage_parp(sample_id, directory, reference, bait_file, picard):
     return "success"
 
 
-def get_transcripts(transcript_location):
+def get_transcripts(transcript_location: str) -> dict:
     """
     Function that gets the currently used transcripts for HGVS numberConversion
 
-    return: list of transcripts
+    :param transcript_location: Location of the transcript file
+
+    :type transcript_location: string
+
+    :return: Dictionary of transcripts
+
+    :rtype: dict
     """
 
     transcript_file = open(transcript_location).read().splitlines()
@@ -252,18 +264,17 @@ def get_transcripts(transcript_location):
     return transcripts
 
 
-def chr_frame(segment):
+def chr_frame(segment: DataFrame) -> tuple:
     """
     Function that checks chromosome regions for coverage under 25X
 
     :param segment: current segment being analysed
-    :param transcripts: list of transcripts
 
     :type segment: pandas DataFrame
-    :type transcripts: list
 
-    :return: gene, segment and chromosome if there's a region under 25x
+    :return: gene, segment and chromosome if there's a region under 25x, otherwise returns 'empty', 'empty', 'empty'
 
+    :rtype: tuple
     """
 
     if segment.loc[segment["coverage"].idxmin()]["coverage"] <= 100:

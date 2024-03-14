@@ -17,21 +17,19 @@ from .log_api import log_to_api
 console = Console()
 
 
-def get_yield(sample_id, datadir, picard):
+def get_yield(sample_id: str, datadir: str, picard: str) -> str:
     """
+    Function that generates Picard CollectQualityYieldMetrics.
+
     :param sample_id: ID of the patient/sample being analysed using Picard
-    :param directory: Location of the BAM files
-    :param reference: Reference genome
-    :param bait_file: Picard specific BED file
+    :param datadir: Location of the BAM files
     :param picard: Picard jar file location
 
     :type sample_id: string
-    :type directory: string
-    :type reference: string
-    :type bait_file: string
+    :type datadir: string
     :type picard: string
 
-    :return: returns success or exists
+    :return: returns 'success' if the Picard CollectQualityYieldMetrics file is successfully created, 'exists' if the file already exists.
 
     :todo: return error
     """
@@ -64,21 +62,32 @@ def get_yield(sample_id, datadir, picard):
     return "success"
 
 
-def get_hs_metrics(sample_id, datadir, reference, bait_file, picard, panel="full"):
+def get_hs_metrics(
+    sample_id: str,
+    datadir: str,
+    reference: str,
+    bait_file: str,
+    picard: str,
+    panel: str = "full",
+) -> str:
     """
+    Function that generates Picard CollectHsMetrics.
+
     :param sample_id: ID of the patient/sample being analysed using Picard
-    :param directory: Location of the BAM files
+    :param datadir: Location of the BAM files
     :param reference: Reference genome
     :param bait_file: Picard specific BED file
     :param picard: Picard jar file location
+    :param panel: Panel type, default is "full"
 
     :type sample_id: string
-    :type directory: string
+    :type datadir: string
     :type reference: string
     :type bait_file: string
     :type picard: string
+    :type panel: string
 
-    :return: returns success or exists
+    :return: returns 'success' if the Picard CollectHsMetrics file is successfully created, 'exists' if the file already exists.
 
     :todo: return error
     """
@@ -139,22 +148,21 @@ def get_hs_metrics(sample_id, datadir, reference, bait_file, picard, panel="full
     return "success"
 
 
-def get_align_summary(sample_id, datadir, reference, picard):
+def get_align_summary(sample_id: str, datadir: str, reference: str, picard: str) -> str:
     """
+    Function that generates Picard CollectAlignmentSummaryMetrics.
 
     :param sample_id: ID of the patient/sample being analysed using Picard
-    :param directory: Location of the BAM files
+    :param datadir: Location of the BAM files
     :param reference: Reference genome
-    :param bait_file: Picard specific BED file
     :param picard: Picard jar file location
 
     :type sample_id: string
-    :type directory: string
+    :type datadir: string
     :type reference: string
-    :type bait_file: string
     :type picard: string
 
-    :return: returns success or exists
+    :return: returns 'success' if the Picard CollectAlignmentSummaryMetrics file is successfully created, 'exists' if the file already exists.
 
     :todo: return error
     """
@@ -204,21 +212,21 @@ def get_align_summary(sample_id, datadir, reference, picard):
     return "success"
 
 
-def get_call_metrics(sample_id, directory, vcf_file, picard):
+def get_call_metrics(sample_id: str, directory: str, vcf_file: str, picard: str) -> str:
     """
+    Function that generates Picard CollectVariantCallingMetrics.
+
     :param sample_id: ID of the patient/sample being analysed using Picard
     :param directory: Location of the BAM files
-    :param reference: Reference genome
-    :param bait_file: Picard specific BED file
+    :param vcf_file: VCF file used for variant calling
     :param picard: Picard jar file location
 
     :type sample_id: string
     :type directory: string
-    :type reference: string
-    :type bait_file: string
+    :type vcf_file: string
     :type picard: string
 
-    :return: returns success or exists
+    :return: returns 'success' if the Picard CollectVariantCallingMetrics file is successfully created, 'exists' if the file already exists.
 
     :todo: return error
     :todo: fix argument
