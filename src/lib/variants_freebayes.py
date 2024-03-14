@@ -17,27 +17,26 @@ from .log_api import log_to_api
 console = Console()
 
 
-def get_code(sample_id):
-    return sample_id[-2:]
 
-
-def freebayes_caller(datadir, sample_id, reference, bed_file, freebayes):
+def freebayes_caller(datadir: str, sample_id: str, reference: str, bed_file: str, freebayes: str) -> str:
     """
     Function that calls Freebayes to generate a VCF file
 
+    :param datadir: The directory where the data is located.
     :param sample_id: ID of the patient/sample being analysed
-    :param directory: Location of the BAM files
-    :param bed_file: BED file with regions to be analysed
     :param reference: Reference file used in the original alignment
+    :param bed_file: BED file with regions to be analysed
     :param freebayes: Location of Freebayes executable
 
+    :type datadir: string
     :type sample_id: string
-    :type directory: string
-    :type bed_file: string
     :type reference: string
+    :type bed_file: string
     :type freebayes: string
 
-    :return: returns success or exists
+    :return: returns 'success' if the operation is successful, 'exists' if the VCF file already exists, 'error' if there is an error
+
+    :rtype: string
 
     :todo: return error
     """
@@ -101,15 +100,19 @@ def freebayes_caller(datadir, sample_id, reference, bed_file, freebayes):
     return "success"
 
 
-def edit_freebayes_vcf(sample_id, datadir):
+def edit_freebayes_vcf(sample_id: str, datadir: str) -> str:
     """
-    Function that removes extra lines in Freebayes generated VCF to allow proper sorting
+    Function that removes extra lines in Freebayes generated VCF to allow proper sorting.
 
-    :param sample_id: ID of the patient/sample being analysed using GATK
-    :param directory: Location of the BAM files
+    :param sample_id: ID of the patient/sample being analysed.
+    :param datadir: The directory where the data is located.
 
     :type sample_id: string
-    :type directory: string
+    :type datadir: string
+
+    :return: returns 'exists' if the VCF file already exists, 'success' if the operation is successful.
+
+    :rtype: string
     """
 
     vcf_dir = f"{datadir}/BAM/{sample_id}/VCF/"

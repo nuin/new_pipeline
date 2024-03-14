@@ -19,26 +19,25 @@ from .log_api import log_to_api
 console = Console()
 
 
-def haplotype_caller(datadir, sample_id, reference, bed_file, gatk):
+def haplotype_caller(datadir: str, sample_id: str, reference: str, bed_file: str, gatk: str) -> str:
     """
-    Function that calls GATK's HaplotypeCaller parameter to generate a list
-    of raw variants
+    Function that calls GATK's HaplotypeCaller parameter to generate a list of raw variants.
 
-    :param sample_id: ID of the patient/sample being analysed using GATK
-    :param directory: Location of the BAM files
-    :param bed_file: BED file with regions to be analysed
-    :param reference: Reference file used in the original alignment
-    :param gatk: GATK jar file location
-    :param pcr: If True variant call is made on BWA original's BAM
+    :param datadir: The directory where the data is located.
+    :param sample_id: ID of the patient/sample being analysed using GATK.
+    :param reference: Reference file used in the original alignment.
+    :param bed_file: BED file with regions to be analysed.
+    :param gatk: GATK jar file location.
 
+    :type datadir: string
     :type sample_id: string
-    :type directory: string
-    :type bed_file: string
     :type reference: string
+    :type bed_file: string
     :type gatk: string
-    :type pcr: bool
 
-    :return: returns success or exists
+    :return: returns 'success' if the operation is successful, 'exists' if the VCF file already exists.
+
+    :rtype: string
     """
 
     vcf_dir = f"{datadir}/BAM/{sample_id}/VCF/"

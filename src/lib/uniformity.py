@@ -19,8 +19,18 @@ from .log_api import log_to_api
 console = Console()
 
 
-def get_coverage_values(datadir, panel):
-    """ """
+def get_coverage_values(datadir: str, panel: str) -> None:
+    """
+    Function that calculates and saves the uniformity values for samples.
+
+    :param datadir: The directory where the data is located.
+    :param panel: The panel used for the analysis, can be 'Cplus' or 'Cardiac'.
+
+    :type datadir: string
+    :type panel: string
+
+    :return: None
+    """
 
     if panel == "Cplus":
         panel_length = 328863
@@ -69,4 +79,4 @@ def get_coverage_values(datadir, panel):
 
 
 if __name__ == "__main__":
-    get_coverage_values(sys.argv[1])
+    pass
