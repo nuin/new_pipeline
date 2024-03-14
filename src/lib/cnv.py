@@ -9,7 +9,8 @@ import glob
 import os
 import sys
 from pathlib import Path
-from typing import Tuple, List, Dict, Any
+from typing import Any, Dict, List, Tuple
+
 import pandas as pd
 import requests
 import yaml
@@ -57,9 +58,10 @@ def check_file_size(cnv_file: str, panel: str, expected_lines: int) -> bool:
     return True
 
 
-import pandas as pd
 import glob
 from typing import Dict
+
+import pandas as pd
 from rich.console import Console
 
 console = Console()
