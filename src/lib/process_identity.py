@@ -12,6 +12,7 @@
 import glob
 import os
 from pathlib import Path
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -155,7 +156,9 @@ def read_identity(sample_id, datadir):
     return sample_identity
 
 
-def generate_barcode(sample_id: str, datadir: str, sample_identity: pd.DataFrame) -> None:
+def generate_barcode(
+    sample_id: str, datadir: str, sample_identity: pd.DataFrame
+) -> None:
     """
     Function that reads the codes and generates a numeric barcode for each sample
 
@@ -171,9 +174,7 @@ def generate_barcode(sample_id: str, datadir: str, sample_identity: pd.DataFrame
     """
 
     barcode = ""
-    barcode_file = open(
-        f"{datadir}/BAM/{sample_id}/{sample_id}.barcode.txt", "w"
-    )
+    barcode_file = open(f"{datadir}/BAM/{sample_id}/{sample_id}.barcode.txt", "w")
     for i in [0, 3, 1, 12, 15, 4, 14, 13, 5, 6, 8, 11, 10, 9, 7, 2]:
         barcode += str(CODES[sample_identity["Full code"][i]])
 
@@ -188,7 +189,9 @@ def generate_barcode(sample_id: str, datadir: str, sample_identity: pd.DataFrame
     )
 
 
-def process_identity(sample_id: str, datadir: str, sample_identity: pd.DataFrame) -> pd.DataFrame:
+def process_identity(
+    sample_id: str, datadir: str, sample_identity: pd.DataFrame
+) -> pd.DataFrame:
     """
     Function that processes the identity for each patient and returns a DataFrame with information
 
@@ -231,12 +234,20 @@ def process_identity(sample_id: str, datadir: str, sample_identity: pd.DataFrame
     sample_identity["Total reads"] = sample_identity[nucleotides].sum(axis=1)
 
     for nucleotide in nucleotides:
-        sample_identity[f"pc{nucleotide}"] = sample_identity[nucleotide] / sample_identity["Total reads"]
-        sample_identity[f"code{nucleotide}"] = np.where(sample_identity[f"pc{nucleotide}"] > 0.1, nucleotide, "0")
+        sample_identity[f"pc{nucleotide}"] = (
+            sample_identity[nucleotide] / sample_identity["Total reads"]
+        )
+        sample_identity[f"code{nucleotide}"] = np.where(
+            sample_identity[f"pc{nucleotide}"] > 0.1, nucleotide, "0"
+        )
 
-    sample_identity["Full code"] = sample_identity["ID"] + sample_identity["codeA"] + sample_identity["codeC"] + \
-                                   sample_identity["codeG"] + sample_identity["codeT"]
-
+    sample_identity["Full code"] = (
+        sample_identity["ID"]
+        + sample_identity["codeA"]
+        + sample_identity["codeC"]
+        + sample_identity["codeG"]
+        + sample_identity["codeT"]
+    )
 
     sample_identity.to_csv(
         f"{datadir}/BAM/{sample_id}/{sample_id}.identity_full.txt",

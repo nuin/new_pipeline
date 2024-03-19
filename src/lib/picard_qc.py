@@ -11,6 +11,7 @@ import string
 import subprocess
 from pathlib import Path
 
+import pandas as pd
 from rich.console import Console
 from suds.client import Client
 
@@ -264,7 +265,7 @@ def get_transcripts(transcript_location: str) -> dict:
     return transcripts
 
 
-def chr_frame(segment: DataFrame) -> tuple:
+def chr_frame(segment: pd.DataFrame) -> tuple:
     """
     Function that checks chromosome regions for coverage under 25X
 

@@ -17,8 +17,9 @@ from .log_api import log_to_api
 console = Console()
 
 
-
-def freebayes_caller(datadir: str, sample_id: str, reference: str, bed_file: str, freebayes: str) -> str:
+def freebayes_caller(
+    datadir: str, sample_id: str, reference: str, bed_file: str, freebayes: str
+) -> str:
     """
     Function that calls Freebayes to generate a VCF file
 

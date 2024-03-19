@@ -28,7 +28,9 @@ def get_code(sample_id):
     return sample_id[-2:]
 
 
-def octopus_caller(datadir: str, sample_id: str, reference: str, bed_file: str, octopus: str) -> str:
+def octopus_caller(
+    datadir: str, sample_id: str, reference: str, bed_file: str, octopus: str
+) -> str:
     """
     Function that calls Octopus to generate a VCF file
 

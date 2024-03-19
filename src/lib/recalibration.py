@@ -19,7 +19,14 @@ from .log_api import log_to_api
 console = Console()
 
 
-def base_recal1(datadir: str, sample_id: str, bed_file: str, vcf_file: str, reference: str, gatk: str) -> str:
+def base_recal1(
+    datadir: str,
+    sample_id: str,
+    bed_file: str,
+    vcf_file: str,
+    reference: str,
+    gatk: str,
+) -> str:
     """
     Function that does the first step of base recalibration, creating a recalibration data table
 

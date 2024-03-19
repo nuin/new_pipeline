@@ -19,7 +19,9 @@ from .log_api import log_to_api
 console = Console()
 
 
-def haplotype_caller(datadir: str, sample_id: str, reference: str, bed_file: str, gatk: str) -> str:
+def haplotype_caller(
+    datadir: str, sample_id: str, reference: str, bed_file: str, gatk: str
+) -> str:
     """
     Function that calls GATK's HaplotypeCaller parameter to generate a list of raw variants.
 

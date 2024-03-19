@@ -10,7 +10,8 @@
 import os
 from collections import defaultdict
 from pathlib import Path
-from typing import List, Dict, Optional
+from typing import Dict, List, Optional
+
 import click
 import yaml
 from dotenv import dotenv_values
@@ -36,7 +37,6 @@ from lib.variants_freebayes import edit_freebayes_vcf, freebayes_caller
 from lib.variants_GATK import haplotype_caller
 from lib.variants_GATK3 import haplotype_caller as haplotype_caller3
 from lib.variants_octopus import octopus_caller
-
 
 # checks current version
 VERSIONFILE = "VERSION"

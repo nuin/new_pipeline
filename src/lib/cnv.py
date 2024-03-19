@@ -20,6 +20,9 @@ from .log_api import log_to_api
 
 console = Console()
 
+
+console = Console()
+
 XLINKED = ["FANCB", "DMD", "EMD", "FHL1", "GLA", "LAMP2", "TAZ", "GPC3"]
 
 
@@ -56,15 +59,6 @@ def check_file_size(cnv_file: str, panel: str, expected_lines: int) -> bool:
         return False
 
     return True
-
-
-import glob
-from typing import Dict
-
-import pandas as pd
-from rich.console import Console
-
-console = Console()
 
 
 def compile_samples(datadir: str) -> pd.DataFrame:
@@ -242,9 +236,6 @@ def get_xlinked() -> Any:
 
     # Return the JSON response from the GET request
     return r.json()
-
-
-from typing import Any
 
 
 def cnvs_calculation_xlinked(
