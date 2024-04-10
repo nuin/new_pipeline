@@ -43,8 +43,11 @@ from lib.variants_octopus import octopus_caller
 # run configuration file - should be moved to some argument parsing lib
 
 # checks current version
-VERSIONFILE = "VERSION"
-VERSION = open(VERSIONFILE).read().strip()
+try:
+    VERSIONFILE = "VERSION"
+    VERSION = open(VERSIONFILE).read().strip()
+except:
+    VERSION = "N/A" 
 
 console = Console()
 
