@@ -19,7 +19,7 @@ from .log_api import log_to_api
 console = Console()
 
 
-def picard_sort(datadir, sample_id, reference, picard):
+def picard_sort(datadir: str, sample_id: str, reference: str, picard: str) -> str:
     """
     Function that calls Picard for Freebayes VCF sorting
 
@@ -32,6 +32,8 @@ def picard_sort(datadir, sample_id, reference, picard):
     :type datadir: string
     :type reference: string
     :type picard: string
+
+    :return: returns 'success' if the VCF files are successfully sorted, 'exists' if the sorted file already exists.
     """
 
     dictionary = reference.replace("fasta", "dict")
@@ -87,9 +89,4 @@ def picard_sort(datadir, sample_id, reference, picard):
 
 
 if __name__ == "__main__":
-
-    datadir = "/Users/nuin/Projects/Data/Test_dataset"
-    sample_id = "NA12877_1"
-    reference = "/opt/reference/hg19.fasta"
-
-    picard_sort(sample_id, datadir, reference, "picard")
+    pass

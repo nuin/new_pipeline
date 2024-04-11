@@ -6,7 +6,6 @@ LOG_API = "http://10.106.108.24:8001/logs"
 
 
 def log_to_api(message, level, program, sample_id, run_id):
-
     timestamp = datetime.now().isoformat()
     requests.post(
         LOG_API,

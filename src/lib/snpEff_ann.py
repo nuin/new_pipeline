@@ -16,10 +16,9 @@ from .log_api import log_to_api
 console = Console()
 
 
-def annotate_merged(sample_id, datadir, snpEff):
+def annotate_merged(sample_id: str, datadir: str, snpEff: str) -> str:
     """
-    Function that calls snpEff to annotated the required
-    VCF file
+    Function that calls snpEff to annotate the required VCF file.
 
     :param sample_id: ID of the patient/sample being analysed
     :param datadir: Location of the BAM files
@@ -29,7 +28,9 @@ def annotate_merged(sample_id, datadir, snpEff):
     :type datadir: string
     :type snpEff: string
 
-    :return: returns success or exists
+    :return: returns 'success' if the operation is successful, 'exists' if the VCF file already exists
+
+    :rtype: string
 
     :todo: return error
     """
@@ -73,12 +74,4 @@ def annotate_merged(sample_id, datadir, snpEff):
 
 
 if __name__ == "__main__":
-
-    datadir = "/Volumes/Juggernaut/200320_NB551084_0089_AH2YWNAFX2_Cplus_2020_NGS_07"
-    # sample_id = '20GN-011G00002_PJ_DF'
-    sample_id = "19-252-017170B_LL_FC"
-    snpEff = "java -jar /usr/local/bin/snpEff.jar"
-    # reference = '/opt/reference/hg19.fasta'
-    # gatk = 'java -jar /usr/local/bin/GATK4.jar'
-
-    # annotate_pseudo(sample_id, datadir, snpEff)
+    pass

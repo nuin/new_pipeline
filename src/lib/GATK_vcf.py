@@ -16,23 +16,21 @@ from .log_api import log_to_api
 console = Console()
 
 
-def vcf_comparison(datadir, sample_id, reference, gatk):
+def vcf_comparison(datadir: str, sample_id: str, reference: str, gatk: str) -> str:
     """
     Function that merges the available VCFs in the sample VCF datadir
 
     :param sample_id: ID of the patient/sample being analysed using GATK
     :param datadir: Location of the BAM files
-    :param bed_file: BED file with regions to be analysed
     :param reference: Reference file used in the original alignment
     :param gatk: GATK jar file location
 
     :type sample_id: string
     :type datadir: string
-    :type bed_file: string
     :type reference: string
     :type gatk: string
 
-    :return: returns success or exists
+    :return: returns 'success' if the VCF files are successfully merged, 'exists' if the merged file already exists.
     """
 
     # --variant:varscan %svarscan_intersect.vcf

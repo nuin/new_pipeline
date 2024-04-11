@@ -7,10 +7,10 @@
 
 """
 
-import glob
 import os
 from collections import defaultdict
 from pathlib import Path
+from typing import Dict, List, Optional
 
 import click
 import yaml
@@ -38,10 +38,6 @@ from lib.variants_GATK import haplotype_caller
 from lib.variants_GATK3 import haplotype_caller as haplotype_caller3
 from lib.variants_octopus import octopus_caller
 
-# main configuration file
-# couch_credentials = open('lib/config/couchdb').read().splitlines()
-# run configuration file - should be moved to some argument parsing lib
-
 # checks current version
 try:
     VERSIONFILE = "VERSION"
@@ -52,186 +48,207 @@ except:
 console = Console()
 
 
-def split_string(ctx, param, value):
-    """ """
+def split_string(ctx: object, param: object, value: Optional[str]) -> List[str]:
+    """
+    Splits a string into a list of items. If the input string is None, returns an empty list.
+    Each item in the list is stripped of leading and trailing whitespace.
 
+    Parameters:
+    ctx: The context in which the function is called. Not used in this function.
+    param: The parameter being processed. Not used in this function.
+    value (str): The string to be split. If None, an empty list is returned.
+
+    Returns:
+    list: A list of items obtained by splitting the input string by comma.
+    """
+
+    # If value is None, return an empty list
     if value is None:
         return []
     else:
+        # Split the value by comma and return a list of stripped items
         return [item.strip() for item in value.split(",")]
 
 
-def find_fastq(datadir, panel_samples, panel):
+def find_fastq(datadir: str, panel_samples: List[str], panel: str) -> List[str]:
+    """
+    Finds all the FASTQ files in the given directory.
+
+    Parameters:
+    datadir (str): The directory in which to search for FASTQ files.
+    panel_samples (list): The list of panel samples. Not used in this function.
+    panel (str): The panel to be used. Not used in this function.
+
+    Returns:
+    list: A list of found FASTQ files.
     """
 
-    :param datadir:
-    :return:
-    """
+    # Use glob to find all files that match the pattern "*.fastq.gz"
+    # fastqs = glob.glob(f"{datadir}/*.fastq.gz")
+    fastqs = list(Path(datadir).glob("*.fastq.gz"))
 
-    fastqs = glob.glob(f"{datadir}/*.fastq.gz")
+    # Sort the found files
     fastqs = sorted(fastqs)
 
     to_return = []
     for fastq in fastqs:
+        # Log each found file
         console.log(f"Found {fastq}")
         log_to_api(f"Found {fastq}", "INFO", "pipeline", "NA", Path(datadir).name)
         to_return.append(Path(fastq).name)
 
+    # Return the list of found FASTQ files
     return fastqs
 
 
-def get_ids(fastqs):
+def get_ids(fastqs: List[Path]) -> List[str]:
     """
+    Extracts the sample IDs from the list of FASTQ files.
 
-    :param fastqs:
-    :return:
+    Parameters:
+    fastqs (List[Path]): The list of FASTQ files.
+
+    Returns:
+    List[str]: A sorted list of unique sample IDs.
     """
 
     sample_ids = []
     for fastq in fastqs:
+        # Split the file name on underscore and take the first part as the sample ID
         sample_ids.append(Path(fastq).name.split("_")[0])
 
+    # Remove duplicates and sort the sample IDs
     sample_ids = sorted(set(sample_ids))
 
     return sample_ids
 
 
-def create_directories(datadir, sample_ids, panel):
+def create_directories(datadir: str, sample_ids: List[str], panel: str) -> None:
+    """
+    Creates necessary directories for each sample in the given directory.
+
+    Parameters:
+    datadir (str): The directory in which to create sample directories.
+    sample_ids (List[str]): The list of sample IDs for which directories are to be created.
+    panel (str): The panel to be used. Not used in this function.
+
+    Returns:
+    None
     """
 
-    :param datadir:
-    :param fastqs:
-    :return:
-    """
-
+    # Try to create a directory for BAM files
     try:
         os.makedirs(f"{datadir}/BAM/")
     except FileExistsError:
+        # If the directory already exists, log a message and continue
         console.log(f"{datadir}/BAM/ already exists")
+
     console.log(f"Creating directories in {panel} directory")
+
+    # For each sample ID, create necessary directories
     for sample in sample_ids:
         console.log(f"Processing {sample}")
         log_to_api(
             f"Processing {sample}", "INFO", "pipeline", sample, Path(datadir).name
         )
-        if not Path(f"{datadir}/BAM/{sample}").exists():
-            console.log(f"Creating {datadir}/BAM/{sample}")
+
+        # Create directories for each sample if they do not exist
+        for sub_dir in ["", "BAM", "VCF", "QC", "Metrics"]:
+            path = Path(datadir) / "BAM" / sample / sub_dir
+            path.mkdir(parents=True, exist_ok=True)
+            console.log(f"Creating {path}")
             log_to_api(
-                f"Creating {datadir}/BAM/{sample}",
+                f"Creating {path}",
                 "INFO",
                 "pipeline",
                 sample,
                 Path(datadir).name,
             )
-            os.makedirs(f"{datadir}/BAM/{sample}")
-        if not Path(f"{datadir}/BAM/{sample}/BAM/").exists():
-            console.log(f"Creating {datadir}/BAM/{sample}/BAM/")
-            log_to_api(
-                f"Creating {datadir}/BAM/{sample}/BAM/",
-                "INFO",
-                "pipeline",
-                sample,
-                Path(datadir).name,
-            )
-            os.makedirs(f"{datadir}/BAM/{sample}/BAM/")
-        if not Path(f"{datadir}/BAM/{sample}/VCF/").exists():
-            console.log(f"Creating {datadir}/BAM/{sample}/VCF/")
-            log_to_api(
-                f"Creating {datadir}/BAM/{sample}/VCF/",
-                "INFO",
-                "pipeline",
-                sample,
-                Path(datadir).name,
-            )
-            os.makedirs(f"{datadir}/BAM/{sample}/VCF/")
-        if not Path(f"{datadir}/BAM/{sample}/QC/").exists():
-            console.log(f"Creating {datadir}/BAM/{sample}/QC/")
-            log_to_api(
-                f"Creating {datadir}/BAM/{sample}/QC/",
-                "INFO",
-                "pipeline",
-                sample,
-                Path(datadir).name,
-            )
-            os.makedirs(f"{datadir}/BAM/{sample}/QC/")
-        if not Path(f"{datadir}/BAM/{sample}/Metrics/").exists():
-            console.log(f"Creating {datadir}/BAM/{sample}/Metrics/")
-            log_to_api(
-                f"Creating {datadir}/BAM/{sample}/Metrics/",
-                "INFO",
-                "pipeline",
-                sample,
-                Path(datadir).name,
-            )
-            os.makedirs(f"{datadir}/BAM/{sample}/Metrics/")
 
     console.log("Directories created/existed")
 
 
-def align_files(config, datadir: Path, samples: list, fastqs: list) -> bool:
+def align_files(
+    config: str, datadir: Path, samples: List[str], fastqs: List[Path]
+) -> bool:
+    """
+    Aligns the FASTQ files for each sample using the BWA aligner.
+
+    Parameters:
+    config (str): The configuration file for the run.
+    datadir (Path): The directory containing the FASTQ files.
+    samples (List[str]): The list of samples to be analysed.
+    fastqs (List[Path]): The list of FASTQ files.
+
+    Returns:
+    bool: True if the alignment was successful, False otherwise.
     """
 
-    :param datadir:
-    :param samples:
-    :return:
-    """
-
+    # Load the environment variables and configuration
     env = dotenv_values(f"{Path.cwd()}/.env")
     configuration = yaml.safe_load(open(config))
     bwa = env["BWA"]
     samtools = env["SAMTOOLS"]
     reference = configuration["Reference"]
 
+    # Log the start of the alignment process
     console.log("Aligning files")
     log_to_api("Aligning files", "INFO", "pipeline", "NA", Path(datadir).name)
 
+    # For each sample, align the corresponding FASTQ files
     for sample in samples:
         console.log(f"Processing {sample}")
         log_to_api(
             f"Processing {sample}", "INFO", "pipeline", sample, Path(datadir).name
         )
-        fastq_files = glob.glob(f"{datadir}/{sample}*.fastq.gz")
+        fastq_files = [fastq for fastq in fastqs if sample in fastq.name]
         console.log(f"Aligning sample {sample}")
         log_to_api(
             f"Aligning sample {sample}", "INFO", "pipeline", sample, Path(datadir).name
         )
         run_bwa(sample, fastq_files, datadir, reference, bwa, samtools)
 
+    return True
 
-def process_dir(config, datadir, samples, panel):
+
+def process_dir(
+    config: str, datadir: str, samples: List[str], panel: str, full_analysis: bool
+) -> Dict[str, Dict[str, bool]]:
     """
-    Function that runs all the steps of the pipeline, usually calling
-    functions from other modules
+    Main function that orchestrates the entire pipeline of processing the data.
 
-    :param datadir: Datadir with the location of the FASTQ files
+    Parameters:
+    config (str): The configuration file for the run.
+    datadir (str): The directory with the location of the FASTQ files.
+    samples (List[str]): The list of samples in the run.
+    panel (str): The panel to be used.
 
-    :type datadir: string
-
-    :return: to_return a dictionary with the fail/success of each step
-    :rtype: dictionary
-
-    :todo: decrease the number of arguments
-    :todo: replace Picard coverage with GATK
+    Returns:
+    Dict[str, Dict[str, bool]]: A dictionary with the success/failure of each step for each sample.
     """
 
+    # Load the environment variables and configuration
     env = dotenv_values(f"{Path.cwd()}/.env")
     configuration = yaml.safe_load(open(config))
 
+    # Log the start of the FASTQ file search
     console.log("Looking for FASTQ files")
     log_to_api("Looking for FASTQ files", "INFO", "pipeline", "NA", Path(datadir).name)
+
+    # Get the list of panel samples from the configuration
     panel_samples = list(configuration["BED"].keys())
+
+    # Find the FASTQ files and get the sample IDs
     fastqs = find_fastq(datadir, panel_samples, panel)
     sample_ids = get_ids(fastqs)
 
+    # Log the number of found samples
     console.log(f"Found {len(sample_ids)} samples")
     log_to_api(
         f"Found {len(sample_ids)} samples", "INFO", "pipeline", "NA", Path(datadir).name
     )
-    console.log(f"Found {' '.join(sample_ids)}")
-    log_to_api(
-        f"Found {' '.join(sample_ids)}", "INFO", "pipeline", "NA", Path(datadir).name
-    )
 
+    # If specific samples are provided, use them instead
     if len(samples) >= 1:
         console.log(f"Samples to be analysed: {' '.join(samples)}")
         log_to_api(
@@ -243,10 +260,12 @@ def process_dir(config, datadir, samples, panel):
         )
         sample_ids = samples
 
+    # Load the software configuration
     bwa = env["BWA"]
     samtools = env["SAMTOOLS"]
     reference = configuration["Reference"]
 
+    # Log the software configuration
     console.log(f"Using BWA: {bwa}")
     log_to_api(f"Using BWA: {bwa}", "INFO", "pipeline", "NA", Path(datadir).name)
     console.log(f"Using SAMTOOLS: {samtools}")
@@ -258,30 +277,28 @@ def process_dir(config, datadir, samples, panel):
         f"Using reference: {reference}", "INFO", "pipeline", "NA", Path(datadir).name
     )
 
+    # Create necessary directories, align files, and analyse pairs
     create_directories(datadir, sample_ids, panel)
     align_files(config, datadir, sample_ids, fastqs)
-    analyse_pairs(config, datadir, sample_ids, panel)
+    analyse_pairs(config, datadir, sample_ids, panel, full_analysis)
 
     return True
 
 
-def analyse_pairs(config, datadir, samples, panel):
+def analyse_pairs(
+    config: str, datadir: str, samples: List[str], panel: str, full_analysis: bool
+) -> Dict[str, Dict[str, bool]]:
     """
-    Main function of the file. Gets all pairs (samples) to
-    be analysed and guide the whole process, step by step
+    Orchestrates the entire pipeline of processing the data for each sample.
 
-    :param config yaml file for the run
-    :param datadir location of the run files
-    :param software_conf yaml file that list the software to be used
-    :param pairs list of samples in the run
-    :param yaml_file run configuration file (required for CNV, needs checking)
+    Parameters:
+    config (str): The configuration file for the run.
+    datadir (str): The directory with the location of the FASTQ files.
+    samples (List[str]): The list of samples in the run.
+    panel (str): The panel to be used.
 
-
-    :type config: string
-    :type datadir: string
-    :type software_conf: string
-    :type pairs: dict
-    :type yaml_file: string
+    Returns:
+    Dict[str, Dict[str, bool]]: A dictionary with the success/failure of each step for each sample.
 
     :todo: better return
     :todo full refactoring
@@ -397,61 +414,69 @@ def analyse_pairs(config, datadir, samples, panel):
             Path(datadir).name,
         )
 
-    console.log("Compiling identity file")
-    log_to_api("Compiling identity file", "INFO", "pipeline", "NA", Path(datadir).name)
-    if not Path(f"{datadir}/identity.txt").exists():
-        console.log("Identity file does not exist, creating it")
+    if full_analysis:
+        console.log("Compiling identity file")
+        log_to_api("Compiling identity file", "INFO", "pipeline", "NA", Path(datadir).name)
+        if not Path(f"{datadir}/identity.txt").exists():
+            console.log("Identity file does not exist, creating it")
+            log_to_api(
+                "Identity file does not exist, creating it",
+                "INFO",
+                "pipeline",
+                "NA",
+                Path(datadir).name,
+            )
+            compile_identity(datadir)
+        else:
+            log_to_api("Identity file exists", "INFO", "pipeline", "NA", Path(datadir).name)
+            console.log("Identity file exists")
+
+        console.log("Compiling barcodes")
+        log_to_api("Compiling barcodes", "INFO", "pipeline", "NA", Path(datadir).name)
+        compile_barcodes(datadir)
+
+        console.log("Calculating and saving CNV read normalization")
         log_to_api(
-            "Identity file does not exist, creating it",
+            "Calculating and saving CNV read normalization",
             "INFO",
             "pipeline",
             "NA",
             Path(datadir).name,
         )
-        compile_identity(datadir)
+        all_cnvs = compile_samples(datadir)
+        cnv_calculation(datadir, all_cnvs, config)
+
+        console.log("Calculating uniformity")
+        log_to_api("Calculating uniformity", "INFO", "pipeline", "NA", Path(datadir).name)
+        get_coverage_values(datadir, panel)
+
+        console.log("Calculating enrichment")
+        log_to_api("Calculating enrichment", "INFO", "pipeline", "NA", Path(datadir).name)
+        for pos, sample in enumerate(samples):
+            get_enrichment(sample, datadir, panel)
     else:
-        log_to_api("Identity file exists", "INFO", "pipeline", "NA", Path(datadir).name)
-        console.log("Identity file exists")
-
-    console.log("Compiling barcodes")
-    log_to_api("Compiling barcodes", "INFO", "pipeline", "NA", Path(datadir).name)
-    compile_barcodes(datadir)
-
-    console.log("Calculating and saving CNV read normalization")
-    log_to_api(
-        "Calculating and saving CNV read normalization",
-        "INFO",
-        "pipeline",
-        "NA",
-        Path(datadir).name,
-    )
-    all_cnvs = compile_samples(datadir)
-    cnv_calculation(datadir, all_cnvs, config)
-
-    console.log("Calculating uniformity")
-    log_to_api("Calculating uniformity", "INFO", "pipeline", "NA", Path(datadir).name)
-    get_coverage_values(datadir, panel)
-
-    console.log("Calculating enrichment")
-    log_to_api("Calculating enrichment", "INFO", "pipeline", "NA", Path(datadir).name)
-    for pos, sample in enumerate(samples):
-        get_enrichment(sample, datadir, panel)
+        console.log("Full analysis not requested, skipping additional steps")
 
     return to_return
 
 
-def generate_analysis(config, datadir, samples, panel):
+def generate_analysis(
+    config: str, datadir: str, samples: List[str], panel: str, full_analysis: bool
+) -> Dict[str, Dict[str, bool]]:
     """
-    Main function of the script, find input files, start alignemt and processing
+    Main function of the script, find input files, start alignment and processing.
 
-    :param datadir: location of the FASTQ files
+    Parameters:
+    config (str): The configuration file for the run.
+    datadir (str): The directory with the location of the FASTQ files.
+    samples (List[str]): The list of samples in the run.
+    panel (str): The panel to be used.
 
-    :type datadir: string
-
-    :return: patients dictionary
-    :rtype: dictionary
+    Returns:
+    Dict[str, Dict[str, bool]]: A dictionary with the success/failure of each step for each sample.
     """
 
+    # Log the start of the analysis and quality control report generation process
     console.log("Starting analysis and qc report generation")
     log_to_api(
         "Starting analysis and qc report generation",
@@ -460,6 +485,8 @@ def generate_analysis(config, datadir, samples, panel):
         "NA",
         Path(datadir).name,
     )
+
+    # Log the configuration file, data directory, and panel
     console.log(f"Configuration file: {config}")
     log_to_api(
         f"Configuration file: {config}", "INFO", "pipeline", "NA", Path(datadir).name
@@ -468,20 +495,24 @@ def generate_analysis(config, datadir, samples, panel):
     log_to_api(f"Datadir: {datadir}", "INFO", "pipeline", "NA", Path(datadir).name)
     console.log(f"Panel: {panel}")
     log_to_api(f"Panel: {panel}", "INFO", "pipeline", "NA", Path(datadir).name)
-    if samples == []:
-        console.log("Samples: ALL")
-        log_to_api("Samples: ALL", "INFO", "pipeline", "NA", Path(datadir).name)
-    else:
-        console.log(f"Samples: {' '.join(samples)}")
-        log_to_api(
-            f"Samples: {' '.join(samples)}",
-            "INFO",
-            "pipeline",
-            "NA",
-            Path(datadir).name,
-        )
 
-    s = process_dir(config, datadir, samples, panel)
+    # If no specific samples are provided, log a message and set samples to an empty list
+    if not samples:
+        console.log("No samples provided, will analyse all samples in the run")
+        samples = []
+
+    # Log the samples to be analysed
+    console.log(f"Samples: {' '.join(samples)}")
+    log_to_api(
+        f"Samples: {' '.join(samples)}",
+        "INFO",
+        "pipeline",
+        "NA",
+        Path(datadir).name,
+    )
+
+    # Start the analysis process by calling the process_dir function
+    s = process_dir(config, datadir, samples, panel, full_analysis)
 
     return s
 
@@ -500,17 +531,29 @@ def generate_analysis(config, datadir, samples, panel):
 )
 @click.option("-d", "--datadir", "datadir", help="run directory", required=True)
 @click.option("-p", "--panel", "panel", help="panel to be used", required=True)
-def run_analysis(configuration_file, datadir, panel, samples):
+@click.option("-f", "--full_analysis", "full_analysis", help="full analysis", is_flag=True)
+def run_analysis(
+    configuration_file: str, datadir: str, panel: str, samples: List[str], full_analysis: bool
+) -> Dict[str, Dict[str, bool]]:
+    """
+    Starts the analysis process by calling the generate_analysis function.
+
+    Parameters:
+    configuration_file (str): The YAML configuration file for the run.
+    datadir (str): The directory of the run.
+    panel (str): The panel to be used.
+    samples (List[str]): The list of samples to be analysed.
+
+    Returns:
+    Dict[str, Dict[str, bool]]: A dictionary with the success/failure of each step for each sample.
     """
 
-    :param configuration_file:
-    :param samples:
-    :param datadir:
-    :return:
-    """
+    # If no specific samples are provided, log a message and set samples to an empty list
     if not samples:
         console.log("No samples provided, will analyse all samples in the run")
         samples = []
+
+    # Log the current version of the pipeline
     console.log("Pipeline current version is " + VERSION)
     log_to_api(
         "Pipeline current version is " + VERSION,
@@ -519,6 +562,8 @@ def run_analysis(configuration_file, datadir, panel, samples):
         "NA",
         Path(datadir).name,
     )
+
+    # Log the start of the analysis
     console.log("All requirements found, starting analysis")
     log_to_api(
         "All requirements found, starting analysis",
@@ -527,15 +572,13 @@ def run_analysis(configuration_file, datadir, panel, samples):
         "NA",
         Path(datadir).name,
     )
+    console.log(f"Full analysis: {full_analysis}")
 
-    sample_dict = generate_analysis(configuration_file, datadir, samples, panel)
+    # Start the analysis process by calling the generate_analysis function
+    sample_dict = generate_analysis(configuration_file, datadir, samples, panel, full_analysis)
 
     return sample_dict
 
 
 if __name__ == "__main__":
     run_analysis()
-
-# 23GN-135G00063
-# 23GN-135G00072
-# 23GN-125G00029

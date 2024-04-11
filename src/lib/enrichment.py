@@ -5,7 +5,6 @@
 .. moduleauthor:: Paulo Nuin, August 2020
 """
 
-
 import subprocess
 from pathlib import Path
 
@@ -17,12 +16,19 @@ from .log_api import log_to_api
 console = Console()
 
 
-def get_enrichment(sample_id, datadir, panel):
+def get_enrichment(sample_id: str, datadir: str, panel: str) -> None:
     """
+    Function that generates enrichment information.
 
-    :param sample_id:
-    :param datadir:
-    :return:
+    :param sample_id: ID of the sample
+    :param datadir: Location of the BAM files
+    :param panel: Panel type (e.g., "Cplus")
+
+    :type sample_id: string
+    :type datadir: string
+    :type panel: string
+
+    :return: None
     """
 
     env = dotenv_values(f"{Path.cwd()}/.env")

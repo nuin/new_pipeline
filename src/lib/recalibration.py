@@ -19,27 +19,34 @@ from .log_api import log_to_api
 console = Console()
 
 
-def base_recal1(datadir, sample_id, bed_file, vcf_file, reference, gatk):
+def base_recal1(
+    datadir: str,
+    sample_id: str,
+    bed_file: str,
+    vcf_file: str,
+    reference: str,
+    gatk: str,
+) -> str:
     """
-    Function that does the first step of base recalibration, creating a
-    recalibration data table
+    Function that does the first step of base recalibration, creating a recalibration data table
 
+    :param datadir: Location of the data
     :param sample_id: ID of the patient/sample being analysed
-    :param directory: Location of the BAM files
     :param bed_file: BED file with regions to be analysed
     :param vcf_file: VCF file of known regions of variants
     :param reference: Reference file used in the original alignment
     :param gatk: GATK jar file location
 
+    :type datadir: string
     :type sample_id: string
-    :type directory: string
     :type bed_file: string
     :type vcf_file: string
     :type reference: string
     :type gatk: string
 
-    :return: returns success or exists
+    :return: returns 'success' if the operation is successful, 'exists' if the recalibration data table already exists
 
+    :rtype: string
     :todo: return error
     :todo: fix argument
     """
@@ -96,20 +103,24 @@ def base_recal1(datadir, sample_id, bed_file, vcf_file, reference, gatk):
     return "success"
 
 
-def recalibrate(datadir, sample_id, reference, gatk):
+def recalibrate(datadir: str, sample_id: str, reference: str, gatk: str) -> str:
     """
     Function that performs the third step of the base recalibration process,
     generating the final BAM file. *.recal_reads.bam
 
-    :param sample_id: ID of the patient/sample being analysed using GATK
-    :param directory: Location of the BAM files
+    :param datadir: Location of the data
+    :param sample_id: ID of the patient/sample being analysed
     :param reference: Reference file used in the original alignment
     :param gatk: GATK jar file location
 
+    :type datadir: string
     :type sample_id: string
-    :type directory: string
     :type reference: string
     :type gatk: string
+
+    :return: returns 'success' if the operation is successful, 'exists' if the recalibration data table already exists
+
+    :rtype: string
     """
 
     bam_dir = f"{datadir}/BAM/{sample_id}/BAM/"
