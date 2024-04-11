@@ -84,7 +84,7 @@ def run_bwa(
     else:
         bam_header = f"@RG\\tID:{sample_id}\\tLB:{datadir}\\tPL:Illumina\\tSM:{sample_id}\\tPU:None"
         bwa_string = (
-            f"{bwa} mem -t 16 -R '{bam_header}' {reference} {' '.join(fastq_files)} "
+            f"{bwa} mem -t 16 -R '{bam_header}' {reference} {' '.join([str(file) for file in fastq_files])} "
             f"| {samtools} view -Sb - > {datadir}/BAM/{sample_id}/BAM/{sample_id}.bam"
         )
         console.log(f"{bwa_string}")
