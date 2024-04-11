@@ -209,7 +209,7 @@ def align_files(
 
 
 def process_dir(
-    config: str, datadir: str, samples: List[str], panel: str
+    config: str, datadir: str, samples: List[str], panel: str, full_analysis: bool
 ) -> Dict[str, Dict[str, bool]]:
     """
     Main function that orchestrates the entire pipeline of processing the data.
@@ -277,13 +277,13 @@ def process_dir(
     # Create necessary directories, align files, and analyse pairs
     create_directories(datadir, sample_ids, panel)
     align_files(config, datadir, sample_ids, fastqs)
-    analyse_pairs(config, datadir, sample_ids, panel)
+    analyse_pairs(config, datadir, sample_ids, panel, full_analysis)
 
     return True
 
 
 def analyse_pairs(
-    config: str, datadir: str, samples: List[str], panel: str
+    config: str, datadir: str, samples: List[str], panel: str, full_analysis: bool
 ) -> Dict[str, Dict[str, bool]]:
     """
     Orchestrates the entire pipeline of processing the data for each sample.
@@ -411,51 +411,54 @@ def analyse_pairs(
             Path(datadir).name,
         )
 
-    console.log("Compiling identity file")
-    log_to_api("Compiling identity file", "INFO", "pipeline", "NA", Path(datadir).name)
-    if not Path(f"{datadir}/identity.txt").exists():
-        console.log("Identity file does not exist, creating it")
+    if full_analysis:
+        console.log("Compiling identity file")
+        log_to_api("Compiling identity file", "INFO", "pipeline", "NA", Path(datadir).name)
+        if not Path(f"{datadir}/identity.txt").exists():
+            console.log("Identity file does not exist, creating it")
+            log_to_api(
+                "Identity file does not exist, creating it",
+                "INFO",
+                "pipeline",
+                "NA",
+                Path(datadir).name,
+            )
+            compile_identity(datadir)
+        else:
+            log_to_api("Identity file exists", "INFO", "pipeline", "NA", Path(datadir).name)
+            console.log("Identity file exists")
+
+        console.log("Compiling barcodes")
+        log_to_api("Compiling barcodes", "INFO", "pipeline", "NA", Path(datadir).name)
+        compile_barcodes(datadir)
+
+        console.log("Calculating and saving CNV read normalization")
         log_to_api(
-            "Identity file does not exist, creating it",
+            "Calculating and saving CNV read normalization",
             "INFO",
             "pipeline",
             "NA",
             Path(datadir).name,
         )
-        compile_identity(datadir)
+        all_cnvs = compile_samples(datadir)
+        cnv_calculation(datadir, all_cnvs, config)
+
+        console.log("Calculating uniformity")
+        log_to_api("Calculating uniformity", "INFO", "pipeline", "NA", Path(datadir).name)
+        get_coverage_values(datadir, panel)
+
+        console.log("Calculating enrichment")
+        log_to_api("Calculating enrichment", "INFO", "pipeline", "NA", Path(datadir).name)
+        for pos, sample in enumerate(samples):
+            get_enrichment(sample, datadir, panel)
     else:
-        log_to_api("Identity file exists", "INFO", "pipeline", "NA", Path(datadir).name)
-        console.log("Identity file exists")
-
-    console.log("Compiling barcodes")
-    log_to_api("Compiling barcodes", "INFO", "pipeline", "NA", Path(datadir).name)
-    compile_barcodes(datadir)
-
-    console.log("Calculating and saving CNV read normalization")
-    log_to_api(
-        "Calculating and saving CNV read normalization",
-        "INFO",
-        "pipeline",
-        "NA",
-        Path(datadir).name,
-    )
-    all_cnvs = compile_samples(datadir)
-    cnv_calculation(datadir, all_cnvs, config)
-
-    console.log("Calculating uniformity")
-    log_to_api("Calculating uniformity", "INFO", "pipeline", "NA", Path(datadir).name)
-    get_coverage_values(datadir, panel)
-
-    console.log("Calculating enrichment")
-    log_to_api("Calculating enrichment", "INFO", "pipeline", "NA", Path(datadir).name)
-    for pos, sample in enumerate(samples):
-        get_enrichment(sample, datadir, panel)
+        console.log("Full analysis not requested, skipping additional steps")
 
     return to_return
 
 
 def generate_analysis(
-    config: str, datadir: str, samples: List[str], panel: str
+    config: str, datadir: str, samples: List[str], panel: str, full_analysis: bool
 ) -> Dict[str, Dict[str, bool]]:
     """
     Main function of the script, find input files, start alignment and processing.
@@ -506,7 +509,7 @@ def generate_analysis(
     )
 
     # Start the analysis process by calling the process_dir function
-    s = process_dir(config, datadir, samples, panel)
+    s = process_dir(config, datadir, samples, panel, full_analysis)
 
     return s
 
@@ -525,8 +528,9 @@ def generate_analysis(
 )
 @click.option("-d", "--datadir", "datadir", help="run directory", required=True)
 @click.option("-p", "--panel", "panel", help="panel to be used", required=True)
+@click.option("-f", "--full_analysis", "full_analysis", help="full analysis", is_flag=True)
 def run_analysis(
-    configuration_file: str, datadir: str, panel: str, samples: List[str]
+    configuration_file: str, datadir: str, panel: str, samples: List[str], full_analysis: bool
 ) -> Dict[str, Dict[str, bool]]:
     """
     Starts the analysis process by calling the generate_analysis function.
@@ -565,9 +569,10 @@ def run_analysis(
         "NA",
         Path(datadir).name,
     )
+    console.log(f"Full analysis: {full_analysis}")
 
     # Start the analysis process by calling the generate_analysis function
-    sample_dict = generate_analysis(configuration_file, datadir, samples, panel)
+    sample_dict = generate_analysis(configuration_file, datadir, samples, panel, full_analysis)
 
     return sample_dict
 
