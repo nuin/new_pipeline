@@ -32,5 +32,4 @@ def main_parser(picard_output):
 
 
 if __name__ == "__main__":
-
     main_parser(sys.argv[1])[1]

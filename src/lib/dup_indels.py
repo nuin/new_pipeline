@@ -15,9 +15,9 @@ from .log_api import log_to_api
 console = Console()
 
 
-def remove_duplicates(sample_id, datadir, picard):
+def remove_duplicates(sample_id: str, datadir: str, picard: str) -> str:
     """
-    Function that runs the duplicate removal step in the analysis
+    Function that runs the duplicate removal step in the analysis using Picard.
 
     :param sample_id: ID of the patient/sample being analysed using Picard
     :param datadir: Location of the BAM files
@@ -27,8 +27,7 @@ def remove_duplicates(sample_id, datadir, picard):
     :type datadir: string
     :type picard: string
 
-    :return: returns success or exists
-
+    :return: returns 'success' if the process completes successfully, 'exists' if the dedup.bam file already exists, or 'error - process' if the duplicate removal fails.
     """
 
     bam_dir = f"{datadir}/BAM/{sample_id}/BAM/"

@@ -15,19 +15,19 @@ from .log_api import log_to_api
 console = Console()
 
 
-def extract_counts(datadir, full_BED, sample_id):
+def extract_counts(datadir: str, full_BED: str, sample_id: str) -> None:
     """
     Function that reads the BAM file and extract the read count for each window
 
     :param datadir: Location of the BAM files
     :param full_BED: BED file to guide the counts
-    :param sample_id: ID of the sdample
+    :param sample_id: ID of the sample
 
     :type datadir: string
     :type full_BED: string
     :type sample_id: string
 
-    :return: no return yet
+    :return: None
     :todo: change BED file location from hardcoded
     """
 

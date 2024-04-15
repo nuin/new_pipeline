@@ -13,10 +13,19 @@ console = Console()
 
 def move_bam(datadir: Path, sample: str, bam_file: str) -> bool:
     """
+    Function that moves the BAM file and its index file from one location to another.
 
-    :param datadir:
-    :param bam_file:
-    :return:
+    :param datadir: The directory where the data is located.
+    :param sample: The sample ID.
+    :param bam_file: The name of the BAM file.
+
+    :type datadir: Path
+    :type sample: string
+    :type bam_file: string
+
+    :return: True if the operation is successful, False otherwise.
+
+    :rtype: bool
     """
 
     bam_location = f"{datadir}/BAM/{sample}/BAM/{sample}"
@@ -48,16 +57,17 @@ def move_bam(datadir: Path, sample: str, bam_file: str) -> bool:
         )
 
 
-def compile_identity(datadir):
+def compile_identity(datadir: str) -> bool:
     """
-    Function that reads samples' identity files
-    and compiles them in a single file
+    Function that reads samples' identity files and compiles them in a single file.
 
-    :param datadir: run location
+    :param datadir: The directory where the run is located.
 
     :type datadir: string
 
-    :return: boolean
+    :return: True if the operation is successful.
+
+    :rtype: bool
     """
 
     all_identity = open(datadir + "/identity.txt", "w")

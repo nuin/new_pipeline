@@ -12,6 +12,7 @@
 import glob
 import os
 from pathlib import Path
+from typing import Dict
 
 import numpy as np
 import pandas as pd
@@ -155,24 +156,25 @@ def read_identity(sample_id, datadir):
     return sample_identity
 
 
-def generate_barcode(sample_id, datadir, sample_identity):
+def generate_barcode(
+    sample_id: str, datadir: str, sample_identity: pd.DataFrame
+) -> None:
     """
-    Function that reads the reads the codes and generates a numeric barcode for each sample
+    Function that reads the codes and generates a numeric barcode for each sample
 
     :param sample_id: ID of the sample
-    :param datadir: run_location
-    :param sample_identity: list of nuclotides in each position of the barcode
+    :param datadir: run location
+    :param sample_identity: list of nucleotides in each position of the barcode
 
     :type sample_id: string
     :type datadir: string
+    :type sample_identity: pandas DataFrame
 
-
+    :return: None
     """
 
     barcode = ""
-    barcode_file = open(
-        datadir + "/BAM/" + sample_id + "/" + sample_id + ".barcode.txt", "w"
-    )
+    barcode_file = open(f"{datadir}/BAM/{sample_id}/{sample_id}.barcode.txt", "w")
     for i in [0, 3, 1, 12, 15, 4, 14, 13, 5, 6, 8, 11, 10, 9, 7, 2]:
         barcode += str(CODES[sample_identity["Full code"][i]])
 
@@ -187,22 +189,58 @@ def generate_barcode(sample_id, datadir, sample_identity):
     )
 
 
-def process_identity(sample_id, datadir, sample_identity):
+def process_identity(
+    sample_id: str, datadir: str, sample_identity: pd.DataFrame
+) -> pd.DataFrame:
     """
-    :todo: check function
+    Function that processes the identity for each patient and returns a DataFrame with information
+
+    :param sample_id: ID of the sample
+    :param datadir: run location
+    :param sample_identity: DataFrame with sample identity information
+
+    :type sample_id: string
+    :type datadir: string
+    :type sample_identity: pandas DataFrame
+
+    :returns: DataFrame with processed sample data
+
+    :rtype: pandas DataFrame
     """
+
+    # sample_identity["ID"] = sample_identity["Position"].map(GENES)
+    # sample_identity["HGVS"] = sample_identity["Position"].map(HGVS)
+    # sample_identity["Total reads"] = sample_identity[["A", "C", "G", "T"]].sum(axis=1)
+    # sample_identity["pcA"] = sample_identity["A"] / sample_identity["Total reads"]
+    # sample_identity["pcC"] = sample_identity["C"] / sample_identity["Total reads"]
+    # sample_identity["pcG"] = sample_identity["G"] / sample_identity["Total reads"]
+    # sample_identity["pcT"] = sample_identity["T"] / sample_identity["Total reads"]
+    # sample_identity["codeA"] = np.where(sample_identity["pcA"] > 0.1, "A", "0")
+    # sample_identity["codeC"] = np.where(sample_identity["pcC"] > 0.1, "C", "0")
+    # sample_identity["codeG"] = np.where(sample_identity["pcG"] > 0.1, "G", "0")
+    # sample_identity["codeT"] = np.where(sample_identity["pcT"] > 0.1, "T", "0")
+    # sample_identity["Full code"] = (
+    #     sample_identity["ID"]
+    #     + sample_identity["codeA"]
+    #     + sample_identity["codeC"]
+    #     + sample_identity["codeG"]
+    #     + sample_identity["codeT"]
+    # )
+
+    nucleotides = ["A", "C", "G", "T"]
 
     sample_identity["ID"] = sample_identity["Position"].map(GENES)
     sample_identity["HGVS"] = sample_identity["Position"].map(HGVS)
-    sample_identity["Total reads"] = sample_identity[["A", "C", "G", "T"]].sum(axis=1)
-    sample_identity["pcA"] = sample_identity["A"] / sample_identity["Total reads"]
-    sample_identity["pcC"] = sample_identity["C"] / sample_identity["Total reads"]
-    sample_identity["pcG"] = sample_identity["G"] / sample_identity["Total reads"]
-    sample_identity["pcT"] = sample_identity["T"] / sample_identity["Total reads"]
-    sample_identity["codeA"] = np.where(sample_identity["pcA"] > 0.1, "A", "0")
-    sample_identity["codeC"] = np.where(sample_identity["pcC"] > 0.1, "C", "0")
-    sample_identity["codeG"] = np.where(sample_identity["pcG"] > 0.1, "G", "0")
-    sample_identity["codeT"] = np.where(sample_identity["pcT"] > 0.1, "T", "0")
+    sample_identity["Total reads"] = sample_identity[nucleotides].sum(axis=1)
+
+    for nucleotide in nucleotides:
+        sample_identity[f"pc{nucleotide}"] = (
+            sample_identity[nucleotide] / sample_identity["Total reads"]
+        )
+        sample_identity[f"code{nucleotide}"] = np.where(
+            sample_identity[f"pc{nucleotide}"] > 0.1, nucleotide, "0"
+        )
+
     sample_identity["Full code"] = (
         sample_identity["ID"]
         + sample_identity["codeA"]
@@ -228,9 +266,17 @@ def process_identity(sample_id, datadir, sample_identity):
     return sample_identity
 
 
-def barcoding(sample_id, datadir):
+def barcoding(sample_id: str, datadir: str) -> None:
     """
-    TBA
+    Function that processes the identity for each patient, generates a numeric barcode for each sample, and saves the results.
+
+    :param sample_id: ID of the sample
+    :param datadir: run location
+
+    :type sample_id: string
+    :type datadir: string
+
+    :return: None
     """
 
     sample_identity = read_identity(sample_id, datadir)
@@ -238,12 +284,20 @@ def barcoding(sample_id, datadir):
     generate_barcode(sample_id, datadir, sample_identity)
 
 
-def find_duplicates(datadir):
+def find_duplicates(datadir: str) -> Dict[str, bool]:
     """
-    TBA
+    Function that checks for duplicate barcodes in the data directory.
+
+    :param datadir: The directory where the data is located.
+
+    :type datadir: string
+
+    :return: A dictionary where the keys are sample IDs and the values are boolean indicating whether the barcode is duplicated.
+
+    :rtype: dict
     """
 
-    barcodes = open(datadir + "/barcodes.txt").read().splitlines()
+    barcodes = open(f"{datadir}/barcodes.txt").read().splitlines()
 
     check = {}
 
@@ -262,9 +316,17 @@ def find_duplicates(datadir):
     return check
 
 
-def compile_barcodes(datadir):
+def compile_barcodes(datadir: str) -> str:
     """
-    TBA
+    Function that compiles all barcodes from the data directory into a single file.
+
+    :param datadir: The directory where the data is located.
+
+    :type datadir: string
+
+    :return: A string indicating the success of the operation.
+
+    :rtype: string
     """
 
     barcodes = open(datadir + "/barcodes.txt", "w")
@@ -285,32 +347,4 @@ def compile_barcodes(datadir):
 
 
 if __name__ == "__main__":
-
-    # for sample_id in ['17-291-021140B_DM_OR',
-    #                   '17-293-019731B_TL_DF',
-    #                   '17-298-020323B_HM_DF',
-    #                   '17-299-019925B_MJ_DF',
-    #                   '18-268-019416B_CK_JA',
-    #                   '18-268-020573B_RF_OS',
-    #                   '18-268-020575B_WJ_48',
-    #                   '18-269-020737B_WA_OS',
-    #                   '18-269-020738B_BS_5Z',
-    #                   '18-270-010956B_CJ_Z9',
-    #                   '18-270-019017B_JM_DF',
-    #                   '18-270-019024B_DJ_DF',
-    #                   '18-270-020250B_HD_Z9',
-    #                   '18-272-009307B_HJ_DF',
-    #                   '18-283-010388B_MV_DF',
-    #                   '18-283-010456B_LD_DF',
-    #                   '18-283-010518B_HS_DF',
-    #                   '18-285-006845B_M1_9P',
-    #                   '18-285-006938B_M9_9P',
-    #                   '18-285-007000B_M1_9P',
-    #                   '18-285-008885B_M9_OR',
-    #                   '18-285-008949B_M9_OR',
-    #                   '18-285-009002B_M9_5Z',
-    #                   '18-285-009062B_M9_OR',]:
-    #   datadir = '/Volumes/Jupiter/CancerPlusRuns/181018_NB551084_0049_AHCH75AFXY_Cplus_2018_NGS_38/'
-    #   barcoding(sample_id, datadir)
-    datadir = "/Volumes/Jupiter/CancerPlusRuns/181018_NB551084_0049_AHCH75AFXY_Cplus_2018_NGS_38/"
-    compile_barcodes(datadir)
+    pass

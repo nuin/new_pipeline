@@ -25,29 +25,30 @@ console = Console()
 
 
 def get_code(sample_id):
-
     return sample_id[-2:]
 
 
-def octopus_caller(datadir, sample_id, reference, bed_file, octopus):
+def octopus_caller(
+    datadir: str, sample_id: str, reference: str, bed_file: str, octopus: str
+) -> str:
     """
-    Function that calls Platypus to generate a VCF file
+    Function that calls Octopus to generate a VCF file
 
-    :param sample_id: ID of the patient/sample being analysed
-    :param directory: Location of the BAM files
-    :param bed_file: BED file with regions to be analysed
-    :param reference: Reference file used in the original alignment
-    :param octopus: Platypus Python script location
+    :param datadir: The directory where the data is located.
+    :param sample_id: ID of the patient/sample being analysed.
+    :param reference: Reference file used in the original alignment.
+    :param bed_file: BED file with regions to be analysed.
+    :param octopus: Octopus executable location.
 
+    :type datadir: string
     :type sample_id: string
-    :type directory: string
-    :type bed_file: string
     :type reference: string
-    :type platypus: string
+    :type bed_file: string
+    :type octopus: string
 
-    :return: returns success or exists
+    :return: returns 'success' if the operation is successful, 'exists' if the VCF file already exists.
 
-    :todo: return error
+    :rtype: string
     """
 
     vcf_dir = f"{datadir}/BAM/{sample_id}/VCF/"
@@ -94,7 +95,7 @@ def octopus_caller(datadir, sample_id, reference, bed_file, octopus):
     return "success"
 
 
-def change_vcf_version(vcf_file):
+def change_vcf_version(vcf_file: str) -> None:
     """
     Function that changes the VCF version from 4.3 to 4.2 so it can be used in GATK
 
@@ -102,6 +103,7 @@ def change_vcf_version(vcf_file):
 
     :type vcf_file: string
 
+    :return: None
     """
 
     contents = open(vcf_file).read().splitlines()
