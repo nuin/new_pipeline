@@ -530,6 +530,10 @@ def run_analysis(configuration_file, datadir, panel, samples):
 
     sample_dict = generate_analysis(configuration_file, datadir, samples, panel)
 
+    finished = open(f"/nfs/mgn_dna/NGS/temp/automation/finished_{panel}", "w")
+    finished.write(f"{datadir}\n")
+    finished.close()
+
     return sample_dict
 
 
