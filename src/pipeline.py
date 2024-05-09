@@ -411,6 +411,15 @@ def analyse_pairs(
             Path(datadir).name,
         )
 
+    console.log("Calculating uniformity")
+    log_to_api("Calculating uniformity", "INFO", "pipeline", "NA", Path(datadir).name)
+    get_coverage_values(datadir, panel)
+
+    console.log("Calculating enrichment")
+    log_to_api("Calculating enrichment", "INFO", "pipeline", "NA", Path(datadir).name)
+    for pos, sample in enumerate(samples):
+        get_enrichment(sample, datadir, panel)
+
     if full_analysis:
         console.log("Compiling identity file")
         log_to_api("Compiling identity file", "INFO", "pipeline", "NA", Path(datadir).name)
@@ -442,15 +451,6 @@ def analyse_pairs(
         )
         all_cnvs = compile_samples(datadir)
         cnv_calculation(datadir, all_cnvs, config)
-
-        console.log("Calculating uniformity")
-        log_to_api("Calculating uniformity", "INFO", "pipeline", "NA", Path(datadir).name)
-        get_coverage_values(datadir, panel)
-
-        console.log("Calculating enrichment")
-        log_to_api("Calculating enrichment", "INFO", "pipeline", "NA", Path(datadir).name)
-        for pos, sample in enumerate(samples):
-            get_enrichment(sample, datadir, panel)
     else:
         console.log("Full analysis not requested, skipping additional steps")
 
