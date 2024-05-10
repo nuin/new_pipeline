@@ -422,7 +422,9 @@ def analyse_pairs(
 
     if full_analysis:
         console.log("Compiling identity file")
-        log_to_api("Compiling identity file", "INFO", "pipeline", "NA", Path(datadir).name)
+        log_to_api(
+            "Compiling identity file", "INFO", "pipeline", "NA", Path(datadir).name
+        )
         if not Path(f"{datadir}/identity.txt").exists():
             console.log("Identity file does not exist, creating it")
             log_to_api(
@@ -434,7 +436,9 @@ def analyse_pairs(
             )
             compile_identity(datadir)
         else:
-            log_to_api("Identity file exists", "INFO", "pipeline", "NA", Path(datadir).name)
+            log_to_api(
+                "Identity file exists", "INFO", "pipeline", "NA", Path(datadir).name
+            )
             console.log("Identity file exists")
 
         console.log("Compiling barcodes")
@@ -528,9 +532,15 @@ def generate_analysis(
 )
 @click.option("-d", "--datadir", "datadir", help="run directory", required=True)
 @click.option("-p", "--panel", "panel", help="panel to be used", required=True)
-@click.option("-f", "--full_analysis", "full_analysis", help="full analysis", is_flag=True)
+@click.option(
+    "-f", "--full_analysis", "full_analysis", help="full analysis", is_flag=True
+)
 def run_analysis(
-    configuration_file: str, datadir: str, panel: str, samples: List[str], full_analysis: bool
+    configuration_file: str,
+    datadir: str,
+    panel: str,
+    samples: List[str],
+    full_analysis: bool,
 ) -> Dict[str, Dict[str, bool]]:
     """
     Starts the analysis process by calling the generate_analysis function.
@@ -572,7 +582,9 @@ def run_analysis(
     console.log(f"Full analysis: {full_analysis}")
 
     # Start the analysis process by calling the generate_analysis function
-    sample_dict = generate_analysis(configuration_file, datadir, samples, panel, full_analysis)
+    sample_dict = generate_analysis(
+        configuration_file, datadir, samples, panel, full_analysis
+    )
 
     return sample_dict
 

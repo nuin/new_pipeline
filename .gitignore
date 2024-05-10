@@ -176,3 +176,5 @@ pyrightconfig.json
 src/snpEff_genes.txt
 
 src/snpEff_summary.html
+
+.idea/misc.xml
