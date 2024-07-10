@@ -14,7 +14,7 @@ from typing import List
 
 from rich.console import Console
 
-from lib.utils import move_bam
+from .utils import move_bam
 
 from .log_api import log_to_api
 

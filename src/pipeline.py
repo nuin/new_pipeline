@@ -17,30 +17,39 @@ import yaml
 from dotenv import dotenv_values
 from rich.console import Console
 
-from lib.bwa_align import run_bwa
-from lib.cnv import cnv_calculation, compile_samples
-from lib.count2 import extract_counts
-from lib.dup_indels import remove_duplicates
-from lib.enrichment import get_enrichment
-from lib.extract_identity import create_identity_table, mpileup
-from lib.GATK_vcf import vcf_comparison
-from lib.log_api import log_to_api
-from lib.picard_actions import picard_sort
-from lib.picard_metrics import get_align_summary, get_hs_metrics, get_yield
-from lib.picard_qc import get_coverage
-from lib.process_identity import barcoding, compile_barcodes
-from lib.recalibration import base_recal1, recalibrate
-from lib.snpEff_ann import annotate_merged
-from lib.uniformity import get_coverage_values
-from lib.utils import compile_identity, move_bam
-from lib.variants_freebayes import edit_freebayes_vcf, freebayes_caller
-from lib.variants_GATK import haplotype_caller
-from lib.variants_GATK3 import haplotype_caller as haplotype_caller3
-from lib.variants_octopus import octopus_caller
+
+from .lib import (
+    bwa_align, cnv, count2, dup_indels, enrichment, extract_identity,
+    GATK_vcf, picard_actions, picard_metrics, picard_qc, process_identity,
+    recalibration, snpEff_ann, uniformity, utils, variants_freebayes,
+    variants_GATK, variants_GATK3, variants_octopus
+)
+
+
+from .lib.bwa_align import run_bwa
+from .lib.cnv import cnv_calculation, compile_samples
+from .lib.count2 import extract_counts
+from .lib.dup_indels import remove_duplicates
+from .lib.enrichment import get_enrichment
+from .lib.extract_identity import create_identity_table, mpileup
+from .lib.GATK_vcf import vcf_comparison
+from .lib.log_api import log_to_api
+from .lib.picard_actions import picard_sort
+from .lib.picard_metrics import get_align_summary, get_hs_metrics, get_yield
+from .lib.picard_qc import get_coverage
+from .lib.process_identity import barcoding, compile_barcodes
+from .lib.recalibration import base_recal1, recalibrate
+from .lib.snpEff_ann import annotate_merged
+from .lib.uniformity import get_coverage_values
+from .lib.utils import compile_identity, move_bam
+from .lib.variants_freebayes import edit_freebayes_vcf, freebayes_caller
+from .lib.variants_GATK import haplotype_caller
+from .lib.variants_GATK3 import haplotype_caller as haplotype_caller3
+from .lib.variants_octopus import octopus_caller
 
 # checks current version
-VERSIONFILE = "VERSION"
-VERSION = open(VERSIONFILE).read().strip()
+VERSIONFILE = Path(__file__).parent / "VERSION"
+VERSION = VERSIONFILE.read_text().strip()
 
 console = Console()
 
