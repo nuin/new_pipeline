@@ -4,12 +4,16 @@ version = "1.0.2"
 description = ""
 authors = ["nuin <nuin@genedrift.org>"]
 readme = "README.md"
+packages = [
+    { include = "src" },
+    { include = "src/lib" },
+]
 
 [tool.poetry.dependencies]
 python = "^3.10"
 pandas = "^2.0.3"
 PyVCF3 = "^1.0.3"
-pysam = "^0.21.0"
+pysam = "^0.22.1"
 python-dotenv = "^1.0.0"
 rich = "^13.4.2"
 pyyaml = "^6.0"
@@ -32,4 +36,7 @@ test = "pytest"
 
 
 [tool.pytest.ini_options]
-pythonpath = ["."]
+pythonpath = [
+    ".",
+    "src"]
+
