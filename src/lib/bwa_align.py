@@ -26,6 +26,7 @@ console = Console()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 def timer(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
@@ -37,6 +38,7 @@ def timer(func):
         console.print(f"[bold cyan]{function_name} completed in {duration:.2f} seconds[/bold cyan]")
         return result
     return wrapper
+
 
 @timer
 def run_command(command: str, description: str) -> subprocess.CompletedProcess:
@@ -123,39 +125,6 @@ def check_existing_bam(sample_id: str, datadir: Path, threads: int, samtools: st
         return 0
     return 1
 
-@timer
-def align_reads(sample_id: str, bwa: str, reference: Path, fastq_files: List[Path], threads: int, samtools: str, unsorted_bam: Path, datadir: Path) -> int:
-    bam_header = f"@RG\\tID:{sample_id}\\tLB:{datadir}\\tPL:Illumina\\tSM:{sample_id}\\tPU:None"
-    bwa_string = (
-        f"{bwa} mem -t {threads} -Y -R '{bam_header}' {reference} "
-        f"{' '.join([str(file) for file in fastq_files])} | "
-        f"{samtools} view -@ {threads // 2} -bS -F 0 - > {unsorted_bam}"
-    )
-    
-    console.print(Panel("[bold cyan]Aligning reads[/bold cyan]"))
-    result = run_command(bwa_string, f"Aligning reads for {sample_id}")
-    
-    if result.returncode != 0:
-        console.print(f"[bold red]BWA alignment failed for sample {sample_id}[/bold red]")
-        log_to_api(f"BWA alignment failed for sample {sample_id}", "ERROR", "bwa_align", sample_id, str(datadir))
-        return 1
-    return 0
-
-@timer
-def sort_bam(sample_id: str, samtools: str, threads: int, sort_memory: str, temp_dir: Path, unsorted_bam: Path, bam_output: Path) -> int:
-    sort_string = (
-        f"{samtools} sort -@ {threads // 2} -m {sort_memory} "
-        f"-T {temp_dir}/sort_{sample_id} -O bam -o {bam_output} {unsorted_bam}"
-    )
-
-    console.print(Panel("[bold cyan]Sorting BAM file[/bold cyan]"))
-    result = run_command(sort_string, f"Sorting BAM file for {sample_id}")
-
-    if result.returncode != 0:
-        console.print(f"[bold red]BAM sorting failed for sample {sample_id}[/bold red]")
-        log_to_api(f"BAM sorting failed for sample {sample_id}", "ERROR", "bwa_align", sample_id, str(datadir))
-        return 1
-    return 0
 
 @timer
 def index_bam(sample_id: str, samtools: str, threads: int, bam_output: Path) -> int:
@@ -217,7 +186,9 @@ def run_bwa(
         f"{samtools} index -@ {threads} {bam_output}"
     )
 
+
     console.print(Panel("[bold cyan]Aligning, sorting, marking duplicates, and indexing[/bold cyan]"))
+    console.print(command)
     result = run_command(command, f"Processing {sample_id}")
 
     if result.returncode != 0:
