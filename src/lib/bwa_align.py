@@ -138,6 +138,7 @@ def index_bam(sample_id: str, samtools: str, threads: int, bam_output: Path) -> 
         return 1
     return 0
 
+
 @timer
 def run_bwa(
         sample_id: str,
@@ -156,6 +157,17 @@ def run_bwa(
 
     bam_output = bam_dir / f"{sample_id}.bam"
     metrics_file = bam_dir / f"{sample_id}.markdup_metrics.txt"
+
+    # Check if BAM file already exists
+    if bam_output.exists():
+        file_size = bam_output.stat().st_size
+        console.print(f"[yellow]BAM file already exists for {sample_id}. Size: {file_size} bytes[/yellow]")
+        if file_size > 1_000_000:  # More than 1MB
+            console.print("[green]Existing BAM file seems valid. Skipping alignment process.[/green]")
+            return 0
+        else:
+            console.print("[yellow]Existing BAM file is suspiciously small. Will recreate.[/yellow]")
+
     bam_header = f"@RG\\tID:{sample_id}\\tLB:{datadir}\\tPL:Illumina\\tSM:{sample_id}\\tPU:None"
 
     steps = [
@@ -168,10 +180,19 @@ def run_bwa(
         (f"{samtools} view -@ {threads // 2} -bh {temp_dir}/{sample_id}.sam > {temp_dir}/{sample_id}.bam",
          f"Convert SAM to BAM for {sample_id}"),
 
-        # Sort BAM
+        # Sort BAM by name (required for fixmate)
+        (f"{samtools} sort -@ {threads // 2} -n -o {temp_dir}/{sample_id}.namesort.bam {temp_dir}/{sample_id}.bam",
+         f"Sort BAM by name for {sample_id}"),
+
+        # Fixmate
+        (
+        f"{samtools} fixmate -@ {threads // 2} -m {temp_dir}/{sample_id}.namesort.bam {temp_dir}/{sample_id}.fixmate.bam",
+        f"Fixmate for {sample_id}"),
+
+        # Sort BAM by position
         (f"{samtools} sort -@ {threads // 2} -m {sort_memory} -T {temp_dir}/sort_{sample_id} "
-         f"-o {temp_dir}/{sample_id}.sorted.bam {temp_dir}/{sample_id}.bam",
-         f"Sort BAM for {sample_id}"),
+         f"-o {temp_dir}/{sample_id}.sorted.bam {temp_dir}/{sample_id}.fixmate.bam",
+         f"Sort BAM by position for {sample_id}"),
 
         # Mark duplicates
         (f"{samtools} markdup -@ {threads // 2} -s {temp_dir}/{sample_id}.sorted.bam {bam_output} "
@@ -195,8 +216,8 @@ def run_bwa(
             return 1
 
         # Check file sizes after each step
-        if "bam" in command:
-            output_file = command.split(">")[-1].strip().split()[0]
+        output_file = command.split(">")[-1].strip().split()[0] if ">" in command else command.split()[-1]
+        if output_file.endswith('.bam') or output_file.endswith('.sam'):
             file_size = Path(output_file).stat().st_size
             console.print(f"[green]File size of {output_file}: {file_size} bytes[/green]")
 
@@ -212,6 +233,7 @@ def run_bwa(
         return 1
 
     return 0
+
 
 def print_summary(timings: dict):
     table = Table(title="BWA Alignment Process Summary")
