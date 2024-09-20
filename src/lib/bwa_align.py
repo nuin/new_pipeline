@@ -171,21 +171,25 @@ def run_bwa(
         str(datadir),
     )
 
-    bam_output = datadir / "BAM" / sample_id / "BAM" / f"{sample_id}.dedup.bam"
+    bam_output = datadir / "BAM" / sample_id / "BAM" / f"{sample_id}.bam"
     metrics_file = datadir / "BAM" / sample_id / "BAM" / f"{sample_id}.markdup_metrics.txt"
 
     bam_header = f"@RG\\tID:{sample_id}\\tLB:{datadir}\\tPL:Illumina\\tSM:{sample_id}\\tPU:None"
 
     # Combine alignment, sorting, duplicate marking, and indexing in one command
+    temp_dir = datadir / "BAM" / sample_id / "tmp"
+    temp_dir.mkdir(parents=True, exist_ok=True)
+
     command = (
+        f"set -o pipefail; "
         f"{bwa} mem -t {threads} -Y -R '{bam_header}' {reference} "
         f"{' '.join([str(file) for file in fastq_files])} | "
-        f"{samtools} view -@ {threads // 4} -bS -F 0 - | "
+        f"{samtools} view -@ {threads // 4} -bh - | "
         f"{samtools} sort -@ {threads // 4} -m {sort_memory} -T {temp_dir}/sort_{sample_id} - | "
         f"{samtools} markdup -@ {threads // 4} -s - {bam_output} 2> {metrics_file} && "
-        f"{samtools} index -@ {threads} {bam_output}"
+        f"{samtools} index -@ {threads} {bam_output} && "
+        f"rm -rf {temp_dir}"
     )
-
 
     console.print(Panel("[bold cyan]Aligning, sorting, marking duplicates, and indexing[/bold cyan]"))
     console.print(command)
