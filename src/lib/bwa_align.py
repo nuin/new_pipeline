@@ -171,34 +171,16 @@ def index_bam(sample_id: str, samtools: str, threads: int, bam_output: Path) -> 
 
 @timer
 def run_bwa(
-    sample_id: str,
-    fastq_files: List[Path],
-    datadir: Path,
-    reference: Path,
-    bwa: str,
-    samtools: str,
-    threads: int = 16,
-    sort_memory: str = "4G",
-    temp_dir: Path = Path("/tmp")
+        sample_id: str,
+        fastq_files: List[Path],
+        datadir: Path,
+        reference: Path,
+        bwa: str,
+        samtools: str,
+        threads: int = 16,
+        sort_memory: str = "4G",
+        temp_dir: Path = Path("/tmp")
 ) -> int:
-    """
-    Performs the alignment/mapping for each pair/sample_id.
-
-    Parameters:
-    sample_id (str): The ID of the sample to be analysed.
-    fastq_files (List[Path]): The list of FASTQ files for the sample.
-    datadir (Path): The directory of the run.
-    reference (Path): The reference genome.
-    bwa (str): The path to the BWA software.
-    samtools (str): The path to the Samtools software.
-    threads (int): Number of threads to use for alignment and sorting.
-    sort_memory (str): Amount of memory to use for sorting.
-    temp_dir (Path): Directory for temporary files.
-
-    Returns:
-    int: A flag indicating whether the BAM file exists (0) or was created (1).
-    """
-
     console.print(Panel(f"[bold blue]Starting BWA processing for sample: {sample_id}[/bold blue]"))
     log_to_api(
         f"Starting bwa processing for file {sample_id}",
@@ -220,26 +202,33 @@ def run_bwa(
         str(datadir),
     )
 
-    bam_output = datadir / "BAM" / sample_id / "BAM" / f"{sample_id}.bam"
-    unsorted_bam = temp_dir / f"{sample_id}.unsorted.bam"
-    
-    if align_reads(sample_id, bwa, reference, fastq_files, threads, samtools, unsorted_bam, datadir) != 0:
-        return 1
+    bam_output = datadir / "BAM" / sample_id / "BAM" / f"{sample_id}.dedup.bam"
+    metrics_file = datadir / "BAM" / sample_id / "BAM" / f"{sample_id}.markdup_metrics.txt"
 
-    if sort_bam(sample_id, samtools, threads, sort_memory, temp_dir, unsorted_bam, bam_output) != 0:
-        return 1
+    bam_header = f"@RG\\tID:{sample_id}\\tLB:{datadir}\\tPL:Illumina\\tSM:{sample_id}\\tPU:None"
 
-    # Remove unsorted BAM
-    unsorted_bam.unlink()
-    console.print(f"[dim]Removed temporary unsorted BAM: {unsorted_bam}[/dim]")
+    # Combine alignment, sorting, duplicate marking, and indexing in one command
+    command = (
+        f"{bwa} mem -t {threads} -Y -R '{bam_header}' {reference} "
+        f"{' '.join([str(file) for file in fastq_files])} | "
+        f"{samtools} view -@ {threads // 4} -bS -F 0 - | "
+        f"{samtools} sort -@ {threads // 4} -m {sort_memory} -T {temp_dir}/sort_{sample_id} - | "
+        f"{samtools} markdup -@ {threads // 4} -s - {bam_output} 2> {metrics_file} && "
+        f"{samtools} index -@ {threads} {bam_output}"
+    )
 
-    if index_bam(sample_id, samtools, threads, bam_output) != 0:
+    console.print(Panel("[bold cyan]Aligning, sorting, marking duplicates, and indexing[/bold cyan]"))
+    result = run_command(command, f"Processing {sample_id}")
+
+    if result.returncode != 0:
+        console.print(f"[bold red]Processing failed for sample {sample_id}[/bold red]")
+        log_to_api(f"Processing failed for sample {sample_id}", "ERROR", "bwa_align", sample_id, str(datadir))
         return 1
 
     if bam_output.exists() and bam_output.with_suffix('.bam.bai').exists():
-        console.print(f"[bold green]BAM and BAI files created successfully for {sample_id}[/bold green]")
+        console.print(f"[bold green]Deduplicated BAM and BAI files created successfully for {sample_id}[/bold green]")
         log_to_api(
-            f"BAM and BAI files created successfully for {sample_id}",
+            f"Deduplicated BAM and BAI files created successfully for {sample_id}",
             "INFO",
             "bwa_align",
             sample_id,
@@ -247,8 +236,9 @@ def run_bwa(
         )
         return 0
     else:
-        console.print(f"[bold red]Failed to create BAM or BAI file for {sample_id}[/bold red]")
-        log_to_api(f"Failed to create BAM or BAI file for {sample_id}", "ERROR", "bwa_align", sample_id, str(datadir))
+        console.print(f"[bold red]Failed to create deduplicated BAM or BAI file for {sample_id}[/bold red]")
+        log_to_api(f"Failed to create deduplicated BAM or BAI file for {sample_id}", "ERROR", "bwa_align", sample_id,
+                   str(datadir))
         return 1
 
 def print_summary(timings: dict):

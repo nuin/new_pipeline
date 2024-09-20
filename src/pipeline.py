@@ -219,9 +219,9 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         console.log(message)
         log_to_db(db, message, "INFO", "pipeline", sample, datadir.name)
 
-        rm_duplicates = remove_duplicates(sample, datadir, picard)
-        to_return[sample]["dedup"] = rm_duplicates
-        move_bam(datadir, sample, "dedup")
+        # rm_duplicates = remove_duplicates(sample, datadir, picard)
+        # to_return[sample]["dedup"] = rm_duplicates
+        # move_bam(datadir, sample, "dedup")
 
         recalibration_step1 = base_recal1(datadir, sample, bed_file[sample], vcf_file, reference, gatk)
         to_return[sample]["recalibration1"] = recalibration_step1
