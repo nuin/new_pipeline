@@ -147,74 +147,71 @@ def run_bwa(
         bwa: str,
         samtools: str,
         threads: int = 16,
-        sort_memory: str = "4G",
-        temp_dir: Path = Path("/tmp")
+        sort_memory: str = "4G"
 ) -> int:
-    console.print(Panel(f"[bold blue]Starting BWA processing for sample: {sample_id}[/bold blue]"))
-    log_to_api(
-        f"Starting bwa processing for file {sample_id}",
-        "INFO",
-        "bwa_align",
-        sample_id,
-        str(datadir),
-    )
+    bam_dir = datadir / "BAM" / sample_id / "BAM"
+    bam_dir.mkdir(parents=True, exist_ok=True)
+    temp_dir = bam_dir / "tmp"
+    temp_dir.mkdir(exist_ok=True)
 
-    if check_existing_bam(sample_id, datadir, threads, samtools) == 0:
-        return 0
-
-    console.print(f"[yellow]No existing BAM file found for {sample_id}. Proceeding with alignment.[/yellow]")
-    log_to_api(
-        f"No existing BAM file found for {sample_id}. Proceeding with alignment.",
-        "INFO",
-        "bwa_align",
-        sample_id,
-        str(datadir),
-    )
-
-    bam_output = datadir / "BAM" / sample_id / "BAM" / f"{sample_id}.bam"
-    metrics_file = datadir / "BAM" / sample_id / "BAM" / f"{sample_id}.markdup_metrics.txt"
-
+    bam_output = bam_dir / f"{sample_id}.bam"
+    metrics_file = bam_dir / f"{sample_id}.markdup_metrics.txt"
     bam_header = f"@RG\\tID:{sample_id}\\tLB:{datadir}\\tPL:Illumina\\tSM:{sample_id}\\tPU:None"
 
-    # Combine alignment, sorting, duplicate marking, and indexing in one command
-    temp_dir = datadir / "BAM" / sample_id / "tmp"
-    temp_dir.mkdir(parents=True, exist_ok=True)
+    steps = [
+        # Alignment
+        (f"{bwa} mem -t {threads} -Y -R '{bam_header}' {reference} "
+         f"{' '.join([str(file) for file in fastq_files])} > {temp_dir}/{sample_id}.sam",
+         f"BWA alignment for {sample_id}"),
 
-    command = (
-        f"set -o pipefail; "
-        f"{bwa} mem -t {threads} -Y -R '{bam_header}' {reference} "
-        f"{' '.join([str(file) for file in fastq_files])} | "
-        f"{samtools} view -@ {threads // 4} -bh - | "
-        f"{samtools} sort -@ {threads // 4} -m {sort_memory} -T {temp_dir}/sort_{sample_id} - | "
-        f"{samtools} markdup -@ {threads // 4} -s - {bam_output} 2> {metrics_file} && "
-        f"{samtools} index -@ {threads} {bam_output} && "
-        f"rm -rf {temp_dir}"
-    )
+        # Convert SAM to BAM
+        (f"{samtools} view -@ {threads // 2} -bh {temp_dir}/{sample_id}.sam > {temp_dir}/{sample_id}.bam",
+         f"Convert SAM to BAM for {sample_id}"),
 
-    console.print(Panel("[bold cyan]Aligning, sorting, marking duplicates, and indexing[/bold cyan]"))
-    console.print(command)
-    result = run_command(command, f"Processing {sample_id}")
+        # Sort BAM
+        (f"{samtools} sort -@ {threads // 2} -m {sort_memory} -T {temp_dir}/sort_{sample_id} "
+         f"-o {temp_dir}/{sample_id}.sorted.bam {temp_dir}/{sample_id}.bam",
+         f"Sort BAM for {sample_id}"),
 
-    if result.returncode != 0:
-        console.print(f"[bold red]Processing failed for sample {sample_id}[/bold red]")
-        log_to_api(f"Processing failed for sample {sample_id}", "ERROR", "bwa_align", sample_id, str(datadir))
+        # Mark duplicates
+        (f"{samtools} markdup -@ {threads // 2} -s {temp_dir}/{sample_id}.sorted.bam {bam_output} "
+         f"2> {metrics_file}",
+         f"Mark duplicates for {sample_id}"),
+
+        # Index BAM
+        (f"{samtools} index -@ {threads} {bam_output}",
+         f"Index BAM for {sample_id}")
+    ]
+
+    for command, description in steps:
+        console.print(f"[cyan]Executing: {description}[/cyan]")
+        result = subprocess.run(command, shell=True, capture_output=True, text=True)
+
+        if result.returncode != 0:
+            console.print(f"[bold red]Error in {description}[/bold red]")
+            console.print(f"Command: {command}")
+            console.print(f"STDOUT: {result.stdout}")
+            console.print(f"STDERR: {result.stderr}")
+            return 1
+
+        # Check file sizes after each step
+        if "bam" in command:
+            output_file = command.split(">")[-1].strip().split()[0]
+            file_size = Path(output_file).stat().st_size
+            console.print(f"[green]File size of {output_file}: {file_size} bytes[/green]")
+
+    # Clean up temporary files
+    shutil.rmtree(temp_dir)
+
+    # Final file size check
+    final_size = bam_output.stat().st_size
+    console.print(f"[bold green]Final BAM file size: {final_size} bytes[/bold green]")
+
+    if final_size < 1_000_000:  # Less than 1MB
+        console.print("[bold red]Warning: Final BAM file is suspiciously small![/bold red]")
         return 1
 
-    if bam_output.exists() and bam_output.with_suffix('.bam.bai').exists():
-        console.print(f"[bold green]Deduplicated BAM and BAI files created successfully for {sample_id}[/bold green]")
-        log_to_api(
-            f"Deduplicated BAM and BAI files created successfully for {sample_id}",
-            "INFO",
-            "bwa_align",
-            sample_id,
-            str(datadir),
-        )
-        return 0
-    else:
-        console.print(f"[bold red]Failed to create deduplicated BAM or BAI file for {sample_id}[/bold red]")
-        log_to_api(f"Failed to create deduplicated BAM or BAI file for {sample_id}", "ERROR", "bwa_align", sample_id,
-                   str(datadir))
-        return 1
+    return 0
 
 def print_summary(timings: dict):
     table = Table(title="BWA Alignment Process Summary")
@@ -225,6 +222,7 @@ def print_summary(timings: dict):
         table.add_row(step, f"{time:.2f}")
 
     console.print(table)
+
 
 if __name__ == "__main__":
     pass
