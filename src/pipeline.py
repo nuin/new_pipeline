@@ -139,9 +139,9 @@ def align_files(config: Path, datadir: Path, samples: List[str], fastqs: List[Pa
         console.log(message)
         log_to_db(db, message, "INFO", "pipeline", sample, datadir.name)
 
-        run_bwa(sample, fastq_files, datadir, reference, bwa, samtools)
+        sample_db = TinyDB(datadir / "BAM" / sample / f"{sample}_pipeline_logs.json")
+        run_bwa(sample, fastq_files, datadir, reference, bwa, samtools, sample_db)
 
-    return True
 
 
 def process_dir(config: Path, datadir: Path, samples: List[str], panel: str, full_analysis: bool, db: TinyDB) -> Dict[
