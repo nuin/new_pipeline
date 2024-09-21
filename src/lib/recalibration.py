@@ -122,12 +122,28 @@ def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samto
 
     return _recalibrate()
 
+def is_bam_recalibrated(bam_path: Path) -> bool:
+    """
+    Check if the BAM file has already been recalibrated.
+    """
+    recal_bam = bam_path.with_name(f"{bam_path.stem}.recal_reads.bam")
+    recal_log = bam_path.with_name("recalibration.txt")
+    return recal_bam.exists() and recal_log.exists()
 
 def recalibration_pipeline(datadir: Path, sample_id: str, bed_file: Path, vcf_file: Path, reference: Path, gatk: str,
                            samtools: str, db: TinyDB) -> Dict[str, int]:
     @timer_with_db_log(db)
     def _recalibration_pipeline():
         log_to_db(db, "Starting recalibration pipeline", "INFO", "recalibration", sample_id, datadir.name)
+
+        bam_dir = datadir / "BAM" / sample_id / "BAM"
+        input_bam = bam_dir / f"{sample_id}.bam"
+
+        if is_bam_recalibrated(input_bam):
+            console.print(f"[yellow]BAM file for {sample_id} is already recalibrated. Skipping recalibration.[/yellow]")
+            log_to_api(f"BAM file for {sample_id} is already recalibrated", "INFO", "recalibration", sample_id, str(datadir))
+            log_to_db(db, f"BAM file for {sample_id} is already recalibrated", "INFO", "recalibration", sample_id, datadir.name)
+            return {"status": 0}
 
         recal1_result = base_recal1(datadir, sample_id, bed_file, vcf_file, reference, gatk, db)
         if recal1_result != "success":

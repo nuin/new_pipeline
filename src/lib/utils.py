@@ -1,23 +1,36 @@
-
 from pathlib import Path
 from shutil import move
 
 from rich.console import Console
 
-from .log_api import log_to_api
-
 console = Console()
+
+
+def is_bam_recalibrated(bam_path: Path) -> bool:
+    """
+    Check if the BAM file has already been recalibrated.
+    This function can be implemented based on your specific criteria.
+    """
+    # For example, you could check for the existence of a recalibration log file
+    recal_log = bam_path.with_name("recalibration.txt")
+    return recal_log.exists()
 
 
 def move_bam(datadir: Path, sample: str, bam_file: str) -> bool:
     bam_location = datadir / "BAM" / sample / "BAM" / sample
     source_bam = bam_location.with_suffix(f".{bam_file}.bam")
     target_bam = bam_location.with_suffix(".bam")
-    source_bai = bam_location.with_suffix(f".{bam_file}.bam.bai")
-    target_bai = bam_location.with_suffix(".bam.bai")
+    source_bai = source_bam.with_suffix(".bai")  # Changed this line
+    target_bai = target_bam.with_suffix(".bai")  # Changed this line
 
     if source_bam.exists():
         console.log(f"BAM file {bam_file}.bam exists")
+
+        # Check if the BAM is already recalibrated
+        if is_bam_recalibrated(source_bam):
+            console.log(f"BAM file {source_bam} is already recalibrated. Skipping recalibration.")
+            return True
+
         console.log(f"Moving {source_bam} to {target_bam}")
         try:
             move(str(source_bam), str(target_bam))
