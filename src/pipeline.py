@@ -20,6 +20,7 @@ from rich.console import Console
 from tinydb import TinyDB, Query
 
 from lib.bwa_align import run_bwa
+from lib import recalibration
 from lib.cnv import cnv_calculation, compile_samples
 from lib.count2 import extract_counts
 from lib.dup_indels import remove_duplicates
@@ -207,6 +208,9 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
     bed_file = configuration["BED"]
     bait_file = configuration["BAIT"]
 
+
+
+    @timer_with_db_log(sample_db)
     for pos, sample in enumerate(samples):
         message = f"Processing {sample} :: {pos + 1} of {len(samples)}"
         console.log(message)
@@ -215,12 +219,27 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         sample_db = get_sample_db(datadir, sample)
 
         @timer_with_db_log(sample_db)
-        def run_recalibration_step1():
-            return recalibration.base_recal1(datadir, sample, bed_file[sample], vcf_file, reference, gatk)
+        def run_recalibration():
+            return recalibration.recalibration_pipeline(
+                datadir=datadir,
+                sample_id=sample,
+                bed_file=Path(bed_file[sample]),
+                vcf_file=vcf_file,
+                reference=reference,
+                gatk=gatk,
+                samtools=samtools
+            )
 
-        @timer_with_db_log(sample_db)
-        def run_recalibration_final():
-            return recalibration.recalibrate(datadir, sample, reference, gatk)
+        # Replace the two separate recalibration steps with a single call
+        recalibration_result = run_recalibration()
+        if recalibration_result["status"] != 0:
+            console.log(f"[bold red]Recalibration failed for sample {sample}[/bold red]")
+            log_to_db(db, f"Recalibration failed for sample {sample}", "ERROR", "pipeline", sample, datadir.name)
+            # Handle the error (e.g., skip to the next sample or exit)
+            continue
+
+        # Move the recalibrated BAM file
+        utils.move_bam(datadir, sample, "recal_reads")
 
         @timer_with_db_log(sample_db)
         def run_haplotype_caller():
