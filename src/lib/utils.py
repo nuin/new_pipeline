@@ -26,11 +26,6 @@ def move_bam(datadir: Path, sample: str, bam_file: str) -> bool:
     if source_bam.exists():
         console.log(f"BAM file {bam_file}.bam exists")
 
-        # Check if the BAM is already recalibrated
-        if is_bam_recalibrated(source_bam):
-            console.log(f"BAM file {source_bam} is already recalibrated. Skipping recalibration.")
-            return True
-
         console.log(f"Moving {source_bam} to {target_bam}")
         try:
             move(str(source_bam), str(target_bam))
