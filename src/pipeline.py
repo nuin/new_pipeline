@@ -262,7 +262,7 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
 
         @timer_with_db_log(sample_db)
         def run_vcf_comparison():
-            return GATK_vcf.vcf_comparison(datadir, sample, reference, gatk3)
+            return vcf_comparison(datadir, sample, reference, gatk3)
 
         @timer_with_db_log(sample_db)
         def run_snpEff():

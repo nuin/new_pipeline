@@ -29,11 +29,7 @@ def move_bam(datadir: Path, sample: str, bam_file: str) -> bool:
         console.log(f"Moving {source_bam} to {target_bam}")
         try:
             move(str(source_bam), str(target_bam))
-            if source_bai.exists():
-                move(str(source_bai), str(target_bai))
-            else:
-                console.log(f"Index file {source_bai} does not exist. Skipping index move.")
-            console.log("Files moved")
+            move(str(source_bai), str(target_bai))
             return True
         except Exception as e:
             console.log(f"Error moving files: {str(e)}")
