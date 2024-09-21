@@ -36,38 +36,11 @@ def timer(func):
         duration = end_time - start_time
         function_name = func.__name__
         console.print(f"[bold cyan]{function_name} completed in {duration:.2f} seconds[/bold cyan]")
+        console.print(f"[bold cyan]Function {func.__name__} took {end_time - start_time:.2f} seconds[/bold cyan]")
         return result
     return wrapper
 
 
-@timer
-def run_command(command: str, description: str) -> subprocess.CompletedProcess:
-    with Progress(
-        SpinnerColumn(),
-        TextColumn("[progress.description]{task.description}"),
-        BarColumn(),
-        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-        console=console,
-    ) as progress:
-        task = progress.add_task(description, total=None)
-        process = subprocess.Popen(
-            command,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        
-        while True:
-            output = process.stderr.readline()
-            if output == '' and process.poll() is not None:
-                break
-            if output:
-                progress.console.print(output.strip(), style="dim")
-            progress.update(task, advance=1)
-
-        rc = process.poll()
-        return subprocess.CompletedProcess(process.args, rc, stdout=process.stdout.read(), stderr=process.stderr.read())
 
 @timer
 def check_existing_bam(sample_id: str, datadir: Path, threads: int, samtools: str) -> int:
@@ -139,40 +112,32 @@ def index_bam(sample_id: str, samtools: str, threads: int, bam_output: Path) -> 
     return 0
 
 
-import time
-from functools import wraps
-
-
-def timer(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        start_time = time.time()
-        result = func(*args, **kwargs)
-        end_time = time.time()
-        console.print(f"[bold cyan]Function {func.__name__} took {end_time - start_time:.2f} seconds[/bold cyan]")
-        return result
-
-    return wrapper
-
-
 @timer
 def run_command(command: str, description: str) -> int:
-    console.print(f"[cyan]Executing: {description}[/cyan]")
-    console.print(f"Command: {command}")
+    console.print(Panel(f"[bold blue]{description}[/bold blue]"))
+    console.print(Syntax(command, "bash", theme="monokai", line_numbers=True))
 
-    start_time = time.time()
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                                bufsize=1, universal_newlines=True)
 
     output = []
-    for line in process.stdout:
-        print(line, end='')  # Print in real-time
-        output.append(line)
+    with Progress(
+            SpinnerColumn(),
+            TextColumn("[progress.description]{task.description}"),
+            BarColumn(),
+            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+            TimeElapsedColumn(),
+            console=console,
+            transient=True
+    ) as progress:
+        task = progress.add_task(description, total=None)
+
+        for line in process.stdout:
+            output.append(line)
+            progress.update(task, advance=1)
+            console.print(f"[dim]{line.strip()}[/dim]")
 
     process.wait()
-    end_time = time.time()
-
-    console.print(f"[bold cyan]{description} took {end_time - start_time:.2f} seconds[/bold cyan]")
 
     if process.returncode != 0:
         console.print(f"[bold red]Error in {description}[/bold red]")
@@ -202,7 +167,6 @@ def run_bwa(
     bam_output = bam_dir / f"{sample_id}.bam"
     metrics_file = bam_dir / f"{sample_id}.markdup_metrics.txt"
 
-    # Check if BAM file already exists
     if bam_output.exists():
         file_size = bam_output.stat().st_size
         console.print(f"[yellow]BAM file already exists for {sample_id}. Size: {file_size} bytes[/yellow]")
@@ -245,16 +209,13 @@ def run_bwa(
         if run_command(command, description) != 0:
             return 1
 
-        # Check file sizes after each step
         output_file = command.split(">")[-1].strip().split()[0] if ">" in command else command.split()[-1]
         if output_file.endswith('.bam') or output_file.endswith('.sam'):
             file_size = Path(output_file).stat().st_size
             console.print(f"[green]File size of {output_file}: {file_size} bytes[/green]")
 
-    # Clean up temporary files
     shutil.rmtree(temp_dir)
 
-    # Final file size check
     final_size = bam_output.stat().st_size
     console.print(f"[bold green]Final BAM file size: {final_size} bytes[/bold green]")
 
