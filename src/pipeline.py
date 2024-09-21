@@ -210,7 +210,6 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
 
 
 
-    @timer_with_db_log(sample_db)
     for pos, sample in enumerate(samples):
         message = f"Processing {sample} :: {pos + 1} of {len(samples)}"
         console.log(message)
