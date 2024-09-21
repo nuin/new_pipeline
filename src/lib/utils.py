@@ -17,25 +17,30 @@ def is_bam_recalibrated(bam_path: Path) -> bool:
 
 
 def move_bam(datadir: Path, sample: str, bam_file: str) -> bool:
-    bam_location = datadir / "BAM" / sample / "BAM" / sample
-    source_bam = bam_location.with_suffix(f".{bam_file}.bam")
-    target_bam = bam_location.with_suffix(".bam")
-    source_bai = source_bam.with_suffix(".bai")  # Changed this line
-    target_bai = target_bam.with_suffix(".bai")  # Changed this line
+    bam_location = datadir / "BAM" / sample / "BAM"
+    source_bam = bam_location / f"{sample}.{bam_file}.bam"
+    target_bam = bam_location / f"{sample}.bam"
+    source_bai = bam_location / f"{sample}.{bam_file}.bam.bai"
+    target_bai = bam_location / f"{sample}.bai"
 
     if source_bam.exists():
         console.log(f"BAM file {bam_file}.bam exists")
-
-        console.log(f"Moving {source_bam} to {target_bam}")
         try:
             move(str(source_bam), str(target_bam))
-            move(str(source_bai), str(target_bai))
+            console.log(f"Moved {source_bam} to {target_bam}")
+
+            if source_bai.exists():
+                move(str(source_bai), str(target_bai))
+                console.log(f"Moved {source_bai} to {target_bai}")
+            else:
+                console.log(f"Index file {source_bai} does not exist")
+
             return True
         except Exception as e:
             console.log(f"Error moving files: {str(e)}")
             return False
     else:
-        console.log(f"BAM file {bam_file}.bam does not exist, but process might have been completed")
+        console.log(f"BAM file {source_bam} does not exist")
         return False
 
 
