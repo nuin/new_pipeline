@@ -228,6 +228,12 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
                 return {"status": 1}
             return {"status": 0}
 
+        recalibration_result = run_recalibration()
+        if recalibration_result["status"] != 0:
+            console.log(f"[bold red]Recalibration failed for sample {sample}[/bold red]")
+            log_to_db(db, f"Recalibration failed for sample {sample}", "ERROR", "pipeline", sample, datadir.name)
+            continue
+
         # Move the recalibrated BAM file
         move_bam(datadir, sample, "recal_reads")
 

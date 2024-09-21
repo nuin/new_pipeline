@@ -10,22 +10,6 @@ console = Console()
 
 
 def move_bam(datadir: Path, sample: str, bam_file: str) -> bool:
-    """
-    Function that moves the BAM file and its index file from one location to another.
-
-    :param datadir: The directory where the data is located.
-    :param sample: The sample ID.
-    :param bam_file: The name of the BAM file.
-
-    :type datadir: Path
-    :type sample: string
-    :type bam_file: string
-
-    :return: True if the operation is successful, False otherwise.
-
-    :rtype: bool
-    """
-
     bam_location = datadir / "BAM" / sample / "BAM" / sample
     source_bam = bam_location.with_suffix(f".{bam_file}.bam")
     target_bam = bam_location.with_suffix(".bam")
@@ -41,23 +25,13 @@ def move_bam(datadir: Path, sample: str, bam_file: str) -> bool:
                 move(str(source_bai), str(target_bai))
             else:
                 console.log(f"Index file {source_bai} does not exist. Skipping index move.")
-                log_to_api(f"Index file {source_bai} does not exist. Skipping index move.", "WARNING", "move_bam", sample, str(datadir))
             console.log("Files moved")
-            log_to_api("Files moved", "INFO", "move_bam", sample, str(datadir))
             return True
         except Exception as e:
             console.log(f"Error moving files: {str(e)}")
-            log_to_api(f"Error moving files: {str(e)}", "ERROR", "move_bam", sample, str(datadir))
             return False
     else:
         console.log(f"BAM file {bam_file}.bam does not exist, but process might have been completed")
-        log_to_api(
-            f"BAM file {bam_file}.bam does not exist, but process might have been completed",
-            "WARNING",
-            "move_bam",
-            sample,
-            str(datadir)
-        )
         return False
 
 
