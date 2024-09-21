@@ -209,8 +209,6 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
     bed_file = configuration["BED"]
     bait_file = configuration["BAIT"]
 
-
-
     for pos, sample in enumerate(samples):
         message = f"Processing {sample} :: {pos + 1} of {len(samples)}"
         console.log(message)
