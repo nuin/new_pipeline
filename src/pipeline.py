@@ -41,6 +41,7 @@ from lib.variants_GATK import haplotype_caller
 from lib.variants_GATK3 import haplotype_caller as haplotype_caller3
 from lib.variants_octopus import octopus_caller
 from lib.db_logger import get_sample_db, log_to_db, timer_with_db_log
+from lib.utils import move_bam
 
 # checks current version
 VERSIONFILE = Path(__file__).parent / "VERSION"
