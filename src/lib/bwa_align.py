@@ -10,10 +10,11 @@ from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeElapsedColumn
 from rich.table import Table
 from rich.syntax import Syntax
+from tinydb import TinyDB
 
 from .utils import move_bam
 from .log_api import log_to_api
-from .db_logger import get_sample_db, log_to_db, timer_with_db_log
+from .db_logger import log_to_db, timer_with_db_log
 
 console = Console()
 
@@ -132,10 +133,11 @@ def run_bwa(
         reference: Path,
         bwa: str,
         samtools: str,
+        db: TinyDB,
         threads: int = 16,
         sort_memory: str = "4G"
 ) -> int:
-    @timer_with_db_log(get_sample_db(datadir, sample_id))
+    @timer_with_db_log(db)
     def _run_bwa():
         bam_dir = datadir / "BAM" / sample_id / "BAM"
         bam_dir.mkdir(parents=True, exist_ok=True)

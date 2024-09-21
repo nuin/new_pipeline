@@ -1,3 +1,5 @@
+# lib/recalibration.py
+
 import subprocess
 from pathlib import Path
 from typing import Dict
@@ -8,9 +10,10 @@ from rich.syntax import Syntax
 from tinydb import TinyDB
 
 from .log_api import log_to_api
-from .db_logger import get_sample_db, log_to_db, timer_with_db_log
+from .db_logger import log_to_db, timer_with_db_log
 
 console = Console()
+
 
 def run_command(command: str, description: str, sample_id: str, datadir: Path) -> int:
     console.print(Panel(f"[bold blue]{description}[/bold blue]"))
@@ -42,91 +45,106 @@ def run_command(command: str, description: str, sample_id: str, datadir: Path) -
         console.print(f"[bold red]Error in {description}[/bold red]")
         console.print("Command output:")
         console.print("".join(output))
-        log_to_api(f"Error in {description}", "ERROR", "recalibration", sample_id, datadir.name)
+        log_to_api(f"Error in {description}", "ERROR", "recalibration", sample_id, str(datadir))
         return 1
 
-    log_to_api(f"{description} completed successfully", "INFO", "recalibration", sample_id, datadir.name)
+    log_to_api(f"{description} completed successfully", "INFO", "recalibration", sample_id, str(datadir))
     return 0
 
-@timer_with_db_log(get_sample_db(datadir, sample_id))
-def base_recal1(datadir: Path, sample_id: str, bed_file: Path, vcf_file: Path, reference: Path, gatk: str) -> Dict[str, int]:
-    bam_dir = datadir / "BAM" / sample_id / "BAM"
-    recal_table = bam_dir / "recal_data.table"
 
-    if recal_table.exists():
-        console.print(f"[yellow]{recal_table} file exists. Skipping base recalibration step 1.[/yellow]")
-        log_to_api("recal_data.table file exists", "INFO", "base_recal1", sample_id, datadir.name)
-        return {"status": 0}
+def base_recal1(datadir: Path, sample_id: str, bed_file: Path, vcf_file: Path, reference: Path, gatk: str,
+                db: TinyDB) -> str:
+    @timer_with_db_log(db)
+    def _base_recal1():
+        bam_dir = datadir / "BAM" / sample_id / "BAM"
+        recal_table = bam_dir / "recal_data.table"
 
-    console.print(f"[bold cyan]Starting base recalibration step 1 for {sample_id}[/bold cyan]")
+        if recal_table.exists():
+            console.print(f"[yellow]{recal_table} file exists. Skipping base recalibration step 1.[/yellow]")
+            log_to_api("recal_data.table file exists", "INFO", "base_recal1", sample_id, str(datadir))
+            return "exists"
 
-    GATK_string = (
-        f"{gatk} BaseRecalibrator -R {reference} "
-        f"-I {bam_dir}/{sample_id}.bam --known-sites {vcf_file} "
-        f"-O {recal_table} -L {bed_file}"
-    )
+        console.print(f"[bold cyan]Starting base recalibration step 1 for {sample_id}[/bold cyan]")
 
-    result = run_command(GATK_string, f"Base Recalibration Step 1 for {sample_id}", sample_id, datadir)
+        GATK_string = (
+            f"{gatk} BaseRecalibrator -R {reference} "
+            f"-I {bam_dir}/{sample_id}.bam --known-sites {vcf_file} "
+            f"-O {recal_table} -L {bed_file}"
+        )
 
-    return {"status": result}
+        result = run_command(GATK_string, f"Base Recalibration Step 1 for {sample_id}", sample_id, datadir)
 
-@timer_with_db_log(get_sample_db(datadir, sample_id))
-def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samtools: str) -> Dict[str, int]:
-    bam_dir = datadir / "BAM" / sample_id / "BAM"
-    recal_bam = bam_dir / f"{sample_id}.recal_reads.bam"
-    recal_table = bam_dir / "recal_data.table"
-    recalibration_log = bam_dir / "recalibration.txt"
+        return "success" if result == 0 else "error"
 
-    if recal_bam.exists():
-        console.print(f"[yellow]{recal_bam} file exists. Skipping recalibration step 2.[/yellow]")
-        log_to_api("recal_reads.bam file exists", "INFO", "recalibrate", sample_id, datadir.name)
-        return {"status": 0}
-    
-    if not recal_table.exists():
-        console.print(f"[bold red]Error: {recal_table} does not exist. Run base_recal1 first.[/bold red]")
-        log_to_api("recal_data.table does not exist", "ERROR", "recalibrate", sample_id, datadir.name)
-        return {"status": 1}
+    return _base_recal1()
 
-    console.print(f"[bold cyan]Starting recalibration step 2 for {sample_id}[/bold cyan]")
 
-    GATK_string = (
-        f"{gatk} ApplyBQSR -R {reference} -I {bam_dir}/{sample_id}.bam "
-        f"--bqsr-recal-file {recal_table} -O {recal_bam}"
-    )
+def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samtools: str, db: TinyDB) -> str:
+    @timer_with_db_log(db)
+    def _recalibrate():
+        bam_dir = datadir / "BAM" / sample_id / "BAM"
+        recal_bam = bam_dir / f"{sample_id}.recal_reads.bam"
+        recal_table = bam_dir / "recal_data.table"
+        recalibration_log = bam_dir / "recalibration.txt"
 
-    result = run_command(GATK_string, f"Recalibration Step 2 for {sample_id}", sample_id, datadir)
+        if recal_bam.exists():
+            console.print(f"[yellow]{recal_bam} file exists. Skipping recalibration step 2.[/yellow]")
+            log_to_api("recal_reads.bam file exists", "INFO", "recalibrate", sample_id, str(datadir))
+            return "exists"
 
-    if result == 0:
-        # Index the recalibrated BAM file
-        index_command = f"{samtools} index {recal_bam}"
-        index_result = run_command(index_command, f"Indexing Recalibrated BAM for {sample_id}", sample_id, datadir)
+        if not recal_table.exists():
+            console.print(f"[bold red]Error: {recal_table} does not exist. Run base_recal1 first.[/bold red]")
+            log_to_api("recal_data.table does not exist", "ERROR", "recalibrate", sample_id, str(datadir))
+            return "error"
 
-        if index_result == 0:
-            with open(recalibration_log, "w") as recal_file:
-                recal_file.write(f"{GATK_string}\n")
-                recal_file.write(f"{index_command}\n")
+        console.print(f"[bold cyan]Starting recalibration step 2 for {sample_id}[/bold cyan]")
+
+        GATK_string = (
+            f"{gatk} ApplyBQSR -R {reference} -I {bam_dir}/{sample_id}.bam "
+            f"--bqsr-recal-file {recal_table} -O {recal_bam}"
+        )
+
+        result = run_command(GATK_string, f"Recalibration Step 2 for {sample_id}", sample_id, datadir)
+
+        if result == 0:
+            # Index the recalibrated BAM file
+            index_command = f"{samtools} index {recal_bam}"
+            index_result = run_command(index_command, f"Indexing Recalibrated BAM for {sample_id}", sample_id, datadir)
+
+            if index_result == 0:
+                with open(recalibration_log, "w") as recal_file:
+                    recal_file.write(f"{GATK_string}\n")
+                    recal_file.write(f"{index_command}\n")
+                return "success"
+            else:
+                return "error"
         else:
-            result = 1  # Set result to error if indexing fails
+            return "error"
 
-    return {"status": result}
+    return _recalibrate()
 
-def recalibration_pipeline(datadir: Path, sample_id: str, bed_file: Path, vcf_file: Path, reference: Path, gatk: str, samtools: str) -> Dict[str, int]:
-    db = get_sample_db(datadir, sample_id)
 
-    log_to_db(db, "Starting recalibration pipeline", "INFO", "recalibration", sample_id, datadir.name)
+def recalibration_pipeline(datadir: Path, sample_id: str, bed_file: Path, vcf_file: Path, reference: Path, gatk: str,
+                           samtools: str, db: TinyDB) -> Dict[str, int]:
+    @timer_with_db_log(db)
+    def _recalibration_pipeline():
+        log_to_db(db, "Starting recalibration pipeline", "INFO", "recalibration", sample_id, datadir.name)
 
-    recal1_result = base_recal1(datadir, sample_id, bed_file, vcf_file, reference, gatk)
-    if recal1_result["status"] != 0:
-        log_to_db(db, "Base recalibration step 1 failed", "ERROR", "recalibration", sample_id, datadir.name)
-        return {"status": 1}
+        recal1_result = base_recal1(datadir, sample_id, bed_file, vcf_file, reference, gatk, db)
+        if recal1_result != "success":
+            log_to_db(db, "Base recalibration step 1 failed", "ERROR", "recalibration", sample_id, datadir.name)
+            return {"status": 1}
 
-    recal2_result = recalibrate(datadir, sample_id, reference, gatk, samtools)
-    if recal2_result["status"] != 0:
-        log_to_db(db, "Recalibration step 2 failed", "ERROR", "recalibration", sample_id, datadir.name)
-        return {"status": 1}
+        recal2_result = recalibrate(datadir, sample_id, reference, gatk, samtools, db)
+        if recal2_result != "success":
+            log_to_db(db, "Recalibration step 2 failed", "ERROR", "recalibration", sample_id, datadir.name)
+            return {"status": 1}
 
-    log_to_db(db, "Recalibration pipeline completed successfully", "INFO", "recalibration", sample_id, datadir.name)
-    return {"status": 0}
+        log_to_db(db, "Recalibration pipeline completed successfully", "INFO", "recalibration", sample_id, datadir.name)
+        return {"status": 0}
+
+    return _recalibration_pipeline()
+
 
 if __name__ == "__main__":
     # Add any testing or standalone execution code here

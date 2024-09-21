@@ -418,30 +418,13 @@ def generate_analysis(config: Path, datadir: Path, samples: List[str], panel: st
 
 
 @click.command
-@click.option(
-    "-c", "--configuration-file", "configuration_file", help="YAML file", required=True
-)
-@click.option(
-    "-s",
-    "--sample",
-    "samples",
-    help="sample to be analysed (it can be multiple, each with a -s)",
-    callback=split_string,
-    required=False,
-)
+@click.option("-c", "--configuration-file", "configuration_file", help="YAML file", required=True)
+@click.option("-s", "--sample", "samples", help="sample to be analysed (it can be multiple, each with a -s)",
+              callback=split_string, required=False)
 @click.option("-d", "--datadir", "datadir", help="run directory", required=True)
 @click.option("-p", "--panel", "panel", help="panel to be used", required=True)
-@click.option(
-    "-f", "--full_analysis", "full_analysis", help="full analysis", is_flag=True
-)
-def run_analysis(
-    configuration_file: str,
-    datadir: str,
-    panel: str,
-    samples: List[str],
-    full_analysis: bool,
-) -> Dict[str, Dict[str, bool]]:
-
+@click.option("-f", "--full_analysis", "full_analysis", help="full analysis", is_flag=True)
+def run_analysis(configuration_file: str, datadir: str, panel: str, samples: List[str], full_analysis: bool) -> Dict[str, Dict[str, bool]]:
     config_path = Path(configuration_file)
     datadir_path = Path(datadir)
     db = get_db(datadir_path)
@@ -464,12 +447,9 @@ def run_analysis(
     console.log(message)
     log_to_db(db, message, "INFO", "pipeline", "NA", datadir_path.name)
 
-    sample_dict = generate_analysis(
-        config_path, datadir_path, samples, panel, full_analysis, db
-    )
+    sample_dict = process_dir(config_path, datadir_path, samples, panel, full_analysis, db)
 
     return sample_dict
-
 
 if __name__ == "__main__":
     run_analysis()
