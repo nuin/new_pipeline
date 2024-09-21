@@ -139,6 +139,50 @@ def index_bam(sample_id: str, samtools: str, threads: int, bam_output: Path) -> 
     return 0
 
 
+import time
+from functools import wraps
+
+
+def timer(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        end_time = time.time()
+        console.print(f"[bold cyan]Function {func.__name__} took {end_time - start_time:.2f} seconds[/bold cyan]")
+        return result
+
+    return wrapper
+
+
+@timer
+def run_command(command: str, description: str) -> int:
+    console.print(f"[cyan]Executing: {description}[/cyan]")
+    console.print(f"Command: {command}")
+
+    start_time = time.time()
+    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+                               bufsize=1, universal_newlines=True)
+
+    output = []
+    for line in process.stdout:
+        print(line, end='')  # Print in real-time
+        output.append(line)
+
+    process.wait()
+    end_time = time.time()
+
+    console.print(f"[bold cyan]{description} took {end_time - start_time:.2f} seconds[/bold cyan]")
+
+    if process.returncode != 0:
+        console.print(f"[bold red]Error in {description}[/bold red]")
+        console.print("Command output:")
+        console.print("".join(output))
+        return 1
+
+    return 0
+
+
 @timer
 def run_bwa(
         sample_id: str,
@@ -171,48 +215,34 @@ def run_bwa(
     bam_header = f"@RG\\tID:{sample_id}\\tLB:{datadir}\\tPL:Illumina\\tSM:{sample_id}\\tPU:None"
 
     steps = [
-        # Alignment
         (f"{bwa} mem -t {threads} -Y -R '{bam_header}' {reference} "
          f"{' '.join([str(file) for file in fastq_files])} > {temp_dir}/{sample_id}.sam",
          f"BWA alignment for {sample_id}"),
 
-        # Convert SAM to BAM
         (f"{samtools} view -@ {threads // 2} -bh {temp_dir}/{sample_id}.sam > {temp_dir}/{sample_id}.bam",
          f"Convert SAM to BAM for {sample_id}"),
 
-        # Sort BAM by name (required for fixmate)
         (f"{samtools} sort -@ {threads // 2} -n -o {temp_dir}/{sample_id}.namesort.bam {temp_dir}/{sample_id}.bam",
          f"Sort BAM by name for {sample_id}"),
 
-        # Fixmate
         (
         f"{samtools} fixmate -@ {threads // 2} -m {temp_dir}/{sample_id}.namesort.bam {temp_dir}/{sample_id}.fixmate.bam",
         f"Fixmate for {sample_id}"),
 
-        # Sort BAM by position
         (f"{samtools} sort -@ {threads // 2} -m {sort_memory} -T {temp_dir}/sort_{sample_id} "
          f"-o {temp_dir}/{sample_id}.sorted.bam {temp_dir}/{sample_id}.fixmate.bam",
          f"Sort BAM by position for {sample_id}"),
 
-        # Mark duplicates
         (f"{samtools} markdup -@ {threads // 2} -s {temp_dir}/{sample_id}.sorted.bam {bam_output} "
          f"2> {metrics_file}",
          f"Mark duplicates for {sample_id}"),
 
-        # Index BAM
         (f"{samtools} index -@ {threads} {bam_output}",
          f"Index BAM for {sample_id}")
     ]
 
     for command, description in steps:
-        console.print(f"[cyan]Executing: {description}[/cyan]")
-        result = subprocess.run(command, shell=True, capture_output=True, text=True)
-
-        if result.returncode != 0:
-            console.print(f"[bold red]Error in {description}[/bold red]")
-            console.print(f"Command: {command}")
-            console.print(f"STDOUT: {result.stdout}")
-            console.print(f"STDERR: {result.stderr}")
+        if run_command(command, description) != 0:
             return 1
 
         # Check file sizes after each step
