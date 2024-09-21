@@ -232,34 +232,33 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         if recalibration_result["status"] != 0:
             console.log(f"[bold red]Recalibration failed for sample {sample}[/bold red]")
             log_to_db(db, f"Recalibration failed for sample {sample}", "ERROR", "pipeline", sample, datadir.name)
-            continue
 
         # Move the recalibrated BAM file
         move_bam(datadir, sample, "recal_reads")
 
         @timer_with_db_log(sample_db)
         def run_haplotype_caller():
-            return variants_GATK.haplotype_caller(datadir, sample, reference, bed_file[sample], gatk)
+            return haplotype_caller(datadir, sample, reference, bed_file[sample], gatk)
 
         @timer_with_db_log(sample_db)
         def run_haplotype_caller3():
-            return variants_GATK3.haplotype_caller(datadir, sample, reference, bed_file[sample], gatk3)
+            return.haplotype_caller(datadir, sample, reference, bed_file[sample], gatk3)
 
         @timer_with_db_log(sample_db)
         def run_freebayes_caller():
-            return variants_freebayes.freebayes_caller(datadir, sample, reference, bed_file[sample], freebayes)
+            return freebayes_caller(datadir, sample, reference, bed_file[sample], freebayes)
 
         @timer_with_db_log(sample_db)
         def run_picard_sort():
-            return picard_actions.picard_sort(datadir, sample, reference, picard)
+            return picard_sort(datadir, sample, reference, picard)
 
         @timer_with_db_log(sample_db)
         def run_freebayes_edit():
-            return variants_freebayes.edit_freebayes_vcf(sample, datadir)
+            return edit_freebayes_vcf(sample, datadir)
 
         @timer_with_db_log(sample_db)
         def run_octopus_caller():
-            return variants_octopus.octopus_caller(datadir, sample, reference, bed_file[sample], octopus)
+            return octopus_caller(datadir, sample, reference, bed_file[sample], octopus)
 
         @timer_with_db_log(sample_db)
         def run_vcf_comparison():
@@ -267,50 +266,50 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
 
         @timer_with_db_log(sample_db)
         def run_snpEff():
-            return snpEff_ann.annotate_merged(sample, datadir, snpEff)
+            return annotate_merged(sample, datadir, snpEff)
 
         @timer_with_db_log(sample_db)
         def run_picard_coverage():
-            return picard_qc.get_coverage(sample, datadir, reference, bait_file, picard)
+            return get_coverage(sample, datadir, reference, bait_file, picard)
 
         @timer_with_db_log(sample_db)
         def run_picard_coverage_panel():
-            return picard_qc.get_coverage(sample, datadir, reference, bed_file[sample], picard, "panel")
+            return get_coverage(sample, datadir, reference, bed_file[sample], picard, "panel")
 
         @timer_with_db_log(sample_db)
         def run_picard_yield():
-            return picard_metrics.get_yield(sample, datadir, picard)
+            return get_yield(sample, datadir, picard)
 
         @timer_with_db_log(sample_db)
         def run_picard_hs_metrics():
-            return picard_metrics.get_hs_metrics(sample, datadir, reference, bait_file, picard)
+            return get_hs_metrics(sample, datadir, reference, bait_file, picard)
 
         @timer_with_db_log(sample_db)
         def run_picard_hs_metrics_panel():
-            return picard_metrics.get_hs_metrics(sample, datadir, reference, bed_file[sample], picard, "panel")
+            return get_hs_metrics(sample, datadir, reference, bed_file[sample], picard, "panel")
 
         @timer_with_db_log(sample_db)
         def run_picard_align_metrics():
-            return picard_metrics.get_align_summary(sample, datadir, reference, picard)
+            return get_align_summary(sample, datadir, reference, picard)
 
         @timer_with_db_log(sample_db)
         def run_mpileup_ident():
-            return extract_identity.mpileup(sample, datadir, "/apps/data/src/bundle/identity.txt", samtools)
+            return .mpileup(sample, datadir, "/apps/data/src/bundle/identity.txt", samtools)
 
         @timer_with_db_log(sample_db)
         def run_identity_table():
-            return extract_identity.create_identity_table(sample, datadir)
+            return create_identity_table(sample, datadir)
 
         @timer_with_db_log(sample_db)
         def run_full_identity():
-            return process_identity.barcoding(sample, datadir)
+            return barcoding(sample, datadir)
 
         @timer_with_db_log(sample_db)
         def run_extract_counts():
             if panel == "Cplus":
-                return count2.extract_counts(datadir, "/apps/data/src/BED/new/C+_ALL_IDPE_01JUN2021_Window.bed", sample)
+                return extract_counts(datadir, "/apps/data/src/BED/new/C+_ALL_IDPE_01JUN2021_Window.bed", sample)
             else:
-                return count2.extract_counts(datadir, "/apps/data/src/BED/new/CardiacALL_29MAR2021_Window.bed", sample)
+                return extract_counts(datadir, "/apps/data/src/BED/new/CardiacALL_29MAR2021_Window.bed", sample)
 
 
         run_haplotype_caller()
