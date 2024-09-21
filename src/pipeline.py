@@ -312,9 +312,6 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
             else:
                 return count2.extract_counts(datadir, "/apps/data/src/BED/new/CardiacALL_29MAR2021_Window.bed", sample)
 
-        to_return[sample]["recalibration1"] = run_recalibration_step1()
-        to_return[sample]["recalibrate"] = run_recalibration_final()
-        utils.move_bam(datadir, sample, "recal_reads")
 
         run_haplotype_caller()
         run_haplotype_caller3()
