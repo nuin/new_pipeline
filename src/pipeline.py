@@ -19,13 +19,6 @@ from dotenv import dotenv_values
 from rich.console import Console
 from tinydb import TinyDB, Query
 
-from lib import (
-    bwa_align, cnv, count2, dup_indels, enrichment, extract_identity,
-    GATK_vcf, picard_actions, picard_metrics, picard_qc, process_identity,
-    recalibration, snpEff_ann, uniformity, utils, variants_freebayes,
-    variants_GATK, variants_GATK3, variants_octopus
-)
-
 from lib.bwa_align import run_bwa
 from lib.cnv import cnv_calculation, compile_samples
 from lib.count2 import extract_counts
@@ -46,6 +39,7 @@ from lib.variants_freebayes import edit_freebayes_vcf, freebayes_caller
 from lib.variants_GATK import haplotype_caller
 from lib.variants_GATK3 import haplotype_caller as haplotype_caller3
 from lib.variants_octopus import octopus_caller
+from lib.db_logger import get_sample_db, log_to_db, timer_with_db_log
 
 # checks current version
 VERSIONFILE = Path(__file__).parent / "VERSION"
@@ -196,8 +190,7 @@ def process_dir(config: Path, datadir: Path, samples: List[str], panel: str, ful
     return True
 
 
-def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, full_analysis: bool, db: TinyDB) -> Dict[
-    str, Dict[str, bool]]:
+def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, full_analysis: bool, db: TinyDB) -> Dict[str, Dict[str, bool]]:
     to_return = defaultdict(dict)
     env = dotenv_values(Path.cwd() / ".env")
     configuration = yaml.safe_load(config.read_text())
@@ -219,39 +212,113 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         console.log(message)
         log_to_db(db, message, "INFO", "pipeline", sample, datadir.name)
 
-        recalibration_step1 = base_recal1(datadir, sample, bed_file[sample], vcf_file, reference, gatk)
-        to_return[sample]["recalibration1"] = recalibration_step1
+        sample_db = get_sample_db(datadir, sample)
 
-        recalibration_final = recalibrate(datadir, sample, reference, gatk)
-        to_return[sample]["recalibrate"] = recalibration_final
-        move_bam(datadir, sample, "recal_reads")
+        @timer_with_db_log(sample_db)
+        def run_recalibration_step1():
+            return recalibration.base_recal1(datadir, sample, bed_file[sample], vcf_file, reference, gatk)
 
-        haplotype_caller(datadir, sample, reference, bed_file[sample], gatk)
-        haplotype_caller3(datadir, sample, reference, bed_file[sample], gatk3)
-        freebayes_caller(datadir, sample, reference, bed_file[sample], freebayes)
-        to_return[sample]["picard_sort"] = picard_sort(datadir, sample, reference, picard)
-        to_return[sample]["freebayes_edit"] = edit_freebayes_vcf(sample, datadir)
-        to_return[sample]["variants_octopus"] = octopus_caller(datadir, sample, reference, bed_file[sample], octopus)
-        to_return[sample]["vcf_merge"] = vcf_comparison(datadir, sample, reference, gatk3)
-        to_return[sample]["snpEff"] = annotate_merged(sample, datadir, snpEff)
-        to_return[sample]["picard_coverage"] = get_coverage(sample, datadir, reference, bait_file, picard)
-        to_return[sample]["picard_coverage_panel"] = get_coverage(sample, datadir, reference, bed_file[sample], picard,
-                                                                  "panel")
-        to_return[sample]["picard_yield"] = get_yield(sample, datadir, picard)
-        to_return[sample]["picard_hs_metrics"] = get_hs_metrics(sample, datadir, reference, bait_file, picard)
-        to_return[sample]["picard_hs_metrics_panel"] = get_hs_metrics(sample, datadir, reference, bed_file[sample],
-                                                                      picard, "panel")
-        to_return[sample]["picard_align_metrics"] = get_align_summary(sample, datadir, reference, picard)
-        to_return[sample]["mpileup_ident"] = mpileup(sample, datadir, "/apps/data/src/bundle/identity.txt", samtools)
-        to_return[sample]["identity_table"] = create_identity_table(sample, datadir)
-        to_return[sample]["full_identity"] = barcoding(sample, datadir)
+        @timer_with_db_log(sample_db)
+        def run_recalibration_final():
+            return recalibration.recalibrate(datadir, sample, reference, gatk)
 
-        if panel == "Cplus":
-            to_return[sample]["cnv"] = extract_counts(datadir,
-                                                      "/apps/data/src/BED/new/C+_ALL_IDPE_01JUN2021_Window.bed", sample)
-        else:
-            to_return[sample]["cnv"] = extract_counts(datadir, "/apps/data/src/BED/new/CardiacALL_29MAR2021_Window.bed",
-                                                      sample)
+        @timer_with_db_log(sample_db)
+        def run_haplotype_caller():
+            return variants_GATK.haplotype_caller(datadir, sample, reference, bed_file[sample], gatk)
+
+        @timer_with_db_log(sample_db)
+        def run_haplotype_caller3():
+            return variants_GATK3.haplotype_caller(datadir, sample, reference, bed_file[sample], gatk3)
+
+        @timer_with_db_log(sample_db)
+        def run_freebayes_caller():
+            return variants_freebayes.freebayes_caller(datadir, sample, reference, bed_file[sample], freebayes)
+
+        @timer_with_db_log(sample_db)
+        def run_picard_sort():
+            return picard_actions.picard_sort(datadir, sample, reference, picard)
+
+        @timer_with_db_log(sample_db)
+        def run_freebayes_edit():
+            return variants_freebayes.edit_freebayes_vcf(sample, datadir)
+
+        @timer_with_db_log(sample_db)
+        def run_octopus_caller():
+            return variants_octopus.octopus_caller(datadir, sample, reference, bed_file[sample], octopus)
+
+        @timer_with_db_log(sample_db)
+        def run_vcf_comparison():
+            return GATK_vcf.vcf_comparison(datadir, sample, reference, gatk3)
+
+        @timer_with_db_log(sample_db)
+        def run_snpEff():
+            return snpEff_ann.annotate_merged(sample, datadir, snpEff)
+
+        @timer_with_db_log(sample_db)
+        def run_picard_coverage():
+            return picard_qc.get_coverage(sample, datadir, reference, bait_file, picard)
+
+        @timer_with_db_log(sample_db)
+        def run_picard_coverage_panel():
+            return picard_qc.get_coverage(sample, datadir, reference, bed_file[sample], picard, "panel")
+
+        @timer_with_db_log(sample_db)
+        def run_picard_yield():
+            return picard_metrics.get_yield(sample, datadir, picard)
+
+        @timer_with_db_log(sample_db)
+        def run_picard_hs_metrics():
+            return picard_metrics.get_hs_metrics(sample, datadir, reference, bait_file, picard)
+
+        @timer_with_db_log(sample_db)
+        def run_picard_hs_metrics_panel():
+            return picard_metrics.get_hs_metrics(sample, datadir, reference, bed_file[sample], picard, "panel")
+
+        @timer_with_db_log(sample_db)
+        def run_picard_align_metrics():
+            return picard_metrics.get_align_summary(sample, datadir, reference, picard)
+
+        @timer_with_db_log(sample_db)
+        def run_mpileup_ident():
+            return extract_identity.mpileup(sample, datadir, "/apps/data/src/bundle/identity.txt", samtools)
+
+        @timer_with_db_log(sample_db)
+        def run_identity_table():
+            return extract_identity.create_identity_table(sample, datadir)
+
+        @timer_with_db_log(sample_db)
+        def run_full_identity():
+            return process_identity.barcoding(sample, datadir)
+
+        @timer_with_db_log(sample_db)
+        def run_extract_counts():
+            if panel == "Cplus":
+                return count2.extract_counts(datadir, "/apps/data/src/BED/new/C+_ALL_IDPE_01JUN2021_Window.bed", sample)
+            else:
+                return count2.extract_counts(datadir, "/apps/data/src/BED/new/CardiacALL_29MAR2021_Window.bed", sample)
+
+        to_return[sample]["recalibration1"] = run_recalibration_step1()
+        to_return[sample]["recalibrate"] = run_recalibration_final()
+        utils.move_bam(datadir, sample, "recal_reads")
+
+        run_haplotype_caller()
+        run_haplotype_caller3()
+        run_freebayes_caller()
+        to_return[sample]["picard_sort"] = run_picard_sort()
+        to_return[sample]["freebayes_edit"] = run_freebayes_edit()
+        to_return[sample]["variants_octopus"] = run_octopus_caller()
+        to_return[sample]["vcf_merge"] = run_vcf_comparison()
+        to_return[sample]["snpEff"] = run_snpEff()
+        to_return[sample]["picard_coverage"] = run_picard_coverage()
+        to_return[sample]["picard_coverage_panel"] = run_picard_coverage_panel()
+        to_return[sample]["picard_yield"] = run_picard_yield()
+        to_return[sample]["picard_hs_metrics"] = run_picard_hs_metrics()
+        to_return[sample]["picard_hs_metrics_panel"] = run_picard_hs_metrics_panel()
+        to_return[sample]["picard_align_metrics"] = run_picard_align_metrics()
+        to_return[sample]["mpileup_ident"] = run_mpileup_ident()
+        to_return[sample]["identity_table"] = run_identity_table()
+        to_return[sample]["full_identity"] = run_full_identity()
+        to_return[sample]["cnv"] = run_extract_counts()
 
         message = f"Processing {sample} completed"
         console.log(message)
@@ -260,13 +327,13 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
     message = "Calculating uniformity"
     console.log(message)
     log_to_db(db, message, "INFO", "pipeline", "NA", datadir.name)
-    get_coverage_values(datadir, panel)
+    uniformity.get_coverage_values(datadir, panel)
 
     message = "Calculating enrichment"
     console.log(message)
     log_to_db(db, message, "INFO", "pipeline", "NA", datadir.name)
     for pos, sample in enumerate(samples):
-        get_enrichment(sample, datadir, panel)
+        enrichment.get_enrichment(sample, datadir, panel)
 
     if full_analysis:
         message = "Compiling identity file"
@@ -276,7 +343,7 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
             message = "Identity file does not exist, creating it"
             console.log(message)
             log_to_db(db, message, "INFO", "pipeline", "NA", datadir.name)
-            compile_identity(datadir)
+            utils.compile_identity(datadir)
         else:
             message = "Identity file exists"
             console.log(message)
@@ -285,13 +352,13 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         message = "Compiling barcodes"
         console.log(message)
         log_to_db(db, message, "INFO", "pipeline", "NA", datadir.name)
-        compile_barcodes(datadir)
+        process_identity.compile_barcodes(datadir)
 
         message = "Calculating and saving CNV read normalization"
         console.log(message)
         log_to_db(db, message, "INFO", "pipeline", "NA", datadir.name)
-        all_cnvs = compile_samples(datadir)
-        cnv_calculation(datadir, all_cnvs, config)
+        all_cnvs = cnv.compile_samples(datadir)
+        cnv.cnv_calculation(datadir, all_cnvs, config)
     else:
         message = "Full analysis not requested, skipping additional steps"
         console.log(message)

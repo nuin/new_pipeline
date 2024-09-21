@@ -1,9 +1,4 @@
-"""
-.. module:: bwa_align
-    :platform: Any
-    :synopsis: Module that performs BWA alignment and generates BAM files
-.. moduleauthor:: Paulo Nuin, July 2016
-"""
+# lib/bwa_align.py
 
 import logging
 import subprocess
@@ -21,29 +16,14 @@ from rich.syntax import Syntax
 
 from .utils import move_bam
 from .log_api import log_to_api
+from .db_logger import get_sample_db, log_to_db, timer_with_db_log
 
 console = Console()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
-def timer(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        start_time = time.time()
-        result = func(*args, **kwargs)
-        end_time = time.time()
-        duration = end_time - start_time
-        function_name = func.__name__
-        console.print(f"[bold cyan]{function_name} completed in {duration:.2f} seconds[/bold cyan]")
-        console.print(f"[bold cyan]Function {func.__name__} took {end_time - start_time:.2f} seconds[/bold cyan]")
-        return result
-    return wrapper
-
-
-
-@timer
+@timer_with_db_log(get_sample_db(datadir, sample_id))
 def check_existing_bam(sample_id: str, datadir: Path, threads: int, samtools: str) -> int:
     bam_paths = [
         datadir / "BAM" / sample_id / f"{sample_id}.bam",
@@ -99,8 +79,7 @@ def check_existing_bam(sample_id: str, datadir: Path, threads: int, samtools: st
         return 0
     return 1
 
-
-@timer
+@timer_with_db_log(get_sample_db(datadir, sample_id))
 def index_bam(sample_id: str, samtools: str, threads: int, bam_output: Path) -> int:
     index_string = f"{samtools} index -@ {threads} {bam_output}"
     console.print(Panel("[bold cyan]Indexing BAM file[/bold cyan]"))
@@ -112,8 +91,7 @@ def index_bam(sample_id: str, samtools: str, threads: int, bam_output: Path) -> 
         return 1
     return 0
 
-
-@timer
+@timer_with_db_log(get_sample_db(datadir, sample_id))
 def run_command(command: str, description: str) -> int:
     console.print(Panel(f"[bold blue]{description}[/bold blue]"))
     console.print(Syntax(command, "bash", theme="monokai", line_numbers=True))
@@ -148,8 +126,7 @@ def run_command(command: str, description: str) -> int:
 
     return 0
 
-
-@timer
+@timer_with_db_log(get_sample_db(datadir, sample_id))
 def run_bwa(
         sample_id: str,
         fastq_files: List[Path],
@@ -190,9 +167,8 @@ def run_bwa(
         (f"{samtools} sort -@ {threads // 2} -n -o {temp_dir}/{sample_id}.namesort.bam {temp_dir}/{sample_id}.bam",
          f"Sort BAM by name for {sample_id}"),
 
-        (
-        f"{samtools} fixmate -@ {threads // 2} -m {temp_dir}/{sample_id}.namesort.bam {temp_dir}/{sample_id}.fixmate.bam",
-        f"Fixmate for {sample_id}"),
+        (f"{samtools} fixmate -@ {threads // 2} -m {temp_dir}/{sample_id}.namesort.bam {temp_dir}/{sample_id}.fixmate.bam",
+         f"Fixmate for {sample_id}"),
 
         (f"{samtools} sort -@ {threads // 2} -m {sort_memory} -T {temp_dir}/sort_{sample_id} "
          f"-o {temp_dir}/{sample_id}.sorted.bam {temp_dir}/{sample_id}.fixmate.bam",
@@ -226,7 +202,6 @@ def run_bwa(
 
     return 0
 
-
 def print_summary(timings: dict):
     table = Table(title="BWA Alignment Process Summary")
     table.add_column("Step", style="cyan", no_wrap=True)
@@ -236,7 +211,6 @@ def print_summary(timings: dict):
         table.add_row(step, f"{time:.2f}")
 
     console.print(table)
-
 
 if __name__ == "__main__":
     pass
