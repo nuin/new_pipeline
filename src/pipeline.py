@@ -217,24 +217,22 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
 
         sample_db = get_sample_db(datadir, sample)
 
+        sample_db = TinyDB(datadir / "BAM" / sample / f"{sample}_pipeline_logs.json")
+
         @timer_with_db_log(sample_db)
         def run_recalibration():
-            return recalibration.recalibration_pipeline(
-                datadir=datadir,
-                sample_id=sample,
-                bed_file=Path(bed_file[sample]),
-                vcf_file=vcf_file,
-                reference=reference,
-                gatk=gatk,
-                samtools=samtools
-            )
+            recal1 = base_recal1(datadir, sample, bed_file[sample], vcf_file, reference, gatk)
+            if recal1 != "success":
+                return {"status": 1}
+            recal2 = recalibrate(datadir, sample, reference, gatk)
+            if recal2 != "success":
+                return {"status": 1}
+            return {"status": 0}
 
-        # Replace the two separate recalibration steps with a single call
         recalibration_result = run_recalibration()
         if recalibration_result["status"] != 0:
             console.log(f"[bold red]Recalibration failed for sample {sample}[/bold red]")
             log_to_db(db, f"Recalibration failed for sample {sample}", "ERROR", "pipeline", sample, datadir.name)
-            # Handle the error (e.g., skip to the next sample or exit)
             continue
 
         # Move the recalibrated BAM file
