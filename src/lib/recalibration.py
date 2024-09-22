@@ -78,57 +78,95 @@ def base_recal1(datadir: Path, sample_id: str, bed_file: Path, vcf_file: Path, r
     return _base_recal1()
 
 
-def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samtools: str, db: TinyDB) -> str:
-    @timer_with_db_log(db)
-    def _recalibrate():
-        bam_dir = datadir / "BAM" / sample_id / "BAM"
-        input_bam = bam_dir / f"{sample_id}.bam"
-        final_bam = bam_dir / f"{sample_id}.bam"  # This will be our final output
-        recal_table = bam_dir / "recal_data.table"
-        recalibration_log = bam_dir / "recalibration.txt"
+import tempfile
+import shutil
 
-        if not recal_table.exists():
-            console.print(f"[bold red]Error: {recal_table} does not exist. Run base_recal1 first.[/bold red]")
-            log_to_api("recal_data.table does not exist", "ERROR", "recalibrate", sample_id, str(datadir))
-            return "error"
+import tempfile
+import shutil
+import subprocess
+from pathlib import Path
 
-        if not input_bam.exists():
-            console.print(f"[bold red]Error: Input BAM file {input_bam} does not exist.[/bold red]")
-            log_to_api("Input BAM file does not exist", "ERROR", "recalibrate", sample_id, str(datadir))
-            return "error"
 
-        console.print(f"[bold cyan]Starting recalibration for {sample_id}[/bold cyan]")
+def _recalibrate():
+    bam_dir = datadir / "BAM" / sample_id / "BAM"
+    input_bam = bam_dir / f"{sample_id}.bam"
+    recal_table = bam_dir / "recal_data.table"
+    recalibration_log = bam_dir / "recalibration.log"
 
-        # Apply BQSR and output directly to the final BAM name
-        GATK_string = (
-            f"{gatk} ApplyBQSR -R {reference} -I {input_bam} "
-            f"--bqsr-recal-file {recal_table} -O {final_bam}"
-        )
+    # Check if input files exist
+    if not input_bam.exists():
+        with open(recalibration_log, 'w') as log_file:
+            log_file.write(f"Error: Input BAM file not found: {input_bam}\n")
+        return False
 
-        result = run_command(GATK_string, f"Recalibration for {sample_id}", sample_id, datadir)
+    if not recal_table.exists():
+        with open(recalibration_log, 'w') as log_file:
+            log_file.write(f"Error: Recalibration table not found: {recal_table}\n")
+        return False
 
-        if result == 0:
-            # Index the recalibrated BAM file
-            index_command = f"{samtools} index {final_bam}"
-            index_result = run_command(index_command, f"Indexing Recalibrated BAM for {sample_id}", sample_id, datadir)
+    # Create a temporary directory for the output
+    with tempfile.TemporaryDirectory(dir=bam_dir) as temp_dir:
+        temp_output_bam = Path(temp_dir) / f"{sample_id}.recal.bam"
 
-            if index_result == 0:
-                with open(recalibration_log, "w") as recal_file:
-                    recal_file.write(f"{GATK_string}\n")
-                    recal_file.write(f"{index_command}\n")
-                console.print(f"[bold green]Recalibration and indexing completed successfully for {sample_id}[/bold green]")
-                log_to_api("Recalibration and indexing completed successfully", "INFO", "recalibrate", sample_id, str(datadir))
-                return "success"
-            else:
-                console.print(f"[bold red]Error: Failed to index recalibrated BAM for {sample_id}[/bold red]")
-                log_to_api("Failed to index recalibrated BAM", "ERROR", "recalibrate", sample_id, str(datadir))
-                return "error"
-        else:
-            console.print(f"[bold red]Error: Recalibration failed for {sample_id}[/bold red]")
-            log_to_api("Recalibration failed", "ERROR", "recalibrate", sample_id, str(datadir))
-            return "error"
+        # Construct the GATK command
+        command = f"{gatk} ApplyBQSR " \
+                  f"-R {reference} " \
+                  f"-I {input_bam} " \
+                  f"--bqsr-recal-file {recal_table} " \
+                  f"-O {temp_output_bam} " \
+                  f"--create-output-bam-index true"
 
-    return _recalibrate()
+        # Run the recalibration
+        try:
+            result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
+
+            # Write the log
+            with open(recalibration_log, 'w') as log_file:
+                log_file.write(f"Command executed: {command}\n\n")
+                log_file.write("STDOUT:\n")
+                log_file.write(result.stdout)
+                log_file.write("\nSTDERR:\n")
+                log_file.write(result.stderr)
+
+            # Check if the output BAM was created
+            if not temp_output_bam.exists():
+                with open(recalibration_log, 'a') as log_file:
+                    log_file.write(f"\nError: Output BAM file was not created: {temp_output_bam}\n")
+                return False
+
+            # If successful, replace the original BAM file
+            shutil.move(str(temp_output_bam), str(input_bam))
+
+            # Also move the index file if it was created
+            temp_bai = temp_output_bam.with_suffix('.bai')
+            if temp_bai.exists():
+                shutil.move(str(temp_bai), str(input_bam.with_suffix('.bai')))
+
+            with open(recalibration_log, 'a') as log_file:
+                log_file.write("\nRecalibration completed successfully.\n")
+
+            return True
+
+        except subprocess.CalledProcessError as e:
+            # Log the error
+            with open(recalibration_log, 'w') as log_file:
+                log_file.write(f"Command failed: {command}\n")
+                log_file.write(f"Error: {str(e)}\n")
+                log_file.write("STDOUT:\n")
+                log_file.write(e.stdout)
+                log_file.write("\nSTDERR:\n")
+                log_file.write(e.stderr)
+            return False
+
+        except Exception as e:
+            # Log any other unexpected errors
+            with open(recalibration_log, 'w') as log_file:
+                log_file.write(f"Unexpected error occurred: {str(e)}\n")
+            return False
+
+    return False  # If we get here, something went wrong
+
+
 def is_bam_recalibrated(bam_path: Path) -> bool:
     """
     Check if the BAM file has already been recalibrated.
