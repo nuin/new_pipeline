@@ -17,23 +17,32 @@ def is_bam_recalibrated(bam_path: Path) -> bool:
 
 
 def move_bam(datadir: Path, sample: str, bam_file: str) -> bool:
-    bam_location = datadir / "BAM" / sample / "BAM"
-    source_bam = bam_location / f"{sample}.{bam_file}.bam"
-    target_bam = bam_location / f"{sample}.bam"
-    source_bai = bam_location / f"{sample}.{bam_file}.bam.bai"
-    target_bai = bam_location / f"{sample}.bai"
+    bam_dir = datadir / "BAM" / sample / "BAM"
+    source_bam = bam_dir / f"{sample}.{bam_file}.bam"
+    target_bam = bam_dir / f"{sample}.bam"
+    source_bai = bam_dir / f"{sample}.{bam_file}.bam.bai"
+    target_bai = bam_dir / f"{sample}.bai"
 
     if source_bam.exists():
-        console.log(f"BAM file {bam_file}.bam exists")
+        console.log(f"Moving {source_bam} to {target_bam}")
         try:
             move(str(source_bam), str(target_bam))
-            console.log(f"Moved {source_bam} to {target_bam}")
 
             if source_bai.exists():
                 move(str(source_bai), str(target_bai))
-                console.log(f"Moved {source_bai} to {target_bai}")
             else:
-                console.log(f"Index file {source_bai} does not exist")
+                console.log(f"Warning: Index file {source_bai} does not exist")
+
+            # Clean up any extra .bai files
+            extra_bai = bam_dir / f"{sample}.bai"
+            if extra_bai.exists():
+                extra_bai.unlink()
+                console.log(f"Removed extra index file: {extra_bai}")
+
+            extra_bam_bai = bam_dir / f"{sample}.bam.bai"
+            if extra_bam_bai.exists():
+                extra_bam_bai.unlink()
+                console.log(f"Removed extra index file: {extra_bam_bai}")
 
             return True
         except Exception as e:

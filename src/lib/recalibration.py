@@ -82,6 +82,7 @@ def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samto
     @timer_with_db_log(db)
     def _recalibrate():
         bam_dir = datadir / "BAM" / sample_id / "BAM"
+        input_bam = bam_dir / f"{sample_id}.bam"
         recal_bam = bam_dir / f"{sample_id}.recal_reads.bam"
         recal_table = bam_dir / "recal_data.table"
         recalibration_log = bam_dir / "recalibration.txt"
@@ -96,10 +97,15 @@ def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samto
             log_to_api("recal_data.table does not exist", "ERROR", "recalibrate", sample_id, str(datadir))
             return "error"
 
+        if not input_bam.exists():
+            console.print(f"[bold red]Error: Input BAM file {input_bam} does not exist.[/bold red]")
+            log_to_api("Input BAM file does not exist", "ERROR", "recalibrate", sample_id, str(datadir))
+            return "error"
+
         console.print(f"[bold cyan]Starting recalibration step 2 for {sample_id}[/bold cyan]")
 
         GATK_string = (
-            f"{gatk} ApplyBQSR -R {reference} -I {bam_dir}/{sample_id}.bam "
+            f"{gatk} ApplyBQSR -R {reference} -I {input_bam} "
             f"--bqsr-recal-file {recal_table} -O {recal_bam}"
         )
 
@@ -114,13 +120,20 @@ def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samto
                 with open(recalibration_log, "w") as recal_file:
                     recal_file.write(f"{GATK_string}\n")
                     recal_file.write(f"{index_command}\n")
+                console.print(f"[bold green]Recalibration and indexing completed successfully for {sample_id}[/bold green]")
+                log_to_api("Recalibration and indexing completed successfully", "INFO", "recalibrate", sample_id, str(datadir))
                 return "success"
             else:
+                console.print(f"[bold red]Error: Failed to index recalibrated BAM for {sample_id}[/bold red]")
+                log_to_api("Failed to index recalibrated BAM", "ERROR", "recalibrate", sample_id, str(datadir))
                 return "error"
         else:
+            console.print(f"[bold red]Error: Recalibration failed for {sample_id}[/bold red]")
+            log_to_api("Recalibration failed", "ERROR", "recalibrate", sample_id, str(datadir))
             return "error"
 
     return _recalibrate()
+
 
 def is_bam_recalibrated(bam_path: Path) -> bool:
     """
@@ -129,6 +142,7 @@ def is_bam_recalibrated(bam_path: Path) -> bool:
     recal_bam = bam_path.with_name(f"{bam_path.stem}.recal_reads.bam")
     recal_log = bam_path.with_name("recalibration.txt")
     return recal_bam.exists() and recal_log.exists()
+
 
 def recalibration_pipeline(datadir: Path, sample_id: str, bed_file: Path, vcf_file: Path, reference: Path, gatk: str,
                            samtools: str, db: TinyDB) -> Dict[str, int]:

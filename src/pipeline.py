@@ -232,9 +232,15 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         if recalibration_result["status"] != 0:
             console.log(f"[bold red]Recalibration failed for sample {sample}[/bold red]")
             log_to_db(db, f"Recalibration failed for sample {sample}", "ERROR", "pipeline", sample, datadir.name)
+            continue
 
         # Move the recalibrated BAM file
-        move_bam(datadir, sample, "recal_reads")
+        if not move_bam(datadir, sample, "recal_reads"):
+            console.log(f"[bold red]Failed to move recalibrated BAM for sample {sample}[/bold red]")
+            log_to_db(db, f"Failed to move recalibrated BAM for sample {sample}", "ERROR", "pipeline", sample,
+                      datadir.name)
+            continue
+
 
         @timer_with_db_log(sample_db)
         def run_haplotype_caller():
@@ -242,7 +248,7 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
 
         @timer_with_db_log(sample_db)
         def run_haplotype_caller3():
-            return haplotype_caller(datadir, sample, reference, bed_file[sample], gatk3)
+            return haplotype_caller3(datadir, sample, reference, bed_file[sample], gatk3)
 
         @timer_with_db_log(sample_db)
         def run_freebayes_caller():
