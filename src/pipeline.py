@@ -13,17 +13,22 @@ from pathlib import Path
 from typing import Dict, List, Optional
 from datetime import datetime
 
-import click
-import yaml
-from dotenv import dotenv_values
+import os
+from pathlib import Path
+from typing import Dict, List
+from datetime import datetime
 from rich.console import Console
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeElapsedColumn
+from rich.syntax import Syntax
+from rich.table import Table
 from tinydb import TinyDB, Query
 
 from lib.bwa_align import run_bwa
 from lib import recalibration
 from lib.cnv import cnv_calculation, compile_samples
 from lib.count2 import extract_counts
-from lib.dup_indels import remove_duplicates
+# from lib.dup_indels import remove_duplicates
 from lib.enrichment import get_enrichment
 from lib.extract_identity import create_identity_table, mpileup
 from lib.GATK_vcf import vcf_comparison
@@ -41,7 +46,7 @@ from lib.variants_GATK import haplotype_caller
 from lib.variants_GATK3 import haplotype_caller as haplotype_caller3
 from lib.variants_octopus import octopus_caller
 from lib.db_logger import get_sample_db, log_to_db, timer_with_db_log
-from lib.utils import move_bam
+# from lib.utils import move_bam
 
 # checks current version
 VERSIONFILE = Path(__file__).parent / "VERSION"
@@ -78,7 +83,7 @@ def find_fastq(datadir: Path, panel_samples: List[str], panel: str, db: TinyDB) 
     fastqs = sorted(datadir.glob("*.fastq.gz"))
     for fastq in fastqs:
         message = f"Found {fastq}"
-        console.log(message)
+        console.print(Panel(f"[cyan]{message}[/cyan]"))
         log_to_db(db, message, "INFO", "pipeline", "NA", datadir.name)
     return fastqs
 
@@ -95,28 +100,26 @@ def create_directories(datadir: Path, sample_ids: List[str], panel: str, db: Tin
         (datadir / "BAM").mkdir(exist_ok=True)
     except FileExistsError:
         message = f"{datadir}/BAM/ already exists"
-        console.log(message)
+        console.print(Panel(f"[yellow]{message}[/yellow]"))
         log_to_db(db, message, "INFO", "pipeline", "NA", datadir.name)
 
-    message = f"Creating directories in {panel} directory"
-    console.log(message)
-    log_to_db(db, message, "INFO", "pipeline", "NA", datadir.name)
+    console.print(Panel(f"[bold blue]Creating directories in {panel} directory[/bold blue]"))
+    log_to_db(db, f"Creating directories in {panel} directory", "INFO", "pipeline", "NA", datadir.name)
 
     for sample in sample_ids:
-        message = f"Processing {sample}"
-        console.log(message)
-        log_to_db(db, message, "INFO", "pipeline", sample, datadir.name)
+        console.print(f"[cyan]Processing {sample}[/cyan]")
+        log_to_db(db, f"Processing {sample}", "INFO", "pipeline", sample, datadir.name)
 
         for sub_dir in ["", "BAM", "VCF", "QC", "Metrics"]:
             path = datadir / "BAM" / sample / sub_dir
             path.mkdir(parents=True, exist_ok=True)
             message = f"Creating {path}"
-            console.log(message)
+            console.print(f"[green]{message}[/green]")
             log_to_db(db, message, "INFO", "pipeline", sample, datadir.name)
 
-    message = "Directories created/existed"
-    console.log(message)
-    log_to_db(db, message, "INFO", "pipeline", "NA", datadir.name)
+    console.print(Panel("[bold green]Directories created/existed[/bold green]"))
+    log_to_db(db, "Directories created/existed", "INFO", "pipeline", "NA", datadir.name)
+
 
 
 def align_files(config: Path, datadir: Path, samples: List[str], fastqs: List[Path], db: TinyDB) -> bool:
@@ -126,33 +129,30 @@ def align_files(config: Path, datadir: Path, samples: List[str], fastqs: List[Pa
     samtools = env["SAMTOOLS"]
     reference = configuration["Reference"]
 
-    message = "Aligning files"
-    console.log(message)
-    log_to_db(db, message, "INFO", "pipeline", "NA", datadir.name)
+    console.print(Panel("[bold blue]Aligning files[/bold blue]"))
+    log_to_db(db, "Aligning files", "INFO", "pipeline", "NA", datadir.name)
 
     for sample in samples:
-        message = f"Processing {sample}"
-        console.log(message)
-        log_to_db(db, message, "INFO", "pipeline", sample, datadir.name)
+        console.print(f"[cyan]Processing {sample}[/cyan]")
+        log_to_db(db, f"Processing {sample}", "INFO", "pipeline", sample, datadir.name)
 
         fastq_files = [fastq for fastq in fastqs if sample in fastq.name]
-        message = f"Aligning sample {sample}"
-        console.log(message)
-        log_to_db(db, message, "INFO", "pipeline", sample, datadir.name)
+        console.print(Panel(f"[bold blue]Aligning sample {sample}[/bold blue]"))
+        log_to_db(db, f"Aligning sample {sample}", "INFO", "pipeline", sample, datadir.name)
 
         sample_db = TinyDB(datadir / "BAM" / sample / f"{sample}_pipeline_logs.json")
         run_bwa(sample, fastq_files, datadir, reference, bwa, samtools, sample_db)
 
+    return True
 
 
-def process_dir(config: Path, datadir: Path, samples: List[str], panel: str, full_analysis: bool, db: TinyDB) -> Dict[
-    str, Dict[str, bool]]:
+
+def process_dir(config: Path, datadir: Path, samples: List[str], panel: str, full_analysis: bool, db: TinyDB) -> Dict[str, Dict[str, bool]]:
     env = dotenv_values(Path.cwd() / ".env")
     configuration = yaml.safe_load(config.read_text())
 
-    message = "Looking for FASTQ files"
-    console.log(message)
-    log_to_db(db, message, "INFO", "pipeline", "NA", datadir.name)
+    console.print(Panel("[bold blue]Looking for FASTQ files[/bold blue]"))
+    log_to_db(db, "Looking for FASTQ files", "INFO", "pipeline", "NA", datadir.name)
 
     panel_samples = list(configuration["BED"].keys())
 
@@ -160,12 +160,12 @@ def process_dir(config: Path, datadir: Path, samples: List[str], panel: str, ful
     sample_ids = get_ids(fastqs)
 
     message = f"Found {len(sample_ids)} samples"
-    console.log(message)
+    console.print(Panel(f"[green]{message}[/green]"))
     log_to_db(db, message, "INFO", "pipeline", "NA", datadir.name)
 
     if len(samples) >= 1:
         message = f"Samples to be analysed: {' '.join(samples)}"
-        console.log(message)
+        console.print(Panel(f"[cyan]{message}[/cyan]"))
         log_to_db(db, message, "INFO", "pipeline", "NA", datadir.name)
         sample_ids = samples
 
@@ -173,24 +173,20 @@ def process_dir(config: Path, datadir: Path, samples: List[str], panel: str, ful
     samtools = env["SAMTOOLS"]
     reference = configuration["Reference"]
 
-    message = f"Using BWA: {bwa}"
-    console.log(message)
-    log_to_db(db, message, "INFO", "pipeline", "NA", datadir.name)
+    console.print(Panel(f"[cyan]Using BWA: {bwa}[/cyan]"))
+    log_to_db(db, f"Using BWA: {bwa}", "INFO", "pipeline", "NA", datadir.name)
 
-    message = f"Using SAMTOOLS: {samtools}"
-    console.log(message)
-    log_to_db(db, message, "INFO", "pipeline", "NA", datadir.name)
+    console.print(Panel(f"[cyan]Using SAMTOOLS: {samtools}[/cyan]"))
+    log_to_db(db, f"Using SAMTOOLS: {samtools}", "INFO", "pipeline", "NA", datadir.name)
 
-    message = f"Using reference: {reference}"
-    console.log(message)
-    log_to_db(db, message, "INFO", "pipeline", "NA", datadir.name)
+    console.print(Panel(f"[cyan]Using reference: {reference}[/cyan]"))
+    log_to_db(db, f"Using reference: {reference}", "INFO", "pipeline", "NA", datadir.name)
 
     create_directories(datadir, sample_ids, panel, db)
     align_files(config, datadir, sample_ids, fastqs, db)
     analyse_pairs(config, datadir, sample_ids, panel, full_analysis, db)
 
     return True
-
 
 def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, full_analysis: bool, db: TinyDB) -> Dict[str, Dict[str, bool]]:
     to_return = defaultdict(dict)
@@ -430,25 +426,25 @@ def run_analysis(configuration_file: str, datadir: str, panel: str, samples: Lis
 
     if not samples:
         message = "No samples provided, will analyse all samples in the run"
-        console.log(message)
+        console.print(Panel(f"[yellow]{message}[/yellow]"))
         log_to_db(db, message, "INFO", "pipeline", "NA", datadir_path.name)
         samples = []
 
     message = f"Pipeline current version is {VERSION}"
-    console.log(message)
+    console.print(Panel(f"[bold cyan]{message}[/bold cyan]"))
     log_to_db(db, message, "INFO", "pipeline", "NA", datadir_path.name)
 
-    message = "All requirements found, starting analysis"
-    console.log(message)
-    log_to_db(db, message, "INFO", "pipeline", "NA", datadir_path.name)
+    console.print(Panel("[bold green]All requirements found, starting analysis[/bold green]"))
+    log_to_db(db, "All requirements found, starting analysis", "INFO", "pipeline", "NA", datadir_path.name)
 
     message = f"Full analysis: {full_analysis}"
-    console.log(message)
+    console.print(Panel(f"[cyan]{message}[/cyan]"))
     log_to_db(db, message, "INFO", "pipeline", "NA", datadir_path.name)
 
     sample_dict = process_dir(config_path, datadir_path, samples, panel, full_analysis, db)
 
     return sample_dict
+
 
 if __name__ == "__main__":
     run_analysis()
