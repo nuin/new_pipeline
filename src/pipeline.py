@@ -1,6 +1,3 @@
-Certainly! I apologize for not providing the full file earlier. Here's the complete pipeline.py file with standardized output using Rich for console logging and consistent database logging:
-
-```python
 """
 .. module:: align
     :platform: any
