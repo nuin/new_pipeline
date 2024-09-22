@@ -1,6 +1,8 @@
 # lib/recalibration.py
 
 import subprocess
+import tempfile
+import shutil
 from pathlib import Path
 from typing import Dict
 from rich.console import Console
@@ -12,7 +14,6 @@ from .log_api import log_to_api
 from .db_logger import log_to_db, timer_with_db_log
 
 console = Console()
-
 
 def run_command(command: str, description: str, sample_id: str, datadir: Path) -> int:
     console.print(Panel(f"[bold blue]{description}[/bold blue]"))
@@ -50,7 +51,6 @@ def run_command(command: str, description: str, sample_id: str, datadir: Path) -
     log_to_api(f"{description} completed successfully", "INFO", "recalibration", sample_id, str(datadir))
     return 0
 
-
 def base_recal1(datadir: Path, sample_id: str, bed_file: Path, vcf_file: Path, reference: Path, gatk: str,
                 db: TinyDB) -> str:
     @timer_with_db_log(db)
@@ -77,104 +77,96 @@ def base_recal1(datadir: Path, sample_id: str, bed_file: Path, vcf_file: Path, r
 
     return _base_recal1()
 
+def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samtools: str, db: TinyDB) -> str:
+    @timer_with_db_log(db)
+    def _recalibrate():
+        bam_dir = datadir / "BAM" / sample_id / "BAM"
+        input_bam = bam_dir / f"{sample_id}.bam"
+        recal_table = bam_dir / "recal_data.table"
+        recalibration_log = bam_dir / "recalibration.log"
 
-import tempfile
-import shutil
-
-import tempfile
-import shutil
-import subprocess
-from pathlib import Path
-
-
-def _recalibrate():
-    bam_dir = datadir / "BAM" / sample_id / "BAM"
-    input_bam = bam_dir / f"{sample_id}.bam"
-    recal_table = bam_dir / "recal_data.table"
-    recalibration_log = bam_dir / "recalibration.log"
-
-    # Check if input files exist
-    if not input_bam.exists():
-        with open(recalibration_log, 'w') as log_file:
-            log_file.write(f"Error: Input BAM file not found: {input_bam}\n")
-        return False
-
-    if not recal_table.exists():
-        with open(recalibration_log, 'w') as log_file:
-            log_file.write(f"Error: Recalibration table not found: {recal_table}\n")
-        return False
-
-    # Create a temporary directory for the output
-    with tempfile.TemporaryDirectory(dir=bam_dir) as temp_dir:
-        temp_output_bam = Path(temp_dir) / f"{sample_id}.recal.bam"
-
-        # Construct the GATK command
-        command = f"{gatk} ApplyBQSR " \
-                  f"-R {reference} " \
-                  f"-I {input_bam} " \
-                  f"--bqsr-recal-file {recal_table} " \
-                  f"-O {temp_output_bam} " \
-                  f"--create-output-bam-index true"
-
-        # Run the recalibration
-        try:
-            result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
-
-            # Write the log
+        # Check if input files exist
+        if not input_bam.exists():
             with open(recalibration_log, 'w') as log_file:
-                log_file.write(f"Command executed: {command}\n\n")
-                log_file.write("STDOUT:\n")
-                log_file.write(result.stdout)
-                log_file.write("\nSTDERR:\n")
-                log_file.write(result.stderr)
+                log_file.write(f"Error: Input BAM file not found: {input_bam}\n")
+            return "error"
 
-            # Check if the output BAM was created
-            if not temp_output_bam.exists():
+        if not recal_table.exists():
+            with open(recalibration_log, 'w') as log_file:
+                log_file.write(f"Error: Recalibration table not found: {recal_table}\n")
+            return "error"
+
+        # Create a temporary directory for the output
+        with tempfile.TemporaryDirectory(dir=bam_dir) as temp_dir:
+            temp_output_bam = Path(temp_dir) / f"{sample_id}.recal.bam"
+
+            # Construct the GATK command
+            command = f"{gatk} ApplyBQSR " \
+                      f"-R {reference} " \
+                      f"-I {input_bam} " \
+                      f"--bqsr-recal-file {recal_table} " \
+                      f"-O {temp_output_bam} " \
+                      f"--create-output-bam-index true"
+
+            # Run the recalibration
+            try:
+                result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
+
+                # Write the log
+                with open(recalibration_log, 'w') as log_file:
+                    log_file.write(f"Command executed: {command}\n\n")
+                    log_file.write("STDOUT:\n")
+                    log_file.write(result.stdout)
+                    log_file.write("\nSTDERR:\n")
+                    log_file.write(result.stderr)
+
+                # Check if the output BAM was created
+                if not temp_output_bam.exists():
+                    with open(recalibration_log, 'a') as log_file:
+                        log_file.write(f"\nError: Output BAM file was not created: {temp_output_bam}\n")
+                    return "error"
+
+                # If successful, replace the original BAM file
+                shutil.move(str(temp_output_bam), str(input_bam))
+
+                # Also move the index file if it was created
+                temp_bai = temp_output_bam.with_suffix('.bai')
+                if temp_bai.exists():
+                    shutil.move(str(temp_bai), str(input_bam.with_suffix('.bai')))
+
                 with open(recalibration_log, 'a') as log_file:
-                    log_file.write(f"\nError: Output BAM file was not created: {temp_output_bam}\n")
-                return False
+                    log_file.write("\nRecalibration completed successfully.\n")
 
-            # If successful, replace the original BAM file
-            shutil.move(str(temp_output_bam), str(input_bam))
+                return "success"
 
-            # Also move the index file if it was created
-            temp_bai = temp_output_bam.with_suffix('.bai')
-            if temp_bai.exists():
-                shutil.move(str(temp_bai), str(input_bam.with_suffix('.bai')))
+            except subprocess.CalledProcessError as e:
+                # Log the error
+                with open(recalibration_log, 'w') as log_file:
+                    log_file.write(f"Command failed: {command}\n")
+                    log_file.write(f"Error: {str(e)}\n")
+                    log_file.write("STDOUT:\n")
+                    log_file.write(e.stdout)
+                    log_file.write("\nSTDERR:\n")
+                    log_file.write(e.stderr)
+                return "error"
 
-            with open(recalibration_log, 'a') as log_file:
-                log_file.write("\nRecalibration completed successfully.\n")
+            except Exception as e:
+                # Log any other unexpected errors
+                with open(recalibration_log, 'w') as log_file:
+                    log_file.write(f"Unexpected error occurred: {str(e)}\n")
+                return "error"
 
-            return True
+        return "error"  # If we get here, something went wrong
 
-        except subprocess.CalledProcessError as e:
-            # Log the error
-            with open(recalibration_log, 'w') as log_file:
-                log_file.write(f"Command failed: {command}\n")
-                log_file.write(f"Error: {str(e)}\n")
-                log_file.write("STDOUT:\n")
-                log_file.write(e.stdout)
-                log_file.write("\nSTDERR:\n")
-                log_file.write(e.stderr)
-            return False
-
-        except Exception as e:
-            # Log any other unexpected errors
-            with open(recalibration_log, 'w') as log_file:
-                log_file.write(f"Unexpected error occurred: {str(e)}\n")
-            return False
-
-    return False  # If we get here, something went wrong
-
+    return _recalibrate()
 
 def is_bam_recalibrated(bam_path: Path) -> bool:
     """
     Check if the BAM file has already been recalibrated.
     """
     recal_bam = bam_path.with_name(f"{bam_path.stem}.recal_reads.bam")
-    recal_log = bam_path.with_name("recalibration.txt")
+    recal_log = bam_path.with_name("recalibration.log")
     return recal_bam.exists() and recal_log.exists()
-
 
 def recalibration_pipeline(datadir: Path, sample_id: str, bed_file: Path, vcf_file: Path, reference: Path, gatk: str,
                            samtools: str, db: TinyDB) -> Dict[str, int]:
@@ -205,7 +197,6 @@ def recalibration_pipeline(datadir: Path, sample_id: str, bed_file: Path, vcf_fi
         return {"status": 0}
 
     return _recalibration_pipeline()
-
 
 if __name__ == "__main__":
     # Add any testing or standalone execution code here
