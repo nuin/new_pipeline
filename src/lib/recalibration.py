@@ -17,10 +17,6 @@ import time
 
 console = Console()
 
-
-console = Console()
-
-
 def run_command(command: str, description: str, sample_id: str, datadir: Path) -> int:
     console.print(Panel(f"[bold blue]{description}[/bold blue]"))
     console.print(Syntax(command, "bash", theme="monokai", line_numbers=True))
@@ -153,7 +149,6 @@ def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samto
             input_bam.unlink()
             output_bam.rename(input_bam)
 
-
             time.sleep(30)  # Wait for 2 seconds to ensure file system operations are complete
 
             # Create BAM index
@@ -242,13 +237,10 @@ def recalibration_pipeline(datadir: Path, sample_id: str, bed_file: Path, vcf_fi
             input_bam = bam_dir / f"{sample_id}.bam"
             recalibration_flag = bam_dir / "recalibration_completed.flag"
 
-            if is_bam_recalibrated(bam_dir):
-                console.print(
-                    f"[yellow]BAM file for {sample_id} is already recalibrated. Skipping recalibration.[/yellow]")
-                log_to_api(f"BAM file for {sample_id} is already recalibrated", "INFO", "recalibration", sample_id,
-                           str(datadir))
-                log_to_db(db, f"BAM file for {sample_id} is already recalibrated", "INFO", "recalibration", sample_id,
-                          datadir.name)
+            if recalibration_flag.exists():
+                console.print(f"[yellow]Recalibration flag exists for {sample_id}. Skipping recalibration.[/yellow]")
+                log_to_api(f"Recalibration flag exists for {sample_id}", "INFO", "recalibration", sample_id, str(datadir))
+                log_to_db(db, f"Recalibration flag exists for {sample_id}", "INFO", "recalibration", sample_id, datadir.name)
                 return {"status": 0}
 
             console.print(f"[cyan]Starting base recalibration step 1 (BaseRecalibrator) for {sample_id}[/cyan]")
@@ -267,24 +259,20 @@ def recalibration_pipeline(datadir: Path, sample_id: str, bed_file: Path, vcf_fi
             console.print(f"[cyan]Recalibration step 2 (ApplyBQSR) result: {recal2_result}[/cyan]")
 
             if recal2_result != "success":
-                log_to_db(db, "Recalibration step 2 (ApplyBQSR) failed", "ERROR", "recalibration", sample_id,
-                          datadir.name)
+                log_to_db(db, "Recalibration step 2 (ApplyBQSR) failed", "ERROR", "recalibration", sample_id, datadir.name)
                 console.print(f"[bold red]Recalibration step 2 (ApplyBQSR) failed for {sample_id}[/bold red]")
                 return {"status": 1}
 
             # Create the recalibration flag file
             recalibration_flag.touch()
             console.print(f"[green]Recalibration flag created for {sample_id}[/green]")
-            log_to_db(db, f"Recalibration flag created for {sample_id}", "INFO", "recalibration", sample_id,
-                      datadir.name)
+            log_to_db(db, f"Recalibration flag created for {sample_id}", "INFO", "recalibration", sample_id, datadir.name)
 
-            log_to_db(db, "Recalibration pipeline completed successfully", "INFO", "recalibration", sample_id,
-                      datadir.name)
+            log_to_db(db, "Recalibration pipeline completed successfully", "INFO", "recalibration", sample_id, datadir.name)
             console.print(f"[bold green]Recalibration pipeline completed successfully for {sample_id}[/bold green]")
             return {"status": 0}
         except Exception as e:
-            log_to_db(db, f"Unexpected error in recalibration pipeline: {str(e)}", "ERROR", "recalibration", sample_id,
-                      datadir.name)
+            log_to_db(db, f"Unexpected error in recalibration pipeline: {str(e)}", "ERROR", "recalibration", sample_id, datadir.name)
             console.print(f"[bold red]Unexpected error in recalibration pipeline for {sample_id}: {str(e)}[/bold red]")
             return {"status": 1}
 
