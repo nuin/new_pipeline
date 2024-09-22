@@ -192,23 +192,29 @@ def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samto
             return "success"
 
         except subprocess.CalledProcessError as e:
-            console.print(Panel(f"[bold red]Error in ApplyBQSR or indexing for {sample_id}: {e}[/bold red]"))
-            console.print(f"[bold red]Command output: {e.output}[/bold red]")
-            log_to_db(db, f"Error in ApplyBQSR or indexing: {str(e)}\nCommand output: {e.output}", "ERROR",
-                      "recalibration", sample_id, datadir.name)
-            return "error"
+            error_msg = f"Error in ApplyBQSR or indexing for {sample_id}:\n"
+            error_msg += f"Command: {e.cmd}\n"
+            error_msg += f"Return code: {e.returncode}\n"
+            error_msg += f"Output: {e.output}\n"
+            error_msg += f"Stderr: {e.stderr}\n"
+            console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
+            log_to_db(db, error_msg, "ERROR", "recalibration", sample_id, datadir.name)
+            return f"error: {error_msg}"
 
         except FileNotFoundError as e:
-            console.print(Panel(f"[bold red]File not found error in recalibration for {sample_id}: {e}[/bold red]"))
-            log_to_db(db, f"File not found error in recalibration: {str(e)}", "ERROR", "recalibration", sample_id,
-                      datadir.name)
-            return "error"
+            error_msg = f"File not found error in recalibration for {sample_id}: {e}\n"
+            error_msg += f"Current working directory: {os.getcwd()}\n"
+            error_msg += f"Directory contents: {os.listdir()}\n"
+            console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
+            log_to_db(db, error_msg, "ERROR", "recalibration", sample_id, datadir.name)
+            return f"error: {error_msg}"
 
         except Exception as e:
-            console.print(Panel(f"[bold red]Unexpected error in ApplyBQSR or indexing for {sample_id}: {e}[/bold red]"))
-            log_to_db(db, f"Unexpected error in ApplyBQSR or indexing: {str(e)}", "ERROR", "recalibration", sample_id,
-                      datadir.name)
-            return "error"
+            error_msg = f"Unexpected error in ApplyBQSR or indexing for {sample_id}: {e}\n"
+            error_msg += f"Traceback:\n{''.join(traceback.format_tb(e.__traceback__))}"
+            console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
+            log_to_db(db, error_msg, "ERROR", "recalibration", sample_id, datadir.name)
+            return f"error: {error_msg}"
 
     return _recalibrate()
 
@@ -236,21 +242,38 @@ def recalibration_pipeline(datadir: Path, sample_id: str, bed_file: Path, vcf_fi
             bam_dir = datadir / "BAM" / sample_id / "BAM"
             input_bam = bam_dir / f"{sample_id}.bam"
             recalibration_flag = bam_dir / "recalibration_completed.flag"
+            recal_table = bam_dir / "recal_data.table"
 
-            if recalibration_flag.exists():
-                console.print(f"[yellow]Recalibration flag exists for {sample_id}. Skipping recalibration.[/yellow]")
-                log_to_api(f"Recalibration flag exists for {sample_id}", "INFO", "recalibration", sample_id, str(datadir))
-                log_to_db(db, f"Recalibration flag exists for {sample_id}", "INFO", "recalibration", sample_id, datadir.name)
+            # Check if recalibration was already completed
+            if input_bam.exists() and input_bam.with_suffix('.bam.bai').exists() and recal_table.exists():
+                console.print(
+                    f"[yellow]Recalibrated BAM and index exist for {sample_id}. Assuming recalibration was completed.[/yellow]")
+                log_to_api(f"Recalibrated BAM and index exist for {sample_id}", "INFO", "recalibration", sample_id,
+                           str(datadir))
+                log_to_db(db, f"Recalibrated BAM and index exist for {sample_id}", "INFO", "recalibration", sample_id,
+                          datadir.name)
+
+                # Create the flag file if it doesn't exist
+                if not recalibration_flag.exists():
+                    recalibration_flag.touch()
+                    console.print(f"[green]Recalibration flag created for {sample_id}[/green]")
+                    log_to_db(db, f"Recalibration flag created for {sample_id}", "INFO", "recalibration", sample_id,
+                              datadir.name)
+
                 return {"status": 0}
 
-            console.print(f"[cyan]Starting base recalibration step 1 (BaseRecalibrator) for {sample_id}[/cyan]")
-            recal1_result = base_recal1(datadir, sample_id, bed_file, vcf_file, reference, gatk, db)
-            console.print(f"[cyan]Base recalibration step 1 result: {recal1_result}[/cyan]")
+            if not recal_table.exists():
+                console.print(f"[cyan]Starting base recalibration step 1 (BaseRecalibrator) for {sample_id}[/cyan]")
+                recal1_result = base_recal1(datadir, sample_id, bed_file, vcf_file, reference, gatk, db)
+                console.print(f"[cyan]Base recalibration step 1 result: {recal1_result}[/cyan]")
 
-            if recal1_result != "success":
-                log_to_db(db, "Base recalibration step 1 failed", "ERROR", "recalibration", sample_id, datadir.name)
-                console.print(f"[bold red]Base recalibration step 1 failed for {sample_id}[/bold red]")
-                return {"status": 1}
+                if recal1_result != "success":
+                    log_to_db(db, "Base recalibration step 1 failed", "ERROR", "recalibration", sample_id, datadir.name)
+                    console.print(f"[bold red]Base recalibration step 1 failed for {sample_id}[/bold red]")
+                    return {"status": 1}
+            else:
+                console.print(
+                    f"[yellow]Recalibration table exists for {sample_id}. Skipping BaseRecalibrator step.[/yellow]")
 
             console.print(f"[cyan]Starting recalibration step 2 (ApplyBQSR) for {sample_id}[/cyan]")
             log_to_db(db, "Starting recalibration step 2 (ApplyBQSR)", "INFO", "recalibration", sample_id, datadir.name)
@@ -259,20 +282,24 @@ def recalibration_pipeline(datadir: Path, sample_id: str, bed_file: Path, vcf_fi
             console.print(f"[cyan]Recalibration step 2 (ApplyBQSR) result: {recal2_result}[/cyan]")
 
             if recal2_result != "success":
-                log_to_db(db, "Recalibration step 2 (ApplyBQSR) failed", "ERROR", "recalibration", sample_id, datadir.name)
+                log_to_db(db, "Recalibration step 2 (ApplyBQSR) failed", "ERROR", "recalibration", sample_id,
+                          datadir.name)
                 console.print(f"[bold red]Recalibration step 2 (ApplyBQSR) failed for {sample_id}[/bold red]")
                 return {"status": 1}
 
             # Create the recalibration flag file
             recalibration_flag.touch()
             console.print(f"[green]Recalibration flag created for {sample_id}[/green]")
-            log_to_db(db, f"Recalibration flag created for {sample_id}", "INFO", "recalibration", sample_id, datadir.name)
+            log_to_db(db, f"Recalibration flag created for {sample_id}", "INFO", "recalibration", sample_id,
+                      datadir.name)
 
-            log_to_db(db, "Recalibration pipeline completed successfully", "INFO", "recalibration", sample_id, datadir.name)
+            log_to_db(db, "Recalibration pipeline completed successfully", "INFO", "recalibration", sample_id,
+                      datadir.name)
             console.print(f"[bold green]Recalibration pipeline completed successfully for {sample_id}[/bold green]")
             return {"status": 0}
         except Exception as e:
-            log_to_db(db, f"Unexpected error in recalibration pipeline: {str(e)}", "ERROR", "recalibration", sample_id, datadir.name)
+            log_to_db(db, f"Unexpected error in recalibration pipeline: {str(e)}", "ERROR", "recalibration", sample_id,
+                      datadir.name)
             console.print(f"[bold red]Unexpected error in recalibration pipeline for {sample_id}: {str(e)}[/bold red]")
             return {"status": 1}
 
