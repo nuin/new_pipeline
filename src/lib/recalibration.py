@@ -12,6 +12,11 @@ from rich.syntax import Syntax
 from tinydb import TinyDB
 from .log_api import log_to_api
 from .db_logger import log_to_db, timer_with_db_log
+import time
+
+
+console = Console()
+
 
 console = Console()
 
@@ -80,6 +85,20 @@ def base_recal1(datadir: Path, sample_id: str, bed_file: Path, vcf_file: Path, r
     return _base_recal1()
 
 
+import subprocess
+import time
+from pathlib import Path
+from typing import Dict
+from rich.console import Console
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeElapsedColumn
+from tinydb import TinyDB
+from .log_api import log_to_api
+from .db_logger import log_to_db, timer_with_db_log
+
+console = Console()
+
+
 def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samtools: str, db: TinyDB) -> str:
     @timer_with_db_log(db)
     def _recalibrate():
@@ -105,7 +124,7 @@ def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samto
                     SpinnerColumn(),
                     TextColumn("[progress.description]{task.description}"),
                     BarColumn(),
-                    TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                    TimeElapsedColumn(),
                     console=console
             ) as progress:
                 task = progress.add_task("[cyan]Running ApplyBQSR...", total=None)
@@ -134,12 +153,39 @@ def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samto
             input_bam.unlink()
             output_bam.rename(input_bam)
 
-            # Create BAI file
+
+            time.sleep(30)  # Wait for 2 seconds to ensure file system operations are complete
+
+            # Create BAM index
             console.print(f"[cyan]Creating BAM index for {sample_id}[/cyan]")
             index_command = f"{samtools} index {input_bam}"
-            result = subprocess.run(index_command, shell=True, check=True, capture_output=True, text=True)
 
-            bai_file = input_bam.with_suffix('.bai')
+            with Progress(
+                    SpinnerColumn(),
+                    TextColumn("[progress.description]{task.description}"),
+                    BarColumn(),
+                    TimeElapsedColumn(),
+                    console=console
+            ) as progress:
+                task = progress.add_task("[cyan]Indexing BAM file...", total=None)
+
+                index_process = subprocess.Popen(index_command, shell=True, stdout=subprocess.PIPE,
+                                                 stderr=subprocess.STDOUT, universal_newlines=True)
+
+                while True:
+                    output = index_process.stdout.readline()
+                    if output == '' and index_process.poll() is not None:
+                        break
+                    if output:
+                        progress.update(task, advance=1)
+                        log_to_db(db, output.strip(), "DEBUG", "recalibration", sample_id, datadir.name)
+
+                index_process.wait()
+
+                if index_process.returncode != 0:
+                    raise subprocess.CalledProcessError(index_process.returncode, index_command)
+
+            bai_file = input_bam.with_suffix('.bam.bai')
             if not bai_file.exists():
                 raise FileNotFoundError(f"BAM index file was not created: {bai_file}")
 
@@ -157,6 +203,12 @@ def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samto
                       "recalibration", sample_id, datadir.name)
             return "error"
 
+        except FileNotFoundError as e:
+            console.print(Panel(f"[bold red]File not found error in recalibration for {sample_id}: {e}[/bold red]"))
+            log_to_db(db, f"File not found error in recalibration: {str(e)}", "ERROR", "recalibration", sample_id,
+                      datadir.name)
+            return "error"
+
         except Exception as e:
             console.print(Panel(f"[bold red]Unexpected error in ApplyBQSR or indexing for {sample_id}: {e}[/bold red]"))
             log_to_db(db, f"Unexpected error in ApplyBQSR or indexing: {str(e)}", "ERROR", "recalibration", sample_id,
@@ -164,6 +216,13 @@ def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samto
             return "error"
 
     return _recalibrate()
+
+
+
+
+
+
+
 
 
 def is_bam_recalibrated(bam_dir: Path) -> bool:
