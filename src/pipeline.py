@@ -235,11 +235,11 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
             continue
 
         # Move the recalibrated BAM file
-        if not move_bam(datadir, sample, "recal_reads"):
-            console.log(f"[bold red]Failed to move recalibrated BAM for sample {sample}[/bold red]")
-            log_to_db(db, f"Failed to move recalibrated BAM for sample {sample}", "ERROR", "pipeline", sample,
-                      datadir.name)
-            continue
+        # if not move_bam(datadir, sample, "recal_reads"):
+        #     console.log(f"[bold red]Failed to move recalibrated BAM for sample {sample}[/bold red]")
+        #     log_to_db(db, f"Failed to move recalibrated BAM for sample {sample}", "ERROR", "pipeline", sample,
+        #               datadir.name)
+        #     continue
 
 
         @timer_with_db_log(sample_db)

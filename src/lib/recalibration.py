@@ -83,14 +83,9 @@ def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samto
     def _recalibrate():
         bam_dir = datadir / "BAM" / sample_id / "BAM"
         input_bam = bam_dir / f"{sample_id}.bam"
-        recal_bam = bam_dir / f"{sample_id}.recal_reads.bam"
+        final_bam = bam_dir / f"{sample_id}.bam"  # This will be our final output
         recal_table = bam_dir / "recal_data.table"
         recalibration_log = bam_dir / "recalibration.txt"
-
-        if recal_bam.exists():
-            console.print(f"[yellow]{recal_bam} file exists. Skipping recalibration step 2.[/yellow]")
-            log_to_api("recal_reads.bam file exists", "INFO", "recalibrate", sample_id, str(datadir))
-            return "exists"
 
         if not recal_table.exists():
             console.print(f"[bold red]Error: {recal_table} does not exist. Run base_recal1 first.[/bold red]")
@@ -102,18 +97,19 @@ def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samto
             log_to_api("Input BAM file does not exist", "ERROR", "recalibrate", sample_id, str(datadir))
             return "error"
 
-        console.print(f"[bold cyan]Starting recalibration step 2 for {sample_id}[/bold cyan]")
+        console.print(f"[bold cyan]Starting recalibration for {sample_id}[/bold cyan]")
 
+        # Apply BQSR and output directly to the final BAM name
         GATK_string = (
             f"{gatk} ApplyBQSR -R {reference} -I {input_bam} "
-            f"--bqsr-recal-file {recal_table} -O {recal_bam}"
+            f"--bqsr-recal-file {recal_table} -O {final_bam}"
         )
 
-        result = run_command(GATK_string, f"Recalibration Step 2 for {sample_id}", sample_id, datadir)
+        result = run_command(GATK_string, f"Recalibration for {sample_id}", sample_id, datadir)
 
         if result == 0:
             # Index the recalibrated BAM file
-            index_command = f"{samtools} index {recal_bam}"
+            index_command = f"{samtools} index {final_bam}"
             index_result = run_command(index_command, f"Indexing Recalibrated BAM for {sample_id}", sample_id, datadir)
 
             if index_result == 0:
@@ -133,8 +129,6 @@ def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samto
             return "error"
 
     return _recalibrate()
-
-
 def is_bam_recalibrated(bam_path: Path) -> bool:
     """
     Check if the BAM file has already been recalibrated.
