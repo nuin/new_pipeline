@@ -216,8 +216,99 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
             log_to_db(db, f"Recalibration failed for sample {sample}", "ERROR", "pipeline", sample, datadir.name)
             continue
 
-        # Additional steps (haplotype_caller, freebayes_caller, etc.) would go here
-        # Each step would be wrapped in a similar manner with @timer_with_db_log and appropriate console output
+        @timer_with_db_log(sample_db)
+        def run_haplotype_caller():
+            return haplotype_caller(datadir, sample, reference, bed_file[sample], gatk)
+
+        @timer_with_db_log(sample_db)
+        def run_haplotype_caller3():
+            return haplotype_caller3(datadir, sample, reference, bed_file[sample], gatk3)
+
+        @timer_with_db_log(sample_db)
+        def run_freebayes_caller():
+            return freebayes_caller(datadir, sample, reference, bed_file[sample], freebayes)
+
+        @timer_with_db_log(sample_db)
+        def run_picard_sort():
+            return picard_sort(datadir, sample, reference, picard)
+
+        @timer_with_db_log(sample_db)
+        def run_freebayes_edit():
+            return edit_freebayes_vcf(sample, datadir)
+
+        @timer_with_db_log(sample_db)
+        def run_octopus_caller():
+            return octopus_caller(datadir, sample, reference, bed_file[sample], octopus)
+
+        @timer_with_db_log(sample_db)
+        def run_vcf_comparison():
+            return vcf_comparison(datadir, sample, reference, gatk3)
+
+        @timer_with_db_log(sample_db)
+        def run_snpEff():
+            return annotate_merged(sample, datadir, snpEff)
+
+        @timer_with_db_log(sample_db)
+        def run_picard_coverage():
+            return get_coverage(sample, datadir, reference, bait_file, picard)
+
+        @timer_with_db_log(sample_db)
+        def run_picard_coverage_panel():
+            return get_coverage(sample, datadir, reference, bed_file[sample], picard, "panel")
+
+        @timer_with_db_log(sample_db)
+        def run_picard_yield():
+            return get_yield(sample, datadir, picard)
+
+        @timer_with_db_log(sample_db)
+        def run_picard_hs_metrics():
+            return get_hs_metrics(sample, datadir, reference, bait_file, picard)
+
+        @timer_with_db_log(sample_db)
+        def run_picard_hs_metrics_panel():
+            return get_hs_metrics(sample, datadir, reference, bed_file[sample], picard, "panel")
+
+        @timer_with_db_log(sample_db)
+        def run_picard_align_metrics():
+            return get_align_summary(sample, datadir, reference, picard)
+
+        @timer_with_db_log(sample_db)
+        def run_mpileup_ident():
+            return mpileup(sample, datadir, "/apps/data/src/bundle/identity.txt", samtools)
+
+        @timer_with_db_log(sample_db)
+        def run_identity_table():
+            return create_identity_table(sample, datadir)
+
+        @timer_with_db_log(sample_db)
+        def run_full_identity():
+            return barcoding(sample, datadir)
+
+        @timer_with_db_log(sample_db)
+        def run_extract_counts():
+            if panel == "Cplus":
+                return extract_counts(datadir, "/apps/data/src/BED/new/C+_ALL_IDPE_01JUN2021_Window.bed", sample)
+            else:
+                return extract_counts(datadir, "/apps/data/src/BED/new/CardiacALL_29MAR2021_Window.bed", sample)
+
+        run_haplotype_caller()
+        run_haplotype_caller3()
+        run_freebayes_caller()
+        to_return[sample]["picard_sort"] = run_picard_sort()
+        to_return[sample]["freebayes_edit"] = run_freebayes_edit()
+        to_return[sample]["variants_octopus"] = run_octopus_caller()
+        to_return[sample]["vcf_merge"] = run_vcf_comparison()
+        to_return[sample]["snpEff"] = run_snpEff()
+        to_return[sample]["picard_coverage"] = run_picard_coverage()
+        to_return[sample]["picard_coverage_panel"] = run_picard_coverage_panel()
+        to_return[sample]["picard_yield"] = run_picard_yield()
+        to_return[sample]["picard_hs_metrics"] = run_picard_hs_metrics()
+        to_return[sample]["picard_hs_metrics_panel"] = run_picard_hs_metrics_panel()
+        to_return[sample]["picard_align_metrics"] = run_picard_align_metrics()
+        to_return[sample]["mpileup_ident"] = run_mpileup_ident()
+        to_return[sample]["identity_table"] = run_identity_table()
+        to_return[sample]["full_identity"] = run_full_identity()
+        to_return[sample]["cnv"] = run_extract_counts()
 
         console.print(Panel(f"[bold green]Processing {sample} completed[/bold green]"))
         log_to_db(db, f"Processing {sample} completed", "INFO", "pipeline", sample, datadir.name)
