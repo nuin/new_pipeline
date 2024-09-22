@@ -23,6 +23,8 @@ from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeEl
 from rich.syntax import Syntax
 from rich.table import Table
 from tinydb import TinyDB, Query
+import click
+
 
 from lib.bwa_align import run_bwa
 from lib import recalibration
