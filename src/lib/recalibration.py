@@ -15,6 +15,7 @@ from .db_logger import log_to_db, timer_with_db_log
 
 console = Console()
 
+
 def run_command(command: str, description: str, sample_id: str, datadir: Path) -> int:
     console.print(Panel(f"[bold blue]{description}[/bold blue]"))
     console.print(Syntax(command, "bash", theme="monokai", line_numbers=True))
@@ -88,7 +89,7 @@ def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samto
             recal_table = bam_dir / "recal_data.table"
             output_bam = bam_dir / f"{sample_id}.recalibrated.bam"
 
-            console.print(f"[cyan]Starting ApplyBQSR for {sample_id}[/cyan]")
+            console.print(Panel(f"[bold blue]Starting ApplyBQSR for {sample_id}[/bold blue]"))
             log_to_db(db, f"Starting ApplyBQSR for {sample_id}", "INFO", "recalibration", sample_id, datadir.name)
 
             command = f"{gatk} ApplyBQSR " \
@@ -97,35 +98,72 @@ def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samto
                       f"--bqsr-recal-file {recal_table} " \
                       f"-O {output_bam}"
 
-            console.print(f"[dim]Executing command: {command}[/dim]")
+            console.print(Panel(f"[cyan]Executing command:[/cyan]\n{command}"))
             log_to_db(db, f"Executing ApplyBQSR command: {command}", "INFO", "recalibration", sample_id, datadir.name)
 
-            result = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
+            with Progress(
+                    SpinnerColumn(),
+                    TextColumn("[progress.description]{task.description}"),
+                    BarColumn(),
+                    TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                    console=console
+            ) as progress:
+                task = progress.add_task("[cyan]Running ApplyBQSR...", total=None)
+
+                process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                           universal_newlines=True)
+
+                for line in process.stdout:
+                    progress.update(task, advance=1)
+                    log_to_db(db, line.strip(), "DEBUG", "recalibration", sample_id, datadir.name)
+
+                process.wait()
+
+                if process.returncode != 0:
+                    raise subprocess.CalledProcessError(process.returncode, command)
 
             if not output_bam.exists():
                 raise FileNotFoundError(f"Output BAM file was not created: {output_bam}")
 
+            console.print(Panel(f"[green]ApplyBQSR completed successfully for {sample_id}[/green]"))
+            log_to_db(db, f"ApplyBQSR completed successfully for {sample_id}", "INFO", "recalibration", sample_id,
+                      datadir.name)
+
             # Replace the original BAM with the recalibrated one
+            console.print(f"[cyan]Replacing original BAM with recalibrated BAM for {sample_id}[/cyan]")
             input_bam.unlink()
             output_bam.rename(input_bam)
 
-            console.print(f"[green]ApplyBQSR completed successfully for {sample_id}[/green]")
-            log_to_db(db, f"ApplyBQSR completed successfully for {sample_id}", "INFO", "recalibration", sample_id, datadir.name)
+            # Create BAI file
+            console.print(f"[cyan]Creating BAM index for {sample_id}[/cyan]")
+            index_command = f"{samtools} index {input_bam}"
+            result = subprocess.run(index_command, shell=True, check=True, capture_output=True, text=True)
+
+            bai_file = input_bam.with_suffix('.bai')
+            if not bai_file.exists():
+                raise FileNotFoundError(f"BAM index file was not created: {bai_file}")
+
+            console.print(
+                Panel(f"[bold green]ApplyBQSR and indexing completed successfully for {sample_id}[/bold green]"))
+            log_to_db(db, f"ApplyBQSR and indexing completed successfully for {sample_id}", "INFO", "recalibration",
+                      sample_id, datadir.name)
 
             return "success"
 
         except subprocess.CalledProcessError as e:
-            console.print(f"[bold red]Error in ApplyBQSR for {sample_id}: {e}[/bold red]")
-            log_to_db(db, f"Error in ApplyBQSR: {str(e)}", "ERROR", "recalibration", sample_id, datadir.name)
+            console.print(Panel(f"[bold red]Error in ApplyBQSR or indexing for {sample_id}: {e}[/bold red]"))
+            console.print(f"[bold red]Command output: {e.output}[/bold red]")
+            log_to_db(db, f"Error in ApplyBQSR or indexing: {str(e)}\nCommand output: {e.output}", "ERROR",
+                      "recalibration", sample_id, datadir.name)
             return "error"
 
         except Exception as e:
-            console.print(f"[bold red]Unexpected error in ApplyBQSR for {sample_id}: {e}[/bold red]")
-            log_to_db(db, f"Unexpected error in ApplyBQSR: {str(e)}", "ERROR", "recalibration", sample_id, datadir.name)
+            console.print(Panel(f"[bold red]Unexpected error in ApplyBQSR or indexing for {sample_id}: {e}[/bold red]"))
+            log_to_db(db, f"Unexpected error in ApplyBQSR or indexing: {str(e)}", "ERROR", "recalibration", sample_id,
+                      datadir.name)
             return "error"
 
     return _recalibrate()
-
 
 
 def is_bam_recalibrated(bam_dir: Path) -> bool:
@@ -177,6 +215,9 @@ def recalibration_pipeline(datadir: Path, sample_id: str, bed_file: Path, vcf_fi
 
             # Create the recalibration flag file
             recalibration_flag.touch()
+            console.print(f"[green]Recalibration flag created for {sample_id}[/green]")
+            log_to_db(db, f"Recalibration flag created for {sample_id}", "INFO", "recalibration", sample_id,
+                      datadir.name)
 
             log_to_db(db, "Recalibration pipeline completed successfully", "INFO", "recalibration", sample_id,
                       datadir.name)
