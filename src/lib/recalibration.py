@@ -168,32 +168,45 @@ def is_bam_recalibrated(bam_path: Path) -> bool:
     recal_log = bam_path.with_name("recalibration.log")
     return recal_bam.exists() and recal_log.exists()
 
+
 def recalibration_pipeline(datadir: Path, sample_id: str, bed_file: Path, vcf_file: Path, reference: Path, gatk: str,
                            samtools: str, db: TinyDB) -> Dict[str, int]:
     @timer_with_db_log(db)
     def _recalibration_pipeline():
         log_to_db(db, "Starting recalibration pipeline", "INFO", "recalibration", sample_id, datadir.name)
+        console.print(f"[bold cyan]Starting recalibration pipeline for {sample_id}[/bold cyan]")
 
         bam_dir = datadir / "BAM" / sample_id / "BAM"
         input_bam = bam_dir / f"{sample_id}.bam"
 
         if is_bam_recalibrated(input_bam):
             console.print(f"[yellow]BAM file for {sample_id} is already recalibrated. Skipping recalibration.[/yellow]")
-            log_to_api(f"BAM file for {sample_id} is already recalibrated", "INFO", "recalibration", sample_id, str(datadir))
-            log_to_db(db, f"BAM file for {sample_id} is already recalibrated", "INFO", "recalibration", sample_id, datadir.name)
+            log_to_api(f"BAM file for {sample_id} is already recalibrated", "INFO", "recalibration", sample_id,
+                       str(datadir))
+            log_to_db(db, f"BAM file for {sample_id} is already recalibrated", "INFO", "recalibration", sample_id,
+                      datadir.name)
             return {"status": 0}
 
+        console.print(f"[cyan]Starting base recalibration step 1 for {sample_id}[/cyan]")
         recal1_result = base_recal1(datadir, sample_id, bed_file, vcf_file, reference, gatk, db)
+        console.print(f"[cyan]Base recalibration step 1 result: {recal1_result}[/cyan]")
+
         if recal1_result != "success":
             log_to_db(db, "Base recalibration step 1 failed", "ERROR", "recalibration", sample_id, datadir.name)
+            console.print(f"[bold red]Base recalibration step 1 failed for {sample_id}[/bold red]")
             return {"status": 1}
 
+        console.print(f"[cyan]Starting recalibration step 2 for {sample_id}[/cyan]")
         recal2_result = recalibrate(datadir, sample_id, reference, gatk, samtools, db)
+        console.print(f"[cyan]Recalibration step 2 result: {recal2_result}[/cyan]")
+
         if recal2_result != "success":
             log_to_db(db, "Recalibration step 2 failed", "ERROR", "recalibration", sample_id, datadir.name)
+            console.print(f"[bold red]Recalibration step 2 failed for {sample_id}[/bold red]")
             return {"status": 1}
 
         log_to_db(db, "Recalibration pipeline completed successfully", "INFO", "recalibration", sample_id, datadir.name)
+        console.print(f"[bold green]Recalibration pipeline completed successfully for {sample_id}[/bold green]")
         return {"status": 0}
 
     return _recalibration_pipeline()
