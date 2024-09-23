@@ -57,15 +57,6 @@ def haplotype_caller(datadir: Path, sample_id: str, reference: Union[str, Path],
             log_to_api(error_msg, "ERROR", "GATK", sample_id, datadir.name)
             return "error"
 
-        console.print(Panel(f"[bold blue]Updating reference sequence dictionary[/bold blue]"))
-        try:
-            subprocess.run(shlex.split(update_dict_command), check=True, capture_output=True, text=True)
-        except subprocess.CalledProcessError as e:
-            error_msg = f"Error updating reference dictionary: {e.stderr}"
-            console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
-            log_to_db(db, error_msg, "ERROR", "GATK", sample_id, datadir.name)
-            log_to_api(error_msg, "ERROR", "GATK", sample_id, datadir.name)
-            return "error"
 
         gatk_command = (
             f"{gatk} HaplotypeCaller "
@@ -74,7 +65,7 @@ def haplotype_caller(datadir: Path, sample_id: str, reference: Union[str, Path],
             f"--reference {reference} "
             f"--intervals {bed_file} "
             f"--dbsnp {dbsnp_file} "
-            f"--native-pair-hmm-threads {threads} "
+            f"--native-pair-hmm-threads 4 "
             f"--annotation-group StandardAnnotation "
             f"--annotation StrandBiasBySample "
             f"--standard-min-confidence-threshold-for-calling 30 "
