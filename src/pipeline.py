@@ -216,6 +216,10 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         #     log_to_db(db, f"Recalibration failed for sample {sample}", "ERROR", "pipeline", sample, datadir.name)
         #     continue
 
+        @timer_with_db_log(sample_db)
+        def run_recalibration():
+            return recalibration_pipeline(datadir, sample, bed_file[sample], vcf_file, reference, gatk, samtools, sample_db)
+
         recalibration_result = run_recalibration()
         if recalibration_result["status"] != 0:
             console.print(Panel(f"[bold red]Recalibration failed for sample {sample}[/bold red]"))
