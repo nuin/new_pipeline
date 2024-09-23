@@ -200,7 +200,7 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
 
         sample_db = get_sample_db(datadir, sample)
 
-        @timer_with_db_log(sample_db)
+        # @timer_with_db_log(sample_db)
         # def run_recalibration():
         #     recal1 = base_recal1(datadir, sample, bed_file[sample], vcf_file, reference, gatk, sample_db)
         #     if recal1 != "success":
