@@ -22,10 +22,10 @@ def get_gatk_version(gatk: str) -> str:
     return result.stdout.strip()
 
 def haplotype_caller(datadir: Path, sample_id: str, reference: Union[str, Path], bed_file: Path, gatk: str, db: Dict, threads: int = 4, max_retries: int = 3) -> str:
+    reference = Path(reference) if isinstance(reference, str) else reference
+
     @timer_with_db_log(db)
     def _haplotype_caller():
-        nonlocal reference
-        reference = Path(reference) if isinstance(reference, str) else reference
         vcf_dir = datadir / "BAM" / sample_id / "VCF"
         bam_dir = datadir / "BAM" / sample_id / "BAM"
         output_vcf = vcf_dir / f"{sample_id}_GATK.vcf.gz"
@@ -45,18 +45,19 @@ def haplotype_caller(datadir: Path, sample_id: str, reference: Union[str, Path],
         log_to_api("Start variant calling with GATK", "INFO", "GATK", sample_id, datadir.name)
         log_to_db(db, f"Starting variant calling with GATK for {sample_id}", "INFO", "GATK", sample_id, datadir.name)
 
-        # Update reference dictionary to include both naming conventions
+        # Update reference dictionary
         dict_file = reference.with_suffix('.dict')
-        update_dict_command = (
-            f"{gatk} CreateSequenceDictionary "
-            f"-R {reference} "
-            f"-O {dict_file} "
-            f"--ALIAS 'chr1:1,chr2:2,chr3:3,chr4:4,chr5:5,chr6:6,chr7:7,chr8:8,chr9:9,chr10:10,chr11:11,chr12:12,"
-            f"chr13:13,chr14:14,chr15:15,chr16:16,chr17:17,chr18:18,chr19:19,chr20:20,chr21:21,chr22:22,chrX:X,chrY:Y,chrM:MT'"
-        )
+        update_dict_command = f"{gatk} CreateSequenceDictionary -R {reference} -O {dict_file}"
 
         console.print(Panel(f"[bold blue]Updating reference sequence dictionary[/bold blue]"))
-        subprocess.run(shlex.split(update_dict_command), check=True)
+        try:
+            subprocess.run(shlex.split(update_dict_command), check=True, capture_output=True, text=True)
+        except subprocess.CalledProcessError as e:
+            error_msg = f"Error updating reference dictionary: {e.stderr}"
+            console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
+            log_to_db(db, error_msg, "ERROR", "GATK", sample_id, datadir.name)
+            log_to_api(error_msg, "ERROR", "GATK", sample_id, datadir.name)
+            return "error"
 
         gatk_command = (
             f"{gatk} HaplotypeCaller "
@@ -82,6 +83,7 @@ def haplotype_caller(datadir: Path, sample_id: str, reference: Union[str, Path],
 
         console.print(Syntax(gatk_command, "bash", theme="monokai", line_numbers=True))
         log_to_db(db, f"GATK command: {gatk_command}", "INFO", "GATK", sample_id, datadir.name)
+
 
         for attempt in range(max_retries):
             start_time = datetime.now()
