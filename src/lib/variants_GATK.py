@@ -79,7 +79,8 @@ def haplotype_caller(datadir: Path, sample_id: str, reference: Union[str, Path],
             f"--contamination-fraction-to-filter 0.0 "
             f"--dont-use-soft-clipped-bases "
             f"--pairHMM LOGLESS_CACHING "
-            f"--disable-sequence-dictionary-validation true --use-jdk-inflater --use-jdk-deflater"
+            f"--disable-sequence-dictionary-validation true --use-jdk-inflater --use-jdk-deflater "
+            f"-ip 2"
         )
 
         console.print(Syntax(gatk_command, "bash", theme="monokai", line_numbers=True))
