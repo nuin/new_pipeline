@@ -43,7 +43,7 @@ def haplotype_caller(datadir: Path, sample_id: str, reference: Path, bed_file: P
         log_to_db(db, f"Starting variant calling with GATK3 for {sample_id}", "INFO", "GATK3", sample_id, datadir.name)
 
         gatk_command = (
-            f"java -jar {gatk} -T HaplotypeCaller "
+            f"{gatk} -T HaplotypeCaller "
             f"-R {reference} "
             f"-I {input_bam} "
             f"-o {output_vcf} "
