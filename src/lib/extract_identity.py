@@ -87,47 +87,49 @@ def get_nucleotides(pileup: str) -> tuple:
     return reads.count("A"), reads.count("C"), reads.count("G"), reads.count("T")
 
 
-def create_identity_table(sample_id: str, datadir: str) -> None:
+def create_identity_table(sample_id: str, datadir: Path) -> None:
     """
     Function that creates the identity table in the sample data directory.
 
     :param sample_id: ID of the patient/sample being analysed
     :param datadir: Location where the table will be saved
 
-    :type sample_id: string
-    :type datadir: string
+    :type sample_id: str
+    :type datadir: Path
 
     :return: None
     """
 
-    mpileup = (
-        open(f"{datadir}/BAM/{sample_id}/BAM/identity.mpileup").read().splitlines()
-    )
+    mpileup_file = datadir / "BAM" / sample_id / "BAM" / "identity.mpileup"
+    identity_file = datadir / "BAM" / sample_id / "identity.txt"
 
-    if os.path.isfile(datadir + "/BAM/" + sample_id + "/identity.txt"):
+    with open(mpileup_file, "r") as f:
+        mpileup = f.read().splitlines()
+
+    if identity_file.exists():
         console.log(f"Identity file exists {sample_id}")
         log_to_api(
-            "Identity file exists", "INFO", "mpileup", sample_id, Path(datadir).name
+            "Identity file exists", "INFO", "mpileup", sample_id, datadir.name
         )
     else:
         console.log(f"Creating identity file {sample_id}")
         log_to_api(
-            "Creating identity file", "INFO", "mpileup", sample_id, Path(datadir).name
+            "Creating identity file", "INFO", "mpileup", sample_id, datadir.name
         )
-        identity = open(f"{datadir}/BAM/{sample_id}/identity.txt", "w")
-        for line in mpileup:
-            temp = line.split()
-            nucleotides = get_nucleotides(temp[4])
-            identity.write(f"{temp[0]}\t{temp[1]}\t{str(nucleotides[0])}\t")
-            identity.write(f"{str(nucleotides[1])}\t{str(nucleotides[2])}\t")
-            identity.write(f"{str(nucleotides[3])}\n")
+        with open(identity_file, "w") as identity:
+            for line in mpileup:
+                temp = line.split()
+                nucleotides = get_nucleotides(temp[4])
+                identity.write(f"{temp[0]}\t{temp[1]}\t{str(nucleotides[0])}\t")
+                identity.write(f"{str(nucleotides[1])}\t{str(nucleotides[2])}\t")
+                identity.write(f"{str(nucleotides[3])}\n")
         console.log(f"Identity file creation complete {sample_id}")
         log_to_api(
             "Identity file creation complete",
             "INFO",
             "mpileup",
             sample_id,
-            Path(datadir).name,
+            datadir.name
         )
 
 
