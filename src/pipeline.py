@@ -36,7 +36,7 @@ from lib.picard_actions import picard_sort
 from lib.picard_metrics import get_align_summary, get_hs_metrics, get_yield
 from lib.picard_qc import get_coverage
 from lib.process_identity import barcoding, compile_barcodes
-from lib.recalibration import base_recal1, recalibrate
+from lib.recalibration import recalibration_pipeline
 from lib.snpEff_ann import annotate_merged
 from lib.uniformity import get_coverage_values
 from lib.utils import compile_identity, move_bam
