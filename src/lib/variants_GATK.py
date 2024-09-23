@@ -67,6 +67,7 @@ def haplotype_caller(datadir: Path, sample_id: str, reference: Union[str, Path],
             f"--native-pair-hmm-threads {threads} "
             f"--annotation-group StandardAnnotation "
             f"--annotation StrandBiasBySample "
+            f"--annotation HgvsAnnotation "  # Add this line for HGVS annotation
             f"--standard-min-confidence-threshold-for-calling 30 "
             f"--emit-ref-confidence GVCF "
             f"--create-output-variant-index false "
