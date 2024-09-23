@@ -52,7 +52,7 @@ def haplotype_caller(datadir: Path, sample_id: str, reference: Path, bed_file: P
             f"--reference {reference} "
             f"--intervals {bed_file} "
             f"--dbsnp /apps/data/src/bundle/00-All.vcf.gz "
-            f"--native-pair-hmm-threads {threads} "
+            f"--native-pair-hmm-threads 16 "
             f"--annotation-group StandardAnnotation "
             f"--annotation StrandBiasBySample "
             f"--standard-min-confidence-threshold-for-calling 30 "
