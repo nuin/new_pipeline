@@ -14,6 +14,7 @@ from .log_api import log_to_api
 from .db_logger import log_to_db, timer_with_db_log
 import time
 import traceback
+import os
 
 console = Console()
 
