@@ -189,7 +189,7 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
     freebayes = env["FREEBAYES"]
     snpEff = env["SNPEFF"]
     octopus = env["OCTOPUS"]
-    reference = configuration["Reference"]
+    reference = Path(configuration["Reference"])
     vcf_file = configuration["VCF"]
     bed_file = configuration["BED"]
     bait_file = configuration["BAIT"]

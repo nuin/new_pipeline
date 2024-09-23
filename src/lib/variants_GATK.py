@@ -20,10 +20,10 @@ def get_gatk_version(gatk: str) -> str:
     result = subprocess.run([gatk, "--version"], capture_output=True, text=True)
     return result.stdout.strip()
 
-def haplotype_caller(datadir: Path, sample_id: str, reference: Path, bed_file: Path, gatk: str, db: Dict, threads: int = 4, max_retries: int = 3) -> str:
+def haplotype_caller(datadir: Path, sample_id: str, reference: Union[str, Path], bed_file: Path, gatk: str, db: Dict, threads: int = 4, max_retries: int = 3) -> str:
     @timer_with_db_log(db)
     def _haplotype_caller():
-        reference = Path(reference)
+        reference = Path(reference) if isinstance(reference, str) else reference
         vcf_dir = datadir / "BAM" / sample_id / "VCF"
         bam_dir = datadir / "BAM" / sample_id / "BAM"
         output_vcf = vcf_dir / f"{sample_id}_GATK.vcf.gz"
