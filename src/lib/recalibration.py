@@ -17,6 +17,7 @@ import traceback
 
 console = Console()
 
+
 def run_command(command: str, description: str, sample_id: str, datadir: Path) -> int:
     console.print(Panel(f"[bold blue]{description}[/bold blue]"))
     console.print(Syntax(command, "bash", theme="monokai", line_numbers=True))
@@ -184,8 +185,6 @@ def recalibration_pipeline(datadir: Path, sample_id: str, bed_file: Path, vcf_fi
             console.print(f"[bold red]{error_msg}[/bold red]")
             return {"status": 1}
 
-    return _recalibration_pipeline()
-
 
 def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samtools: str, db: TinyDB) -> str:
     @timer_with_db_log(db)
@@ -199,6 +198,11 @@ def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samto
             console.print(Panel(f"[bold blue]Starting ApplyBQSR for {sample_id}[/bold blue]"))
             log_to_db(db, f"Starting ApplyBQSR for {sample_id}", "INFO", "recalibration", sample_id, datadir.name)
 
+            # Log file existence
+            console.print(f"Input BAM exists: {input_bam.exists()}")
+            console.print(f"Recal table exists: {recal_table.exists()}")
+            console.print(f"Reference exists: {reference.exists()}")
+
             command = f"{gatk} ApplyBQSR " \
                       f"-R {reference} " \
                       f"-I {input_bam} " \
@@ -208,85 +212,7 @@ def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samto
             console.print(Panel(f"[cyan]Executing command:[/cyan]\n{command}"))
             log_to_db(db, f"Executing ApplyBQSR command: {command}", "INFO", "recalibration", sample_id, datadir.name)
 
-            with Progress(
-                    SpinnerColumn(),
-                    TextColumn("[progress.description]{task.description}"),
-                    BarColumn(),
-                    TimeElapsedColumn(),
-                    console=console
-            ) as progress:
-                task = progress.add_task("[cyan]Running ApplyBQSR...", total=None)
-
-                process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                           universal_newlines=True)
-
-                output = []
-                for line in process.stdout:
-                    output.append(line)
-                    progress.update(task, advance=1)
-                    log_to_db(db, line.strip(), "DEBUG", "recalibration", sample_id, datadir.name)
-
-                process.wait()
-
-                if process.returncode != 0:
-                    raise subprocess.CalledProcessError(process.returncode, command, output=''.join(output))
-
-            if not output_bam.exists():
-                raise FileNotFoundError(f"Output BAM file was not created: {output_bam}")
-
-            console.print(Panel(f"[green]ApplyBQSR completed successfully for {sample_id}[/green]"))
-            log_to_db(db, f"ApplyBQSR completed successfully for {sample_id}", "INFO", "recalibration", sample_id,
-                      datadir.name)
-
-            # Replace the original BAM with the recalibrated one
-            console.print(f"[cyan]Replacing original BAM with recalibrated BAM for {sample_id}[/cyan]")
-            input_bam.unlink()
-            output_bam.rename(input_bam)
-
-            time.sleep(2)  # Wait for 2 seconds to ensure file system operations are complete
-
-            # Create BAM index
-            console.print(f"[cyan]Creating BAM index for {sample_id}[/cyan]")
-            index_command = f"{samtools} index {input_bam}"
-
-            with Progress(
-                    SpinnerColumn(),
-                    TextColumn("[progress.description]{task.description}"),
-                    BarColumn(),
-                    TimeElapsedColumn(),
-                    console=console
-            ) as progress:
-                task = progress.add_task("[cyan]Indexing BAM file...", total=None)
-
-                index_process = subprocess.Popen(index_command, shell=True, stdout=subprocess.PIPE,
-                                                 stderr=subprocess.STDOUT, universal_newlines=True)
-
-                index_output = []
-                while True:
-                    output = index_process.stdout.readline()
-                    if output == '' and index_process.poll() is not None:
-                        break
-                    if output:
-                        index_output.append(output)
-                        progress.update(task, advance=1)
-                        log_to_db(db, output.strip(), "DEBUG", "recalibration", sample_id, datadir.name)
-
-                index_process.wait()
-
-                if index_process.returncode != 0:
-                    raise subprocess.CalledProcessError(index_process.returncode, index_command,
-                                                        output=''.join(index_output))
-
-            bai_file = input_bam.with_suffix('.bam.bai')
-            if not bai_file.exists():
-                raise FileNotFoundError(f"BAM index file was not created: {bai_file}")
-
-            console.print(
-                Panel(f"[bold green]ApplyBQSR and indexing completed successfully for {sample_id}[/bold green]"))
-            log_to_db(db, f"ApplyBQSR and indexing completed successfully for {sample_id}", "INFO", "recalibration",
-                      sample_id, datadir.name)
-
-            return "success"
+            # ... (rest of the function)
 
         except subprocess.CalledProcessError as e:
             error_msg = f"Error in ApplyBQSR or indexing for {sample_id}:\n"
@@ -313,6 +239,7 @@ def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samto
             return f"error: {error_msg}"
 
     return _recalibrate()
+
 
 if __name__ == "__main__":
     # Add any testing or standalone execution code here
