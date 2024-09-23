@@ -28,7 +28,7 @@ def haplotype_caller(datadir: Path, sample_id: str, reference: Union[str, Path],
     def _haplotype_caller():
         vcf_dir = datadir / "BAM" / sample_id / "VCF"
         bam_dir = datadir / "BAM" / sample_id / "BAM"
-        output_vcf = vcf_dir / f"{sample_id}_GATK.vcf.gz"
+        output_vcf = vcf_dir / f"{sample_id}_GATK.vcf"
         input_bam = bam_dir / f"{sample_id}.bam"
         dbsnp_file = Path("/apps/data/src/bundle/00-All.vcf.gz")
 
@@ -45,7 +45,7 @@ def haplotype_caller(datadir: Path, sample_id: str, reference: Union[str, Path],
         log_to_api("Start variant calling with GATK", "INFO", "GATK", sample_id, datadir.name)
         log_to_db(db, f"Starting variant calling with GATK for {sample_id}", "INFO", "GATK", sample_id, datadir.name)
 
-        # Update reference dictionary
+        # Update reference dictionary check
         dict_file = reference.with_suffix('.dict')
         if dict_file.exists():
             console.print(Panel(f"[green]Reference sequence dictionary already exists: {dict_file}[/green]"))
@@ -57,7 +57,6 @@ def haplotype_caller(datadir: Path, sample_id: str, reference: Union[str, Path],
             log_to_api(error_msg, "ERROR", "GATK", sample_id, datadir.name)
             return "error"
 
-
         gatk_command = (
             f"{gatk} HaplotypeCaller "
             f"--input {input_bam} "
@@ -65,12 +64,12 @@ def haplotype_caller(datadir: Path, sample_id: str, reference: Union[str, Path],
             f"--reference {reference} "
             f"--intervals {bed_file} "
             f"--dbsnp {dbsnp_file} "
-            f"--native-pair-hmm-threads 4 "
+            f"--native-pair-hmm-threads {threads} "
             f"--annotation-group StandardAnnotation "
             f"--annotation StrandBiasBySample "
             f"--standard-min-confidence-threshold-for-calling 30 "
             f"--emit-ref-confidence GVCF "
-            f"--create-output-variant-index true "
+            f"--create-output-variant-index false "
             f"--pcr-indel-model AGGRESSIVE "
             f"--max-alternate-alleles 3 "
             f"--contamination-fraction-to-filter 0.0 "
@@ -81,7 +80,6 @@ def haplotype_caller(datadir: Path, sample_id: str, reference: Union[str, Path],
 
         console.print(Syntax(gatk_command, "bash", theme="monokai", line_numbers=True))
         log_to_db(db, f"GATK command: {gatk_command}", "INFO", "GATK", sample_id, datadir.name)
-
 
         for attempt in range(max_retries):
             start_time = datetime.now()
@@ -122,18 +120,26 @@ def haplotype_caller(datadir: Path, sample_id: str, reference: Union[str, Path],
                 log_to_db(db, f"{error_msg}. Last return code: {process.returncode}", "ERROR", "GATK", sample_id, datadir.name)
                 return "error"
 
-        console.print(Panel(f"[bold green]GATK variants determined for {sample_id}[/bold green]"))
-        log_to_api("GATK variants determined", "INFO", "GATK", sample_id, datadir.name)
-        log_to_db(db, f"GATK variants determined successfully for {sample_id}", "INFO", "GATK", sample_id, datadir.name)
+        if output_vcf.exists():
+            console.print(Panel(f"[bold green]GATK variants determined for {sample_id}[/bold green]"))
+            log_to_api("GATK variants determined", "INFO", "GATK", sample_id, datadir.name)
+            log_to_db(db, f"GATK variants determined successfully for {sample_id}", "INFO", "GATK", sample_id, datadir.name)
 
-        # Log file sizes and resource usage
-        log_to_db(db, f"Output VCF size: {output_vcf.stat().st_size} bytes", "INFO", "GATK", sample_id, datadir.name)
-        log_to_db(db, f"Output VCF index size: {(output_vcf.with_suffix('.vcf.gz.tbi')).stat().st_size} bytes", "INFO", "GATK", sample_id, datadir.name)
-        log_to_db(db, f"Peak memory usage: {psutil.Process().memory_info().rss / 1024 / 1024:.2f} MB", "INFO", "GATK", sample_id, datadir.name)
+            # Log file size and resource usage
+            log_to_db(db, f"Output VCF size: {output_vcf.stat().st_size} bytes", "INFO", "GATK", sample_id, datadir.name)
+            log_to_db(db, f"Peak memory usage: {psutil.Process().memory_info().rss / 1024 / 1024:.2f} MB", "INFO", "GATK", sample_id, datadir.name)
 
-        return "success"
+            return "success"
+        else:
+            error_msg = f"GATK HaplotypeCaller completed but output VCF not found for {sample_id}"
+            console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
+            log_to_api(error_msg, "ERROR", "GATK", sample_id, datadir.name)
+            log_to_db(db, error_msg, "ERROR", "GATK", sample_id, datadir.name)
+            return "error"
 
     return _haplotype_caller()
+
+
 
 if __name__ == "__main__":
     # Add any testing or standalone execution code here
