@@ -216,7 +216,7 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
 
         @timer_with_db_log(sample_db)
         def run_haplotype_caller3():
-            return haplotype_caller3(datadir, sample, reference, bed_file[sample], gatk3)
+            return haplotype_caller3(datadir, sample, reference, bed_file[sample], gatk3, sample_db)
 
         @timer_with_db_log(sample_db)
         def run_freebayes_caller():
