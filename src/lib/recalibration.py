@@ -206,7 +206,7 @@ def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samto
             console.print(f"Input BAM readable: {os.access(input_bam, os.R_OK)}")
             console.print(f"Recal table exists: {recal_table.exists()}")
             console.print(f"Recal table readable: {os.access(recal_table, os.R_OK)}")
-            console.print(f"Reference exists: {reference.exists()}")
+            console.print(f"Reference exists: {reference}")
             console.print(f"Reference readable: {os.access(reference, os.R_OK)}")
             console.print(f"Output directory writable: {os.access(bam_dir, os.W_OK)}")
 
