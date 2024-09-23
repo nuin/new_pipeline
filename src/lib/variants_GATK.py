@@ -73,7 +73,6 @@ def haplotype_caller(datadir: Path, sample_id: str, reference: Union[str, Path],
             f"--annotation FisherStrand "
             f"--annotation QualByDepth "
             f"--annotation Coverage "
-            f"--standard-min-confidence-threshold-for-calling 30 "
             f"--emit-ref-confidence GVCF "
             f"--create-output-variant-index false "
             f"--pcr-indel-model AGGRESSIVE "
