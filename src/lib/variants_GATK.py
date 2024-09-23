@@ -4,6 +4,7 @@ from typing import Dict
 from datetime import datetime
 import psutil
 import shlex
+from typing import Union
 
 from rich.console import Console
 from rich.panel import Panel
