@@ -2,6 +2,8 @@ import subprocess
 from pathlib import Path
 from typing import Dict
 from datetime import datetime
+import psutil
+import shlex
 
 from rich.console import Console
 from rich.panel import Panel
@@ -13,27 +15,22 @@ from .db_logger import log_to_db, timer_with_db_log
 
 console = Console()
 
-def haplotype_caller(datadir: Path, sample_id: str, reference: Path, bed_file: Path, gatk: str, db: Dict) -> str:
-    """
-    Function that calls GATK's HaplotypeCaller to generate a list of raw variants.
+def get_gatk_version(gatk: str) -> str:
+    """Get GATK version."""
+    result = subprocess.run([gatk, "--version"], capture_output=True, text=True)
+    return result.stdout.strip()
 
-    :param datadir: The directory where the data is located.
-    :param sample_id: ID of the patient/sample being analysed using GATK.
-    :param reference: Reference file used in the original alignment.
-    :param bed_file: BED file with regions to be analysed.
-    :param gatk: GATK executable location.
-    :param db: Database for logging.
-
-    :return: Returns 'success' if the operation is successful, 'exists' if the VCF file already exists.
-    """
+def haplotype_caller(datadir: Path, sample_id: str, reference: Path, bed_file: Path, gatk: str, db: Dict, threads: int = 4, max_retries: int = 3) -> str:
     @timer_with_db_log(db)
     def _haplotype_caller():
         vcf_dir = datadir / "BAM" / sample_id / "VCF"
         bam_dir = datadir / "BAM" / sample_id / "BAM"
         output_vcf = vcf_dir / f"{sample_id}_GATK.vcf.gz"
         input_bam = bam_dir / f"{sample_id}.bam"
+        dbsnp_file = Path("/apps/data/src/bundle/00-All.vcf.gz")
 
-        log_to_db(db, f"Starting HaplotypeCaller for sample {sample_id}", "INFO", "GATK", sample_id, datadir.name)
+        gatk_version = get_gatk_version(gatk)
+        log_to_db(db, f"Starting HaplotypeCaller for sample {sample_id} with GATK version {gatk_version}", "INFO", "GATK", sample_id, datadir.name)
 
         if output_vcf.exists():
             console.print(Panel(f"[yellow]VCF file already exists for {sample_id}[/yellow]"))
@@ -45,14 +42,27 @@ def haplotype_caller(datadir: Path, sample_id: str, reference: Path, bed_file: P
         log_to_api("Start variant calling with GATK", "INFO", "GATK", sample_id, datadir.name)
         log_to_db(db, f"Starting variant calling with GATK for {sample_id}", "INFO", "GATK", sample_id, datadir.name)
 
+        # Update reference dictionary to include both naming conventions
+        dict_file = reference.with_suffix('.dict')
+        update_dict_command = (
+            f"{gatk} CreateSequenceDictionary "
+            f"-R {reference} "
+            f"-O {dict_file} "
+            f"--ALIAS 'chr1:1,chr2:2,chr3:3,chr4:4,chr5:5,chr6:6,chr7:7,chr8:8,chr9:9,chr10:10,chr11:11,chr12:12,"
+            f"chr13:13,chr14:14,chr15:15,chr16:16,chr17:17,chr18:18,chr19:19,chr20:20,chr21:21,chr22:22,chrX:X,chrY:Y,chrM:MT'"
+        )
+
+        console.print(Panel(f"[bold blue]Updating reference sequence dictionary[/bold blue]"))
+        subprocess.run(shlex.split(update_dict_command), check=True)
+
         gatk_command = (
             f"{gatk} HaplotypeCaller "
             f"--input {input_bam} "
             f"--output {output_vcf} "
             f"--reference {reference} "
             f"--intervals {bed_file} "
-            f"--dbsnp /apps/data/src/bundle/00-All.vcf.gz "
-            f"--native-pair-hmm-threads 16 "
+            f"--dbsnp {dbsnp_file} "
+            f"--native-pair-hmm-threads {threads} "
             f"--annotation-group StandardAnnotation "
             f"--annotation StrandBiasBySample "
             f"--standard-min-confidence-threshold-for-calling 30 "
@@ -63,52 +73,60 @@ def haplotype_caller(datadir: Path, sample_id: str, reference: Path, bed_file: P
             f"--contamination-fraction-to-filter 0.0 "
             f"--dont-use-soft-clipped-bases "
             f"--pairHMM LOGLESS_CACHING "
+            f"--activity-profile-out {vcf_dir}/{sample_id}_activity.igv.gz "
+            f"--assembly-region-out {vcf_dir}/{sample_id}_assembly.igv.gz"
         )
 
         console.print(Syntax(gatk_command, "bash", theme="monokai", line_numbers=True))
         log_to_db(db, f"GATK command: {gatk_command}", "INFO", "GATK", sample_id, datadir.name)
 
-        start_time = datetime.now()
-        log_to_db(db, f"GATK HaplotypeCaller started at {start_time}", "INFO", "GATK", sample_id, datadir.name)
+        for attempt in range(max_retries):
+            start_time = datetime.now()
+            log_to_db(db, f"GATK HaplotypeCaller started at {start_time} (Attempt {attempt + 1}/{max_retries})", "INFO", "GATK", sample_id, datadir.name)
 
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-            TimeElapsedColumn(),
-            console=console,
-            transient=True
-        ) as progress:
-            task = progress.add_task(f"[cyan]Running GATK HaplotypeCaller for {sample_id}...", total=None)
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                TimeElapsedColumn(),
+                console=console,
+                transient=True
+            ) as progress:
+                task = progress.add_task(f"[cyan]Running GATK HaplotypeCaller for {sample_id}...", total=None)
 
-            process = subprocess.Popen(gatk_command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, universal_newlines=True)
+                process = subprocess.Popen(shlex.split(gatk_command), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, universal_newlines=True)
 
-            for line in process.stdout:
-                progress.update(task, advance=1)
-                console.print(f"[dim]{line.strip()}[/dim]")
-                log_to_db(db, line.strip(), "DEBUG", "GATK", sample_id, datadir.name)
+                for line in process.stdout:
+                    progress.update(task, advance=1)
+                    console.print(f"[dim]{line.strip()}[/dim]")
+                    log_to_db(db, line.strip(), "DEBUG", "GATK", sample_id, datadir.name)
 
-            process.wait()
+                process.wait()
 
-        end_time = datetime.now()
-        duration = end_time - start_time
-        log_to_db(db, f"GATK HaplotypeCaller finished at {end_time}. Duration: {duration}", "INFO", "GATK", sample_id, datadir.name)
+            end_time = datetime.now()
+            duration = end_time - start_time
+            log_to_db(db, f"GATK HaplotypeCaller finished at {end_time}. Duration: {duration}", "INFO", "GATK", sample_id, datadir.name)
 
-        if process.returncode != 0:
-            error_msg = f"GATK HaplotypeCaller failed for {sample_id}"
-            console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
-            log_to_api(error_msg, "ERROR", "GATK", sample_id, datadir.name)
-            log_to_db(db, f"GATK HaplotypeCaller failed for {sample_id}. Return code: {process.returncode}", "ERROR", "GATK", sample_id, datadir.name)
-            return "error"
+            if process.returncode == 0:
+                break
+            elif attempt < max_retries - 1:
+                log_to_db(db, f"GATK HaplotypeCaller failed. Retrying (Attempt {attempt + 2}/{max_retries})", "WARNING", "GATK", sample_id, datadir.name)
+            else:
+                error_msg = f"GATK HaplotypeCaller failed for {sample_id} after {max_retries} attempts"
+                console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
+                log_to_api(error_msg, "ERROR", "GATK", sample_id, datadir.name)
+                log_to_db(db, f"{error_msg}. Last return code: {process.returncode}", "ERROR", "GATK", sample_id, datadir.name)
+                return "error"
 
         console.print(Panel(f"[bold green]GATK variants determined for {sample_id}[/bold green]"))
         log_to_api("GATK variants determined", "INFO", "GATK", sample_id, datadir.name)
         log_to_db(db, f"GATK variants determined successfully for {sample_id}", "INFO", "GATK", sample_id, datadir.name)
 
-        # Log file sizes
+        # Log file sizes and resource usage
         log_to_db(db, f"Output VCF size: {output_vcf.stat().st_size} bytes", "INFO", "GATK", sample_id, datadir.name)
         log_to_db(db, f"Output VCF index size: {(output_vcf.with_suffix('.vcf.gz.tbi')).stat().st_size} bytes", "INFO", "GATK", sample_id, datadir.name)
+        log_to_db(db, f"Peak memory usage: {psutil.Process().memory_info().rss / 1024 / 1024:.2f} MB", "INFO", "GATK", sample_id, datadir.name)
 
         return "success"
 
