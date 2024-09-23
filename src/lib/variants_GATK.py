@@ -51,15 +51,16 @@ def haplotype_caller(datadir: Path, sample_id: str, reference: Path, bed_file: P
             f"-I {input_bam} "
             f"-O {output_vcf} "
             f"-L {bed_file} "
-            f"--native-pair-hmm-threads 4 "
+            f"--native-pair-hmm-threads 16 "
             f"--smith-waterman FASTEST_AVAILABLE "
-            f"--germline-resource /apps/data/src/bundle/ALL.wgs.phase3_shapeit2_mvncall_integrated_v5c.20130502.sites.vcf.gz "  
             f"--dbsnp /apps/data/src/bundle/00-All.vcf.gz "
             f"--genotyping-mode DISCOVERY "
             f"--annotation-group StandardAnnotation "
             f"--annotation-group AS_StandardAnnotation "
             f"--annotation StrandBiasBySample "
             f"-ERC GVCF "
+            f"--create-output-variant-index true "
+            f"--standard-min-confidence-threshold-for-calling 30 "
             f"--create-output-variant-index true"
         )
 
