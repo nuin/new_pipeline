@@ -13,7 +13,7 @@ from tinydb import TinyDB
 from .log_api import log_to_api
 from .db_logger import log_to_db, timer_with_db_log
 import time
-
+import traceback
 
 console = Console()
 
@@ -231,6 +231,7 @@ def is_bam_recalibrated(bam_dir: Path) -> bool:
     return recalibration_flag.exists()
 
 
+
 def recalibration_pipeline(datadir: Path, sample_id: str, bed_file: Path, vcf_file: Path, reference: Path, gatk: str,
                            samtools: str, db: TinyDB) -> Dict[str, int]:
     @timer_with_db_log(db)
@@ -244,6 +245,13 @@ def recalibration_pipeline(datadir: Path, sample_id: str, bed_file: Path, vcf_fi
             recalibration_flag = bam_dir / "recalibration_completed.flag"
             recal_table = bam_dir / "recal_data.table"
 
+            # Log the existence of files
+            console.print(f"[cyan]Checking for existing files:[/cyan]")
+            console.print(f"Input BAM: {input_bam.exists()}")
+            console.print(f"BAM index: {input_bam.with_suffix('.bam.bai').exists()}")
+            console.print(f"Recal table: {recal_table.exists()}")
+            console.print(f"Recalibration flag: {recalibration_flag.exists()}")
+
             # Check if recalibration was already completed
             if input_bam.exists() and input_bam.with_suffix('.bam.bai').exists() and recal_table.exists():
                 console.print(
@@ -255,13 +263,25 @@ def recalibration_pipeline(datadir: Path, sample_id: str, bed_file: Path, vcf_fi
 
                 # Create the flag file if it doesn't exist
                 if not recalibration_flag.exists():
-                    recalibration_flag.touch()
-                    console.print(f"[green]Recalibration flag created for {sample_id}[/green]")
-                    log_to_db(db, f"Recalibration flag created for {sample_id}", "INFO", "recalibration", sample_id,
-                              datadir.name)
+                    try:
+                        recalibration_flag.touch()
+                        console.print(f"[green]Recalibration flag created for {sample_id}[/green]")
+                        log_to_db(db, f"Recalibration flag created for {sample_id}", "INFO", "recalibration", sample_id,
+                                  datadir.name)
+                    except Exception as e:
+                        console.print(
+                            f"[bold yellow]Warning: Failed to create recalibration flag: {str(e)}[/bold yellow]")
+                        log_to_db(db, f"Warning: Failed to create recalibration flag: {str(e)}", "WARNING",
+                                  "recalibration", sample_id, datadir.name)
 
+                # Even if flag creation fails, we assume recalibration is complete
+                log_to_db(db, "Recalibration pipeline completed successfully (pre-existing files)", "INFO",
+                          "recalibration", sample_id, datadir.name)
+                console.print(
+                    f"[bold green]Recalibration pipeline completed successfully for {sample_id} (pre-existing files)[/bold green]")
                 return {"status": 0}
 
+            # If we reach here, recalibration needs to be performed
             if not recal_table.exists():
                 console.print(f"[cyan]Starting base recalibration step 1 (BaseRecalibrator) for {sample_id}[/cyan]")
                 recal1_result = base_recal1(datadir, sample_id, bed_file, vcf_file, reference, gatk, db)
@@ -282,25 +302,32 @@ def recalibration_pipeline(datadir: Path, sample_id: str, bed_file: Path, vcf_fi
             console.print(f"[cyan]Recalibration step 2 (ApplyBQSR) result: {recal2_result}[/cyan]")
 
             if recal2_result != "success":
-                log_to_db(db, "Recalibration step 2 (ApplyBQSR) failed", "ERROR", "recalibration", sample_id,
-                          datadir.name)
-                console.print(f"[bold red]Recalibration step 2 (ApplyBQSR) failed for {sample_id}[/bold red]")
+                log_to_db(db, f"Recalibration step 2 (ApplyBQSR) failed: {recal2_result}", "ERROR", "recalibration",
+                          sample_id, datadir.name)
+                console.print(
+                    f"[bold red]Recalibration step 2 (ApplyBQSR) failed for {sample_id}: {recal2_result}[/bold red]")
                 return {"status": 1}
 
             # Create the recalibration flag file
-            recalibration_flag.touch()
-            console.print(f"[green]Recalibration flag created for {sample_id}[/green]")
-            log_to_db(db, f"Recalibration flag created for {sample_id}", "INFO", "recalibration", sample_id,
-                      datadir.name)
+            try:
+                recalibration_flag.touch()
+                console.print(f"[green]Recalibration flag created for {sample_id}[/green]")
+                log_to_db(db, f"Recalibration flag created for {sample_id}", "INFO", "recalibration", sample_id,
+                          datadir.name)
+            except Exception as e:
+                console.print(f"[bold yellow]Warning: Failed to create recalibration flag: {str(e)}[/bold yellow]")
+                log_to_db(db, f"Warning: Failed to create recalibration flag: {str(e)}", "WARNING", "recalibration",
+                          sample_id, datadir.name)
 
             log_to_db(db, "Recalibration pipeline completed successfully", "INFO", "recalibration", sample_id,
                       datadir.name)
             console.print(f"[bold green]Recalibration pipeline completed successfully for {sample_id}[/bold green]")
             return {"status": 0}
         except Exception as e:
-            log_to_db(db, f"Unexpected error in recalibration pipeline: {str(e)}", "ERROR", "recalibration", sample_id,
-                      datadir.name)
-            console.print(f"[bold red]Unexpected error in recalibration pipeline for {sample_id}: {str(e)}[/bold red]")
+            error_msg = f"Unexpected error in recalibration pipeline for {sample_id}: {str(e)}\n"
+            error_msg += f"Traceback:\n{''.join(traceback.format_tb(e.__traceback__))}"
+            log_to_db(db, error_msg, "ERROR", "recalibration", sample_id, datadir.name)
+            console.print(f"[bold red]{error_msg}[/bold red]")
             return {"status": 1}
 
     return _recalibration_pipeline()
