@@ -47,7 +47,15 @@ def haplotype_caller(datadir: Path, sample_id: str, reference: Union[str, Path],
 
         # Update reference dictionary
         dict_file = reference.with_suffix('.dict')
-        update_dict_command = f"{gatk} CreateSequenceDictionary -R {reference} -O {dict_file}"
+        if dict_file.exists():
+            console.print(Panel(f"[green]Reference sequence dictionary already exists: {dict_file}[/green]"))
+            log_to_db(db, f"Using existing reference dictionary: {dict_file}", "INFO", "GATK", sample_id, datadir.name)
+        else:
+            error_msg = f"Reference dictionary file not found: {dict_file}"
+            console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
+            log_to_db(db, error_msg, "ERROR", "GATK", sample_id, datadir.name)
+            log_to_api(error_msg, "ERROR", "GATK", sample_id, datadir.name)
+            return "error"
 
         console.print(Panel(f"[bold blue]Updating reference sequence dictionary[/bold blue]"))
         try:
