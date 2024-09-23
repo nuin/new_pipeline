@@ -24,6 +24,7 @@ def get_gatk_version(gatk: str) -> str:
 def haplotype_caller(datadir: Path, sample_id: str, reference: Union[str, Path], bed_file: Path, gatk: str, db: Dict, threads: int = 4, max_retries: int = 3) -> str:
     @timer_with_db_log(db)
     def _haplotype_caller():
+        nonlocal reference
         reference = Path(reference) if isinstance(reference, str) else reference
         vcf_dir = datadir / "BAM" / sample_id / "VCF"
         bam_dir = datadir / "BAM" / sample_id / "BAM"
