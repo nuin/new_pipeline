@@ -57,7 +57,14 @@ def haplotype_caller(datadir: Path, sample_id: str, reference: Path, bed_file: P
             f"--annotation StrandBiasBySample "
             f"--standard-min-confidence-threshold-for-calling 30 "
             f"--emit-ref-confidence GVCF "
-            f"--create-output-variant-index true"
+            f"--create-output-variant-index true "
+            f"--pcr-indel-model AGGRESSIVE "
+            f"--max-alternate-alleles 3 "
+            f"--contamination-fraction-to-filter 0.0 "
+            f"--dont-use-soft-clipped-bases "
+            f"--pairHMM LOGLESS_CACHING "
+            f"--activity-profile-out {vcf_dir}/{sample_id}_activity.igv.gz "
+            f"--assembly-region-out {vcf_dir}/{sample_id}_assembly.igv.gz"
         )
 
         console.print(Syntax(gatk_command, "bash", theme="monokai", line_numbers=True))
