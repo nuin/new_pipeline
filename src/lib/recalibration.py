@@ -188,6 +188,7 @@ def recalibration_pipeline(datadir: Path, sample_id: str, bed_file: Path, vcf_fi
 
     return _recalibration_pipeline()
 
+
 def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samtools: str, db: TinyDB) -> str:
     @timer_with_db_log(db)
     def _recalibrate():
@@ -323,6 +324,7 @@ def recalibrate(datadir: Path, sample_id: str, reference: Path, gatk: str, samto
             return f"error: {error_msg}"
 
     return _recalibrate()
+
 
 if __name__ == "__main__":
     # Add any testing or standalone execution code here
