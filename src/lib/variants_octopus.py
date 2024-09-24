@@ -1,10 +1,3 @@
-"""
-.. module:: variants_octopus
-    :platform: Any
-    :synopsis: Module that calls Octopus for germline variant calling with improved performance and compatibility
-.. moduleauthor:: Assistant, September 2024 (based on original by Paulo Nuin, February 2019)
-"""
-
 import subprocess
 from pathlib import Path
 from typing import Dict
@@ -24,8 +17,11 @@ console = Console()
 
 def get_octopus_version(octopus: str) -> str:
     """Get Octopus version."""
-    result = subprocess.run([octopus, "--version"], capture_output=True, text=True)
-    return result.stdout.strip()
+    try:
+        result = subprocess.run([octopus, "--version"], capture_output=True, text=True, check=True)
+        return result.stdout.strip()
+    except subprocess.CalledProcessError:
+        return "Unknown"
 
 def octopus_caller(datadir: Path, sample_id: str, reference: Path, bed_file: Path, octopus: str, db: Dict, threads: int = 16, max_retries: int = 3) -> str:
     @timer_with_db_log(db)
@@ -81,12 +77,20 @@ def octopus_caller(datadir: Path, sample_id: str, reference: Path, bed_file: Pat
             ) as progress:
                 task = progress.add_task(f"[cyan]Running Octopus for {sample_id}...", total=None)
 
-                process = subprocess.Popen(shlex.split(octopus_command), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, universal_newlines=True)
+                process = subprocess.Popen(shlex.split(octopus_command), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, bufsize=1, universal_newlines=False)
 
-                for line in process.stdout:
-                    progress.update(task, advance=1)
-                    console.print(f"[dim]{line.strip()}[/dim]")
-                    log_to_db(db, line.strip(), "DEBUG", "Octopus", sample_id, datadir.name)
+                while True:
+                    output = process.stdout.readline()
+                    if output == b'' and process.poll() is not None:
+                        break
+                    if output:
+                        try:
+                            line = output.decode('utf-8').strip()
+                        except UnicodeDecodeError:
+                            line = output.decode('utf-8', errors='replace').strip()
+                        progress.update(task, advance=1)
+                        console.print(f"[dim]{line}[/dim]")
+                        log_to_db(db, line, "DEBUG", "Octopus", sample_id, datadir.name)
 
                 process.wait()
 
@@ -157,7 +161,6 @@ def change_vcf_version(vcf_file: Path) -> None:
     finally:
         if temp_file.exists():
             temp_file.unlink()
-
 
 if __name__ == "__main__":
     # Add any testing or standalone execution code here
