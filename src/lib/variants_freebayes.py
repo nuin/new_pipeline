@@ -28,6 +28,7 @@ def get_freebayes_version(freebayes: str) -> str:
     result = subprocess.run([freebayes, "--version"], capture_output=True, text=True)
     return result.stdout.strip()
 
+
 def freebayes_caller(datadir: Path, sample_id: str, reference: Path, bed_file: Path, freebayes: str, db: Dict, max_retries: int = 3) -> str:
     @timer_with_db_log(db)
     def _freebayes_caller():
