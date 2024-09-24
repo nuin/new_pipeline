@@ -57,10 +57,16 @@ def octopus_caller(datadir: Path, sample_id: str, reference: Path, bed_file: Pat
             f"-o {output_vcf} "
             f"--max-haplotypes 200 "
             f"--min-variant-posterior 0.01 "
-            f"--refcall-model default "
-            f"--annotations AD DP ADP "
-            f"--legacy "
-            f"--source-candidates-file /apps/data/src/bundle/00-All.vcf.gz"
+            f"--annotations AD DP ADP GQ GT MQ AF AC AN SB BQ "
+            f"ABP ADP ADRP ARF AOR CYC DAD DC DCP DMP DPF ED FEAD FRF GC HAFTD "
+            f"LEN MFRL MP MRC NF PP QD QUAL REB RSB RTB SD SF SHC SMQ TMP "
+            f"--output-format VCF "
+            f"--forest /path/to/germline.forest "  # Update this path
+            f"--organism human "
+            f"--disable-denovo-variant-discovery "
+            f"--max-reads-per-active-region 1000 "
+            f"--min-supporting-reads 2 "
+            f"--source-candidates-file /path/to/pipeline/resources/source_candidates.vcf"  # Update this path
         )
 
         console.print(Syntax(octopus_command, "bash", theme="monokai", line_numbers=True))
