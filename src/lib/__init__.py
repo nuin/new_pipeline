@@ -1,1 +1,1 @@
-from . import bwa_align, cnv, count2, dup_indels, enrichment, extract_identity, GATK_vcf, picard_actions, picard_metrics, picard_qc, process_identity, recalibration, snpEff_ann, uniformity, utils, variants_freebayes, variants_GATK, variants_GATK3, variants_octopus
+from . import bwa_align, cnv, count2, dup_indels, enrichment, extract_identity, GATK_vcf, picard_metrics, picard_qc, process_identity, recalibration, snpEff_ann, uniformity, utils, variants_freebayes, variants_GATK, variants_GATK3, variants_octopus
