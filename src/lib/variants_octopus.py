@@ -53,7 +53,7 @@ def octopus_caller(datadir: Path, sample_id: str, reference: Path, bed_file: Pat
             f"-o {output_vcf} "
             f"--min-variant-posterior 0.01 "
             f"--annotations AD DP ADP GQ GT MQ AF AC AN SB BQ "
-            f"ABP ADP ADRP ARF AOR CYC DAD DC DCP DMP DPF ED FEAD FRF GC HAFTD "
+            f"ABP ADP ADRP ARF AOR CYC DAD DC DCP DMP DPF ED FEAD FRF GC "
             f"MP MRC PP QD QUAL REB RSB RTB SD SF SHC SMQ"
         )
 
