@@ -32,15 +32,14 @@ from lib.enrichment import get_enrichment
 from lib.extract_identity import create_identity_table, mpileup
 from lib.GATK_vcf import vcf_comparison
 from lib.log_api import log_to_api
-from lib.picard_actions import picard_sort
 from lib.picard_metrics import get_align_summary, get_hs_metrics, get_yield
 from lib.picard_qc import get_coverage
 from lib.process_identity import barcoding, compile_barcodes
 from lib.recalibration import recalibration_pipeline
 from lib.snpEff_ann import annotate_merged
 from lib.uniformity import get_coverage_values
-from lib.utils import compile_identity, move_bam
-from lib.variants_freebayes import edit_freebayes_vcf, freebayes_caller
+from lib.utils import compile_identity
+from lib.variants_freebayes import freebayes_caller, process_freebayes_vcf
 from lib.variants_GATK import haplotype_caller
 from lib.variants_GATK3 import haplotype_caller as haplotype_caller3
 from lib.variants_octopus import octopus_caller
