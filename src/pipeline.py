@@ -281,7 +281,7 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
                 return extract_counts(datadir, "/apps/data/src/BED/new/CardiacALL_29MAR2021_Window.bed", sample)
 
         to_return[sample]["gatk_caller"] = run_haplotype_caller()
-        to_return[sample]]["gatk_caller3"] = run_haplotype_caller3()
+        to_return[sample]["gatk_caller3"] = run_haplotype_caller3()
         to_return[sample]["freebayes_caller"] = run_freebayes_caller()
         to_return[sample]["process_freebayes_vcf"] = run_process_freebayes_vcf()
         to_return[sample]["variants_octopus"] = run_octopus_caller()
