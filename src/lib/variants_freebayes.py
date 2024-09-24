@@ -11,6 +11,7 @@ from typing import Dict
 from datetime import datetime
 import psutil
 import shlex
+import shutil
 
 from rich.console import Console
 from rich.panel import Panel
@@ -130,25 +131,27 @@ def freebayes_caller(datadir: Path, sample_id: str, reference: Path, bed_file: P
 
     return _freebayes_caller()
 
+
+
 def process_freebayes_vcf(datadir: Path, sample_id: str, reference: Path, db: Dict) -> str:
     @timer_with_db_log(db)
     def _process_freebayes_vcf():
         vcf_dir = datadir / "BAM" / sample_id / "VCF"
         input_vcf = vcf_dir / f"{sample_id}_freebayes.vcf"
-        sorted_vcf = vcf_dir / f"{sample_id}_freebayes.sorted.vcf"
+        temp_sorted_vcf = vcf_dir / f"{sample_id}_freebayes.temp.vcf"
         reference_dict = reference.with_suffix('.dict')
 
-        if sorted_vcf.exists():
-            console.print(Panel(f"[yellow]Sorted Freebayes VCF file already exists for {sample_id}[/yellow]"))
-            log_to_api("Sorted Freebayes VCF file exists", "INFO", "Freebayes", sample_id, datadir.name)
-            log_to_db(db, f"Sorted Freebayes VCF file already exists for {sample_id}", "INFO", "Freebayes", sample_id, datadir.name)
-            return "exists"
+        if not input_vcf.exists():
+            error_msg = f"Freebayes VCF file not found for {sample_id}"
+            console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
+            log_to_api(error_msg, "ERROR", "Freebayes", sample_id, datadir.name)
+            log_to_db(db, error_msg, "ERROR", "Freebayes", sample_id, datadir.name)
+            return "error"
 
-        # Step 1: Sort VCF
         try:
-            console.print(Panel(f"[bold blue]Sorting Freebayes VCF for {sample_id}[/bold blue]"))
-            log_to_api(f"Start sorting Freebayes VCF for {sample_id}", "INFO", "Freebayes", sample_id, datadir.name)
-            log_to_db(db, f"Start sorting Freebayes VCF for {sample_id}", "INFO", "Freebayes", sample_id, datadir.name)
+            console.print(Panel(f"[bold blue]Processing Freebayes VCF for {sample_id}[/bold blue]"))
+            log_to_api(f"Start processing Freebayes VCF for {sample_id}", "INFO", "Freebayes", sample_id, datadir.name)
+            log_to_db(db, f"Start processing Freebayes VCF for {sample_id}", "INFO", "Freebayes", sample_id, datadir.name)
 
             # Read the reference dictionary to get the correct chromosome order
             chrom_order = []
@@ -172,18 +175,20 @@ def process_freebayes_vcf(datadir: Path, sample_id: str, reference: Path, db: Di
             # Sort the variants
             sorted_variants = sorted(variants, key=lambda x: (chrom_order.index(x[0]) if x[0] in chrom_order else len(chrom_order), int(x[1])))
 
-            # Write the sorted VCF
-            with sorted_vcf.open("w") as f:
+            # Write the sorted VCF to a temporary file
+            with temp_sorted_vcf.open("w") as f:
                 f.writelines(headers)
                 f.writelines("\t".join(variant) for variant in sorted_variants)
 
-            console.print(Panel(f"[bold green]Freebayes VCF sorted successfully for {sample_id}[/bold green]"))
-            log_to_api(f"Freebayes VCF sorted successfully for {sample_id}", "INFO", "Freebayes", sample_id, datadir.name)
-            log_to_db(db, f"Freebayes VCF sorted successfully for {sample_id}", "INFO", "Freebayes", sample_id, datadir.name)
+            # Replace the original file with the sorted one
+            shutil.move(str(temp_sorted_vcf), str(input_vcf))
 
-            # Log file sizes
-            log_to_db(db, f"Input VCF size: {input_vcf.stat().st_size} bytes", "INFO", "Freebayes", sample_id, datadir.name)
-            log_to_db(db, f"Sorted VCF size: {sorted_vcf.stat().st_size} bytes", "INFO", "Freebayes", sample_id, datadir.name)
+            console.print(Panel(f"[bold green]Freebayes VCF processed and sorted successfully for {sample_id}[/bold green]"))
+            log_to_api(f"Freebayes VCF processed and sorted successfully for {sample_id}", "INFO", "Freebayes", sample_id, datadir.name)
+            log_to_db(db, f"Freebayes VCF processed and sorted successfully for {sample_id}", "INFO", "Freebayes", sample_id, datadir.name)
+
+            # Log file size
+            log_to_db(db, f"Processed VCF size: {input_vcf.stat().st_size} bytes", "INFO", "Freebayes", sample_id, datadir.name)
 
             return "success"
         except Exception as e:
@@ -192,10 +197,12 @@ def process_freebayes_vcf(datadir: Path, sample_id: str, reference: Path, db: Di
             log_to_api(error_msg, "ERROR", "Freebayes", sample_id, datadir.name)
             log_to_db(db, error_msg, "ERROR", "Freebayes", sample_id, datadir.name)
             return "error"
+        finally:
+            # Clean up temporary file if it exists
+            if temp_sorted_vcf.exists():
+                temp_sorted_vcf.unlink()
 
     return _process_freebayes_vcf()
-
-
 
 if __name__ == "__main__":
     # Add any testing or standalone execution code here
