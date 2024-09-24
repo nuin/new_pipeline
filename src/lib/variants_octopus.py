@@ -60,9 +60,6 @@ def octopus_caller(datadir: Path, sample_id: str, reference: Path, bed_file: Pat
             f"--annotations AD DP ADP GQ GT MQ AF AC AN SB BQ "
             f"ABP ADP ADRP ARF AOR CYC DAD DC DCP DMP DPF ED FEAD FRF GC HAFTD "
             f"LEN MFRL MP MRC NF PP QD QUAL REB RSB RTB SD SF SHC SMQ TMP "
-            f"--output-format VCF "
-            f"--forest /path/to/germline.forest "  # Update this path
-            f"--organism human "
             f"--disable-denovo-variant-discovery "
             f"--max-reads-per-active-region 1000 "
             f"--min-supporting-reads 2 "
@@ -163,6 +160,7 @@ def change_vcf_version(vcf_file: Path) -> None:
     finally:
         if temp_file.exists():
             temp_file.unlink()
+
 
 if __name__ == "__main__":
     # Add any testing or standalone execution code here
