@@ -23,7 +23,7 @@ def get_octopus_version(octopus: str) -> str:
     except subprocess.CalledProcessError:
         return "Unknown"
 
-def octopus_caller(datadir: Path, sample_id: str, reference: Path, bed_file: Path, octopus: str, db: Dict, threads: int = 4, max_retries: int = 3) -> str:
+def octopus_caller(datadir: Path, sample_id: str, reference: Path, bed_file: Path, octopus: str, db: Dict, threads: int = 16, max_retries: int = 3) -> str:
     @timer_with_db_log(db)
     def _octopus_caller():
         vcf_dir = datadir / "BAM" / sample_id / "VCF"
