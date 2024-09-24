@@ -43,6 +43,7 @@ from lib.variants_freebayes import freebayes_caller, process_freebayes_vcf
 from lib.variants_GATK import haplotype_caller
 from lib.variants_GATK3 import haplotype_caller as haplotype_caller3
 from lib.variants_octopus import octopus_caller
+from lib.variants_deep import deepvariant_caller
 from lib.db_logger import get_sample_db, log_to_db, timer_with_db_log
 from lib.utils import move_bam
 
@@ -228,6 +229,9 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         def run_octopus_caller():
             return octopus_caller(datadir, sample, reference, bed_file[sample], octopus, sample_db)
 
+        def run_deepvariant_caller():
+            return deepvariant_caller(datadir, sample, reference, bed_file[sample], sample_db)
+
         @timer_with_db_log(sample_db)
         def run_vcf_comparison():
             return vcf_comparison(datadir, sample, reference, gatk3)
@@ -284,6 +288,7 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         to_return[sample]["freebayes_caller"] = run_freebayes_caller()
         to_return[sample]["process_freebayes_vcf"] = run_process_freebayes_vcf()
         to_return[sample]["variants_octopus"] = run_octopus_caller()
+        to_return[sample]["variants_deepvariant"] = run_deepvariant_caller()
         to_return[sample]["vcf_merge"] = run_vcf_comparison()
         to_return[sample]["snpEff"] = run_snpEff()
         to_return[sample]["picard_coverage"] = run_picard_coverage()
