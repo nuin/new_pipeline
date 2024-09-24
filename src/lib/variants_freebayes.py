@@ -50,11 +50,23 @@ def freebayes_caller(datadir: Path, sample_id: str, reference: Path, bed_file: P
 
         freebayes_command = (
             f"{freebayes} "
-            f"-f {reference} "
-            f"-v {output_vcf} "
-            f"-t {bed_file} "
-            f"-P 1 "
-            f"{input_bam}"
+            f"-f {reference} "  # Reference genome
+            f"-b {input_bam} "  # Input BAM file
+            f"-t {bed_file} "   # Target regions
+            f"-v {output_vcf} " # Output VCF file
+            f"--min-alternate-fraction 0.2 "  # Minimum alternate allele fraction
+            f"--min-alternate-count 2 "       # Minimum number of alternate allele observations
+            f"--min-base-quality 20 "         # Minimum base quality to be considered
+            f"--min-mapping-quality 20 "      # Minimum mapping quality to be considered
+            f"--min-coverage 10 "             # Minimum coverage to consider a site
+            f"--genotype-qualities "          # Calculate genotype qualities (GQ field)
+            f"--strict-vcf "                  # Use strict VCF format (for compatibility)
+            f"--pooled-continuous "           # Output all alleles which pass input filters
+            f"--use-best-n-alleles 4 "        # Use only best N alleles, ranked by sum of supporting quality scores
+            f"--haplotype-length 50 "         # Allow haplotype calls with contiguous embedded matches of up to this length
+            f"--report-genotype-likelihood-max "  # Report genotypes using the maximum-likelihood estimate
+            f"--theta 0.001 "                 # The expected mutation rate or pairwise nucleotide diversity among the population
+            f"--ploidy 2 "                    # Specify the ploidy of the sample
         )
 
         console.print(Syntax(freebayes_command, "bash", theme="monokai", line_numbers=True))
@@ -124,13 +136,12 @@ def process_freebayes_vcf(datadir: Path, sample_id: str, reference: Path, db: Di
         vcf_dir = datadir / "BAM" / sample_id / "VCF"
         input_vcf = vcf_dir / f"{sample_id}_freebayes.vcf"
         sorted_vcf = vcf_dir / f"{sample_id}_freebayes.sorted.vcf"
-        final_vcf = vcf_dir / f"{sample_id}_freebayes.final.vcf"
         reference_dict = reference.with_suffix('.dict')
 
-        if final_vcf.exists():
-            console.print(Panel(f"[yellow]Final Freebayes VCF file already exists for {sample_id}[/yellow]"))
-            log_to_api("Final Freebayes VCF file exists", "INFO", "Freebayes", sample_id, datadir.name)
-            log_to_db(db, f"Final Freebayes VCF file already exists for {sample_id}", "INFO", "Freebayes", sample_id, datadir.name)
+        if sorted_vcf.exists():
+            console.print(Panel(f"[yellow]Sorted Freebayes VCF file already exists for {sample_id}[/yellow]"))
+            log_to_api("Sorted Freebayes VCF file exists", "INFO", "Freebayes", sample_id, datadir.name)
+            log_to_db(db, f"Sorted Freebayes VCF file already exists for {sample_id}", "INFO", "Freebayes", sample_id, datadir.name)
             return "exists"
 
         # Step 1: Sort VCF
@@ -153,7 +164,8 @@ def process_freebayes_vcf(datadir: Path, sample_id: str, reference: Path, db: Di
             with input_vcf.open() as f:
                 for line in f:
                     if line.startswith("#"):
-                        headers.append(line)
+                        if not line.startswith("##contig=<ID"):  # Skip contig lines
+                            headers.append(line)
                     else:
                         variants.append(line.split("\t"))
 
@@ -173,41 +185,17 @@ def process_freebayes_vcf(datadir: Path, sample_id: str, reference: Path, db: Di
             log_to_db(db, f"Input VCF size: {input_vcf.stat().st_size} bytes", "INFO", "Freebayes", sample_id, datadir.name)
             log_to_db(db, f"Sorted VCF size: {sorted_vcf.stat().st_size} bytes", "INFO", "Freebayes", sample_id, datadir.name)
 
-        except Exception as e:
-            error_msg = f"Error sorting Freebayes VCF for {sample_id}: {str(e)}"
-            console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
-            log_to_api(error_msg, "ERROR", "Freebayes", sample_id, datadir.name)
-            log_to_db(db, error_msg, "ERROR", "Freebayes", sample_id, datadir.name)
-            return "error"
-
-        # Step 2: Edit VCF
-        try:
-            console.print(Panel(f"[bold blue]Editing sorted Freebayes VCF for {sample_id}[/bold blue]"))
-            log_to_api(f"Start editing sorted Freebayes VCF for {sample_id}", "INFO", "Freebayes", sample_id, datadir.name)
-            log_to_db(db, f"Start editing sorted Freebayes VCF for {sample_id}", "INFO", "Freebayes", sample_id, datadir.name)
-
-            with sorted_vcf.open('r') as infile, final_vcf.open('w') as outfile:
-                for line in infile:
-                    if not line.startswith("##contig=<ID"):
-                        outfile.write(line)
-
-            console.print(Panel(f"[bold green]Freebayes VCF edited successfully for {sample_id}[/bold green]"))
-            log_to_api(f"Freebayes VCF edited successfully for {sample_id}", "INFO", "Freebayes", sample_id, datadir.name)
-            log_to_db(db, f"Freebayes VCF edited successfully for {sample_id}", "INFO", "Freebayes", sample_id, datadir.name)
-
-            # Log file sizes
-            log_to_db(db, f"Sorted VCF size: {sorted_vcf.stat().st_size} bytes", "INFO", "Freebayes", sample_id, datadir.name)
-            log_to_db(db, f"Final VCF size: {final_vcf.stat().st_size} bytes", "INFO", "Freebayes", sample_id, datadir.name)
-
             return "success"
         except Exception as e:
-            error_msg = f"Error editing sorted Freebayes VCF for {sample_id}: {str(e)}"
+            error_msg = f"Error processing Freebayes VCF for {sample_id}: {str(e)}"
             console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
             log_to_api(error_msg, "ERROR", "Freebayes", sample_id, datadir.name)
             log_to_db(db, error_msg, "ERROR", "Freebayes", sample_id, datadir.name)
             return "error"
 
     return _process_freebayes_vcf()
+
+
 
 if __name__ == "__main__":
     # Add any testing or standalone execution code here
