@@ -23,7 +23,7 @@ def get_octopus_version(octopus: str) -> str:
     except subprocess.CalledProcessError:
         return "Unknown"
 
-def octopus_caller(datadir: Path, sample_id: str, reference: Path, bed_file: Path, octopus: str, db: Dict, threads: int = 16, max_retries: int = 3) -> str:
+def octopus_caller(datadir: Path, sample_id: str, reference: Path, bed_file: Path, octopus: str, db: Dict, threads: int = 4, max_retries: int = 3) -> str:
     @timer_with_db_log(db)
     def _octopus_caller():
         vcf_dir = datadir / "BAM" / sample_id / "VCF"
@@ -51,7 +51,6 @@ def octopus_caller(datadir: Path, sample_id: str, reference: Path, bed_file: Pat
             f"--regions-file {bed_file} "
             f"--threads {threads} "
             f"-o {output_vcf} "
-            f"--max-haplotypes 200 "
             f"--min-variant-posterior 0.01 "
             f"--annotations AD DP ADP GQ GT MQ AF AC AN SB BQ "
             f"ABP ADP ADRP ARF AOR CYC DAD DC DCP DMP DPF ED FEAD FRF GC HAFTD "
