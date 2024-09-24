@@ -218,17 +218,12 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         def run_haplotype_caller3():
             return haplotype_caller3(datadir, sample, reference, bed_file[sample], gatk3, sample_db)
 
-        @timer_with_db_log(sample_db)
         def run_freebayes_caller():
-            return freebayes_caller(datadir, sample, reference, bed_file[sample], freebayes)
+            return freebayes_caller(datadir, sample, reference, bed_file[sample], freebayes, sample_db)
 
         @timer_with_db_log(sample_db)
-        def run_picard_sort():
-            return picard_sort(datadir, sample, reference, picard)
-
-        @timer_with_db_log(sample_db)
-        def run_freebayes_edit():
-            return edit_freebayes_vcf(sample, datadir)
+        def run_process_freebayes_vcf():
+            return process_freebayes_vcf(datadir, sample, reference, sample_db)
 
         @timer_with_db_log(sample_db)
         def run_octopus_caller():
@@ -285,11 +280,10 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
             else:
                 return extract_counts(datadir, "/apps/data/src/BED/new/CardiacALL_29MAR2021_Window.bed", sample)
 
-        run_haplotype_caller()
-        run_haplotype_caller3()
-        run_freebayes_caller()
-        to_return[sample]["picard_sort"] = run_picard_sort()
-        to_return[sample]["freebayes_edit"] = run_freebayes_edit()
+        to_return[sample]["gatk_caller"] = run_haplotype_caller()
+        to_return[sample]]["gatk_caller3"] = run_haplotype_caller3()
+        to_return[sample]["freebayes_caller"] = run_freebayes_caller()
+        to_return[sample]["process_freebayes_vcf"] = run_process_freebayes_vcf()
         to_return[sample]["variants_octopus"] = run_octopus_caller()
         to_return[sample]["vcf_merge"] = run_vcf_comparison()
         to_return[sample]["snpEff"] = run_snpEff()
