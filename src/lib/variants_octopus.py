@@ -1,115 +1,163 @@
 """
-.. module:: variants_platypus
+.. module:: variants_octopus
     :platform: Any
-    :synopsis: Module that calls Octopus for variant calling
-.. moduleauthor:: Paulo Nuin, February 2019
-
+    :synopsis: Module that calls Octopus for germline variant calling with improved performance and compatibility
+.. moduleauthor:: Assistant, September 2024 (based on original by Paulo Nuin, February 2019)
 """
-
-# octopus -R /opt/reference/hg19.fasta -I
-# /Volumes/Jupiter/CancerPlusRuns/190207_NB551084_0058_AH2J7FAFXY_Cplus_2019_NGS_05_TEST/BAM/19-015-021509B_SJ_OS/BAM/19-015-021509B_SJ_OS.recal_reads.bam
-# --t /opt/BED/Inherited_Cancer_panel_BED_91122_Target_adjusted_FINAL_GIPoly.bed -o
-# /Volumes/Jupiter/CancerPlusRuns/190207_NB551084_0058_AH2J7FAFXY_Cplus_2019_NGS_05_TEST/BAM/19-015-021509B_SJ_OS/VCF/19-015-021509B_SJ_OS.octopus.vcf
-
-# pylint: disable-msg=too-many-arguments
-# pylint: disable-msg=line-too-long
 
 import subprocess
 from pathlib import Path
+from typing import Dict
+from datetime import datetime
+import psutil
+import shlex
 
 from rich.console import Console
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeElapsedColumn
+from rich.syntax import Syntax
 
 from .log_api import log_to_api
+from .db_logger import log_to_db, timer_with_db_log
 
 console = Console()
 
+def get_octopus_version(octopus: str) -> str:
+    """Get Octopus version."""
+    result = subprocess.run([octopus, "--version"], capture_output=True, text=True)
+    return result.stdout.strip()
 
-def get_code(sample_id):
-    return sample_id[-2:]
+def octopus_caller(datadir: Path, sample_id: str, reference: Path, bed_file: Path, octopus: str, db: Dict, threads: int = 16, max_retries: int = 3) -> str:
+    @timer_with_db_log(db)
+    def _octopus_caller():
+        vcf_dir = datadir / "BAM" / sample_id / "VCF"
+        bam_dir = datadir / "BAM" / sample_id / "BAM"
+        output_vcf = vcf_dir / f"{sample_id}_octopus.vcf"
+        input_bam = bam_dir / f"{sample_id}.bam"
 
+        octopus_version = get_octopus_version(octopus)
+        log_to_db(db, f"Starting Octopus for sample {sample_id} with Octopus version {octopus_version}", "INFO", "Octopus", sample_id, datadir.name)
 
-def octopus_caller(
-    datadir: str, sample_id: str, reference: str, bed_file: str, octopus: str
-) -> str:
-    """
-    Function that calls Octopus to generate a VCF file
+        if output_vcf.exists():
+            console.print(Panel(f"[yellow]Octopus VCF file already exists for {sample_id}[/yellow]"))
+            log_to_api("Octopus VCF file exists", "INFO", "Octopus", sample_id, datadir.name)
+            log_to_db(db, f"Octopus VCF file already exists for {sample_id}", "INFO", "Octopus", sample_id, datadir.name)
+            return "exists"
 
-    :param datadir: The directory where the data is located.
-    :param sample_id: ID of the patient/sample being analysed.
-    :param reference: Reference file used in the original alignment.
-    :param bed_file: BED file with regions to be analysed.
-    :param octopus: Octopus executable location.
+        console.print(Panel(f"[bold blue]Starting germline variant calling with Octopus for {sample_id}[/bold blue]"))
+        log_to_api("Start germline variant calling with Octopus", "INFO", "Octopus", sample_id, datadir.name)
+        log_to_db(db, f"Starting germline variant calling with Octopus for {sample_id}", "INFO", "Octopus", sample_id, datadir.name)
 
-    :type datadir: string
-    :type sample_id: string
-    :type reference: string
-    :type bed_file: string
-    :type octopus: string
-
-    :return: returns 'success' if the operation is successful, 'exists' if the VCF file already exists.
-
-    :rtype: string
-    """
-
-    vcf_dir = f"{datadir}/BAM/{sample_id}/VCF/"
-    bam_dir = f"{datadir}/BAM/{sample_id}/BAM/"
-
-    if Path(f"{vcf_dir}/{sample_id}_octopus.vcf").exists():
-        console.log(f"{vcf_dir}/{sample_id}_octopus.vcf file exists")
-        log_to_api(
-            "Octopus VCF file exists", "info", "octopus", sample_id, Path(datadir).name
+        octopus_command = (
+            f"{octopus} "
+            f"-R {reference} "
+            f"-I {input_bam} "
+            f"--regions-file {bed_file} "
+            f"--threads {threads} "
+            f"-o {output_vcf} "
+            f"--max-haplotypes 200 "
+            f"--min-variant-posterior 0.01 "
+            f"--refcall-model default "
+            f"--annotations AD DP ADP "
+            f"--legacy "
+            f"--source-candidates-file /apps/data/src/bundle/00-All.vcf.gz"
         )
-        return "exists"
 
-    console.log(f"Start variant calling with Octopus {sample_id}")
-    log_to_api(
-        "Start variant calling with Octopus",
-        "info",
-        "octopus",
-        sample_id,
-        Path(datadir).name,
-    )
-    octopus_string = (
-        f"{octopus} -R {reference} -I {bam_dir}/{sample_id}.bam --regions-file {bed_file} "
-        f"--threads 16 -o {vcf_dir}/{sample_id}_octopus.vcf"
-    )
+        console.print(Syntax(octopus_command, "bash", theme="monokai", line_numbers=True))
+        log_to_db(db, f"Octopus command: {octopus_command}", "INFO", "Octopus", sample_id, datadir.name)
 
-    console.log(f"Command {octopus_string} {sample_id}")
-    log_to_api(f"{octopus_string}", "info", "octopus", sample_id, Path(datadir).name)
-    proc = subprocess.Popen(
-        octopus_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    while True:
-        output = proc.stderr.readline().strip()
-        if output == b"":
-            break
+        for attempt in range(max_retries):
+            start_time = datetime.now()
+            log_to_db(db, f"Octopus started at {start_time} (Attempt {attempt + 1}/{max_retries})", "INFO", "Octopus", sample_id, datadir.name)
+
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                TimeElapsedColumn(),
+                console=console,
+                transient=True
+            ) as progress:
+                task = progress.add_task(f"[cyan]Running Octopus for {sample_id}...", total=None)
+
+                process = subprocess.Popen(shlex.split(octopus_command), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, universal_newlines=True)
+
+                for line in process.stdout:
+                    progress.update(task, advance=1)
+                    console.print(f"[dim]{line.strip()}[/dim]")
+                    log_to_db(db, line.strip(), "DEBUG", "Octopus", sample_id, datadir.name)
+
+                process.wait()
+
+            end_time = datetime.now()
+            duration = end_time - start_time
+            log_to_db(db, f"Octopus finished at {end_time}. Duration: {duration}", "INFO", "Octopus", sample_id, datadir.name)
+
+            if process.returncode == 0:
+                break
+            elif attempt < max_retries - 1:
+                log_to_db(db, f"Octopus failed. Retrying (Attempt {attempt + 2}/{max_retries})", "WARNING", "Octopus", sample_id, datadir.name)
+            else:
+                error_msg = f"Octopus failed for {sample_id} after {max_retries} attempts"
+                console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
+                log_to_api(error_msg, "ERROR", "Octopus", sample_id, datadir.name)
+                log_to_db(db, f"{error_msg}. Last return code: {process.returncode}", "ERROR", "Octopus", sample_id, datadir.name)
+                return "error"
+
+        if output_vcf.exists():
+            console.print(Panel(f"[bold green]Octopus germline variants determined for {sample_id}[/bold green]"))
+            log_to_api("Octopus germline variants determined", "INFO", "Octopus", sample_id, datadir.name)
+            log_to_db(db, f"Octopus germline variants determined successfully for {sample_id}", "INFO", "Octopus", sample_id, datadir.name)
+
+            # Log file size and resource usage
+            log_to_db(db, f"Output VCF size: {output_vcf.stat().st_size} bytes", "INFO", "Octopus", sample_id, datadir.name)
+            log_to_db(db, f"Peak memory usage: {psutil.Process().memory_info().rss / 1024 / 1024:.2f} MB", "INFO", "Octopus", sample_id, datadir.name)
+
+            # Change VCF version
+            change_vcf_version(output_vcf)
+
+            return "success"
         else:
-            console.log(output.decode("utf-8"))
-    proc.wait()
+            error_msg = f"Octopus completed but output VCF not found for {sample_id}"
+            console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
+            log_to_api(error_msg, "ERROR", "Octopus", sample_id, datadir.name)
+            log_to_db(db, error_msg, "ERROR", "Octopus", sample_id, datadir.name)
+            return "error"
 
-    console.log("Octopus VCF file created " + sample_id)
-    log_to_api(
-        "Octopus VCF file created", "info", "octopus", sample_id, Path(datadir).name
-    )
-    change_vcf_version(f"{vcf_dir}{sample_id}_octopus.vcf")
-    return "success"
+    return _octopus_caller()
 
-
-def change_vcf_version(vcf_file: str) -> None:
+def change_vcf_version(vcf_file: Path) -> None:
     """
     Function that changes the VCF version from 4.3 to 4.2 so it can be used in GATK
 
     :param vcf_file: VCF file location
-
-    :type vcf_file: string
+    :type vcf_file: Path
 
     :return: None
     """
+    console.print(Panel(f"[bold blue]Changing VCF version for compatibility: {vcf_file}[/bold blue]"))
 
-    contents = open(vcf_file).read().splitlines()
+    temp_file = vcf_file.with_suffix('.vcf.temp')
 
-    contents[0] = contents[0].replace("4.3", "4.2")
-    new_file = open(vcf_file, "w")
-    for i in contents:
-        new_file.write(i + "\n")
-    new_file.close()
+    try:
+        with vcf_file.open('r') as infile, temp_file.open('w') as outfile:
+            for line in infile:
+                if line.startswith('##fileformat='):
+                    outfile.write('##fileformat=VCFv4.2\n')
+                else:
+                    outfile.write(line)
+
+        # Replace the original file with the modified one
+        temp_file.replace(vcf_file)
+
+        console.print(Panel(f"[bold green]Successfully changed VCF version to 4.2 for {vcf_file}[/bold green]"))
+    except Exception as e:
+        console.print(Panel(f"[bold red]Error changing VCF version: {str(e)}[/bold red]"))
+    finally:
+        if temp_file.exists():
+            temp_file.unlink()
+
+if __name__ == "__main__":
+    # Add any testing or standalone execution code here
+    pass

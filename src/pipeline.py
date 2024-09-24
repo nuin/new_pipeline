@@ -226,7 +226,7 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
 
         @timer_with_db_log(sample_db)
         def run_octopus_caller():
-            return octopus_caller(datadir, sample, reference, bed_file[sample], octopus)
+            return octopus_caller(datadir, sample, reference, bed_file[sample], octopus, sample_db)
 
         @timer_with_db_log(sample_db)
         def run_vcf_comparison():
