@@ -54,7 +54,7 @@ def octopus_caller(datadir: Path, sample_id: str, reference: Path, bed_file: Pat
             f"--min-variant-posterior 0.01 "
             f"--annotations AD DP ADP GQ GT MQ AF AC AN SB BQ "
             f"ABP ADP ADRP ARF AOR CYC DAD DC DCP DMP DPF ED FEAD FRF GC HAFTD "
-            f"LEN MFRL MP MRC PP QD QUAL REB RSB RTB SD SF SHC SMQ"
+            f"LEN MP MRC PP QD QUAL REB RSB RTB SD SF SHC SMQ"
         )
 
         console.print(Syntax(octopus_command, "bash", theme="monokai", line_numbers=True))
