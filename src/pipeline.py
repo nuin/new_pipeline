@@ -36,16 +36,17 @@ from lib.picard_metrics import get_align_summary, get_hs_metrics, get_yield
 from lib.picard_qc import get_coverage
 from lib.process_identity import barcoding, compile_barcodes
 from lib.recalibration import recalibration_pipeline
-from lib.snpEff_ann import annotate_merged
+# from lib.snpEff_ann import annotate_merged
 from lib.uniformity import get_coverage_values
 from lib.utils import compile_identity
 from lib.variants_freebayes import freebayes_caller, process_freebayes_vcf
 from lib.variants_GATK import haplotype_caller
 from lib.variants_GATK3 import haplotype_caller as haplotype_caller3
 from lib.variants_octopus import octopus_caller
-from lib.variants_deep import deepvariant_caller
+# from lib.variants_deep import deepvariant_caller
 from lib.db_logger import get_sample_db, log_to_db, timer_with_db_log
 from lib.utils import move_bam
+from lib.bcftools_ann import annotate_merged
 
 # checks current version
 VERSIONFILE = Path(__file__).parent / "VERSION"
@@ -189,10 +190,12 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
     freebayes = env["FREEBAYES"]
     snpEff = env["SNPEFF"]
     octopus = env["OCTOPUS"]
+    bcftools = env["BCFTOOLS"]
     reference = Path(configuration["Reference"])
     vcf_file = configuration["VCF"]
     bed_file = configuration["BED"]
     bait_file = configuration["BAIT"]
+    gff_file = env["GFF"] 
 
     for pos, sample in enumerate(samples):
         console.print(Panel(f"[bold blue]Processing {sample} :: {pos + 1} of {len(samples)}[/bold blue]"))
@@ -238,8 +241,9 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
             return vcf_comparison(datadir, sample, reference, gatk3, sample_db)
 
         @timer_with_db_log(sample_db)
-        def run_snpEff():
-            return annotate_merged(sample, datadir, snpEff)
+        def run_bcftools_ann():
+            return annotate_merged(sample, datadir, bcftools, reference, gff_file, sample_db)
+
 
         @timer_with_db_log(sample_db)
         def run_picard_coverage():
@@ -291,7 +295,8 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         to_return[sample]["variants_octopus"] = run_octopus_caller()
         # to_return[sample]["variants_deepvariant"] = run_deepvariant_caller()
         to_return[sample]["vcf_merge"] = run_vcf_comparison()
-        to_return[sample]["snpEff"] = run_snpEff()
+        # to_return[sample]["snpEff"] = run_snpEff()
+        to_return[sample]["bcftools_ann"] = run_bcftools_ann()
         to_return[sample]["picard_coverage"] = run_picard_coverage()
         to_return[sample]["picard_coverage_panel"] = run_picard_coverage_panel()
         to_return[sample]["picard_yield"] = run_picard_yield()

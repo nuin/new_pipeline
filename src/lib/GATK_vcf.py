@@ -11,6 +11,8 @@ from typing import Dict
 from datetime import datetime
 import psutil
 import shlex
+import tempfile
+import shutil
 
 from rich.console import Console
 from rich.panel import Panel
@@ -27,28 +29,60 @@ def get_gatk_version(gatk: str) -> str:
     result = subprocess.run(["java", "-jar", gatk, "--version"], capture_output=True, text=True)
     return result.stdout.strip()
 
-def vcf_comparison(datadir: Path, sample_id: str, reference: Path, gatk: str, db: Dict, max_retries: int = 3) -> str:
+def filter_merged_vcf(input_vcf: Path, output_vcf: Path, db: Dict, sample_id: str, datadir: Path) -> bool:
     """
-    Function that merges the available VCFs in the sample VCF datadir
-
-    :param datadir: Location of the BAM files
-    :param sample_id: ID of the patient/sample being analysed using GATK
-    :param reference: Reference file used in the original alignment
-    :param gatk: GATK jar file location
+    Filter the merged VCF file to remove variants not called by at least two callers.
+    
+    :param input_vcf: Path to the input VCF file
+    :param output_vcf: Path to the output filtered VCF file
     :param db: Database for logging
-    :param max_retries: Maximum number of retries for GATK execution
-
-    :return: returns 'success' if the VCF files are successfully merged, 'exists' if the merged file already exists.
+    :param sample_id: Sample ID
+    :param datadir: Data directory
+    :return: True if filtering was successful, False otherwise
     """
+    try:
+        with input_vcf.open('r') as infile, output_vcf.open('w') as outfile:
+            for line in infile:
+                if line.startswith('#'):
+                    outfile.write(line)
+                    continue
+                
+                fields = line.strip().split('\t')
+                info = fields[7]
+                
+                if 'set=' not in info:
+                    continue
+                
+                set_field = [f for f in info.split(';') if f.startswith('set=')][0]
+                callers = set_field.split('=')[1].split('-')
+                
+                # Keep variant if called by at least two callers
+                # or if it's in the Intersection set
+                if len(callers) >= 2 or 'Intersection' in callers:
+                    outfile.write(line)
+                else:
+                    log_to_db(db, f"Filtered out variant: {fields[0]}:{fields[1]} {fields[3]}>{fields[4]} (set={'-'.join(callers)})", "DEBUG", "GATK_vcf", sample_id, datadir.name)
+        
+        log_to_db(db, f"Successfully filtered merged VCF for {sample_id}", "INFO", "GATK_vcf", sample_id, datadir.name)
+        return True
+    except Exception as e:
+        error_msg = f"Error filtering merged VCF for {sample_id}: {str(e)}"
+        console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
+        log_to_api(error_msg, "ERROR", "GATK_vcf", sample_id, datadir.name)
+        log_to_db(db, error_msg, "ERROR", "GATK_vcf", sample_id, datadir.name)
+        return False
+
+
+def vcf_comparison(datadir: Path, sample_id: str, reference: Path, gatk: str, db: Dict, max_retries: int = 3) -> str:
     @timer_with_db_log(db)
     def _vcf_comparison():
         vcf_dir = datadir / "BAM" / sample_id / "VCF"
-        output_vcf = vcf_dir / f"{sample_id}_merged.vcf"
+        final_vcf = vcf_dir / f"{sample_id}_merged.vcf"
 
         gatk_version = get_gatk_version(gatk)
         log_to_db(db, f"Starting VCF comparison for sample {sample_id} with GATK version {gatk_version}", "INFO", "GATK_vcf", sample_id, datadir.name)
 
-        if output_vcf.exists():
+        if final_vcf.exists():
             console.print(Panel(f"[yellow]Merged VCF file already exists for {sample_id}[/yellow]"))
             log_to_api("Merged VCF file exists", "INFO", "GATK_vcf", sample_id, datadir.name)
             log_to_db(db, f"Merged VCF file already exists for {sample_id}", "INFO", "GATK_vcf", sample_id, datadir.name)
@@ -65,7 +99,7 @@ def vcf_comparison(datadir: Path, sample_id: str, reference: Path, gatk: str, db
             f"--variant:gatk {vcf_dir}/{sample_id}_GATK.vcf "
             f"--variant:gatk3 {vcf_dir}/{sample_id}_GATK3.vcf "
             f"--variant:octopus {vcf_dir}/{sample_id}_octopus.vcf "
-            f"-o {output_vcf} "
+            f"-o {final_vcf} "
             f"--genotypemergeoption UNSORTED "
             f"--mergeInfoWithMaxAC "
             f"--minimumN 2"
@@ -113,16 +147,32 @@ def vcf_comparison(datadir: Path, sample_id: str, reference: Path, gatk: str, db
                 log_to_db(db, f"{error_msg}. Last return code: {process.returncode}", "ERROR", "GATK_vcf", sample_id, datadir.name)
                 return "error"
 
-        if output_vcf.exists():
+        if final_vcf.exists():
             console.print(Panel(f"[bold green]VCFs merged successfully for {sample_id}[/bold green]"))
             log_to_api("VCFs merged successfully", "INFO", "GATK_vcf", sample_id, datadir.name)
             log_to_db(db, f"VCFs merged successfully for {sample_id}", "INFO", "GATK_vcf", sample_id, datadir.name)
 
-            # Log file size and resource usage
-            log_to_db(db, f"Output VCF size: {output_vcf.stat().st_size} bytes", "INFO", "GATK_vcf", sample_id, datadir.name)
-            log_to_db(db, f"Peak memory usage: {psutil.Process().memory_info().rss / 1024 / 1024:.2f} MB", "INFO", "GATK_vcf", sample_id, datadir.name)
+            # Filter the merged VCF
+            console.print(Panel(f"[bold blue]Filtering merged VCF for {sample_id}[/bold blue]"))
+            log_to_api("Filtering merged VCF", "INFO", "GATK_vcf", sample_id, datadir.name)
+            log_to_db(db, f"Filtering merged VCF for {sample_id}", "INFO", "GATK_vcf", sample_id, datadir.name)
 
-            return "success"
+            with tempfile.NamedTemporaryFile(mode='w+t', delete=False, suffix='.vcf', dir=vcf_dir) as temp_file:
+                temp_vcf = Path(temp_file.name)
+                if filter_merged_vcf(final_vcf, temp_vcf, db, sample_id, datadir):
+                    # Replace the original merged VCF with the filtered one
+                    shutil.move(str(temp_vcf), str(final_vcf))
+                    console.print(Panel(f"[bold green]VCF filtered and replaced successfully for {sample_id}[/bold green]"))
+                    log_to_api("VCF filtered and replaced successfully", "INFO", "GATK_vcf", sample_id, datadir.name)
+                    log_to_db(db, f"VCF filtered and replaced successfully for {sample_id}", "INFO", "GATK_vcf", sample_id, datadir.name)
+
+                    # Log file size and resource usage
+                    log_to_db(db, f"Final VCF size: {final_vcf.stat().st_size} bytes", "INFO", "GATK_vcf", sample_id, datadir.name)
+                    log_to_db(db, f"Peak memory usage: {psutil.Process().memory_info().rss / 1024 / 1024:.2f} MB", "INFO", "GATK_vcf", sample_id, datadir.name)
+
+                    return "success"
+                else:
+                    return "error"
         else:
             error_msg = f"GATK CombineVariants completed but output VCF not found for {sample_id}"
             console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
@@ -131,6 +181,7 @@ def vcf_comparison(datadir: Path, sample_id: str, reference: Path, gatk: str, db
             return "error"
 
     return _vcf_comparison()
+
 
 if __name__ == "__main__":
     # Add any testing or standalone execution code here
