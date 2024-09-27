@@ -48,6 +48,7 @@ from lib.db_logger import get_sample_db, log_to_db, timer_with_db_log
 from lib.utils import move_bam
 from lib.bcftools_ann import annotate_merged
 
+
 # checks current version
 VERSIONFILE = Path(__file__).parent / "VERSION"
 VERSION = VERSIONFILE.read_text().strip()
@@ -196,6 +197,8 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
     bed_file = configuration["BED"]
     bait_file = configuration["BAIT"]
     gff_file = env["GFF"] 
+    vep = env["VEP"]
+    transcripts = env["TRANSCRIPTS"]
 
     for pos, sample in enumerate(samples):
         console.print(Panel(f"[bold blue]Processing {sample} :: {pos + 1} of {len(samples)}[/bold blue]"))
@@ -243,7 +246,11 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         @timer_with_db_log(sample_db)
         def run_bcftools_ann():
             return annotate_merged(sample, datadir, bcftools, reference, gff_file, sample_db)
-
+       
+        @timer_with_db_log(sample_db)
+        def run_vep_annotation():
+            from lib.vep_ann import vep_annotate  # Import with alias
+            return vep_annotate(sample, datadir, vep, reference, sample_db, transcripts)
 
         @timer_with_db_log(sample_db)
         def run_picard_coverage():
@@ -297,6 +304,7 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         to_return[sample]["vcf_merge"] = run_vcf_comparison()
         # to_return[sample]["snpEff"] = run_snpEff()
         to_return[sample]["bcftools_ann"] = run_bcftools_ann()
+        to_return[sample]["vep_annotation"] = run_vep_annotation()
         to_return[sample]["picard_coverage"] = run_picard_coverage()
         to_return[sample]["picard_coverage_panel"] = run_picard_coverage_panel()
         to_return[sample]["picard_yield"] = run_picard_yield()
