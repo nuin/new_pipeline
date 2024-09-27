@@ -106,6 +106,7 @@ def get_coverage(
         output_suffix = ".nucl.panel.out" if is_panel else ".nucl.out"
         output_file = metrics_dir / f"{sample_id}{output_suffix}"
         metrics_output = metrics_dir / f"{sample_id}.{'panel.' if is_panel else ''}out"
+        bed_file = Path(bed_file)
 
         # Check if input files exist
         if not bam_dir.exists():
