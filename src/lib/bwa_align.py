@@ -7,7 +7,13 @@ from pathlib import Path
 from typing import List
 from rich.console import Console
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeElapsedColumn
+from rich.progress import (
+    Progress,
+    SpinnerColumn,
+    BarColumn,
+    TextColumn,
+    TimeElapsedColumn,
+)
 from rich.table import Table
 from rich.syntax import Syntax
 from tinydb import TinyDB
@@ -22,12 +28,14 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def check_existing_bam(sample_id: str, datadir: Path, threads: int, samtools: str) -> int:
+def check_existing_bam(
+    sample_id: str, datadir: Path, threads: int, samtools: str
+) -> int:
     bam_paths = [
         datadir / "BAM" / sample_id / f"{sample_id}.bam",
         datadir / "BAM" / sample_id / "BAM" / f"{sample_id}.bam",
         datadir / "BAM" / sample_id / f"{sample_id}.bam.gz",
-        datadir / "BAM" / sample_id / "BAM" / f"{sample_id}.bam.gz"
+        datadir / "BAM" / sample_id / "BAM" / f"{sample_id}.bam.gz",
     ]
 
     existing_bam_path = next((path for path in bam_paths if path.exists()), None)
@@ -43,9 +51,11 @@ def check_existing_bam(sample_id: str, datadir: Path, threads: int, samtools: st
         )
 
         # Check for BAI file
-        bai_path = existing_bam_path.with_suffix('.bam.bai')
+        bai_path = existing_bam_path.with_suffix(".bam.bai")
         if not bai_path.exists():
-            console.print(f"[yellow]BAI file not found for {sample_id}. Creating index.[/yellow]")
+            console.print(
+                f"[yellow]BAI file not found for {sample_id}. Creating index.[/yellow]"
+            )
             log_to_api(
                 f"BAI file not found for {sample_id}. Creating index.",
                 "INFO",
@@ -66,7 +76,9 @@ def check_existing_bam(sample_id: str, datadir: Path, threads: int, samtools: st
                     str(datadir),
                 )
             else:
-                console.print(f"[bold red]Failed to create BAI file for {sample_id}[/bold red]")
+                console.print(
+                    f"[bold red]Failed to create BAI file for {sample_id}[/bold red]"
+                )
                 log_to_api(
                     f"Failed to create BAI file for {sample_id}",
                     "ERROR",
@@ -84,9 +96,16 @@ def index_bam(sample_id: str, samtools: str, threads: int, bam_output: Path) -> 
     result = run_command(index_string, f"Indexing BAM file for {sample_id}")
 
     if result != 0:
-        console.print(f"[bold red]BAM indexing failed for sample {sample_id}[/bold red]")
-        log_to_api(f"BAM indexing failed for sample {sample_id}", "ERROR", "bwa_align", sample_id,
-                   str(bam_output.parent.parent))
+        console.print(
+            f"[bold red]BAM indexing failed for sample {sample_id}[/bold red]"
+        )
+        log_to_api(
+            f"BAM indexing failed for sample {sample_id}",
+            "ERROR",
+            "bwa_align",
+            sample_id,
+            str(bam_output.parent.parent),
+        )
         return 1
     return 0
 
@@ -95,18 +114,25 @@ def run_command(command: str, description: str) -> int:
     console.print(Panel(f"[bold blue]{description}[/bold blue]"))
     console.print(Syntax(command, "bash", theme="monokai", line_numbers=True))
 
-    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
-                               bufsize=1, universal_newlines=True)
+    process = subprocess.Popen(
+        command,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,
+        universal_newlines=True,
+    )
 
     output = []
     with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-            TimeElapsedColumn(),
-            console=console,
-            transient=True
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+        TimeElapsedColumn(),
+        console=console,
+        transient=True,
     ) as progress:
         task = progress.add_task(description, total=None)
 
@@ -127,15 +153,15 @@ def run_command(command: str, description: str) -> int:
 
 
 def run_bwa(
-        sample_id: str,
-        fastq_files: List[Path],
-        datadir: Path,
-        reference: Path,
-        bwa: str,
-        samtools: str,
-        db: TinyDB,
-        threads: int = 16,
-        sort_memory: str = "4G"
+    sample_id: str,
+    fastq_files: List[Path],
+    datadir: Path,
+    reference: Path,
+    bwa: str,
+    samtools: str,
+    db: TinyDB,
+    threads: int = 16,
+    sort_memory: str = "4G",
 ) -> int:
     @timer_with_db_log(db)
     def _run_bwa():
@@ -149,58 +175,81 @@ def run_bwa(
 
         if bam_output.exists():
             file_size = bam_output.stat().st_size
-            console.print(f"[yellow]BAM file already exists for {sample_id}. Size: {file_size} bytes[/yellow]")
+            console.print(
+                f"[yellow]BAM file already exists for {sample_id}. Size: {file_size} bytes[/yellow]"
+            )
             if file_size > 1_000_000:  # More than 1MB
-                console.print("[green]Existing BAM file seems valid. Skipping alignment process.[/green]")
+                console.print(
+                    "[green]Existing BAM file seems valid. Skipping alignment process.[/green]"
+                )
                 return 0
             else:
-                console.print("[yellow]Existing BAM file is suspiciously small. Will recreate.[/yellow]")
+                console.print(
+                    "[yellow]Existing BAM file is suspiciously small. Will recreate.[/yellow]"
+                )
 
         bam_header = f"@RG\\tID:{sample_id}\\tLB:{datadir}\\tPL:Illumina\\tSM:{sample_id}\\tPU:None"
 
         steps = [
-            (f"{bwa} mem -t {threads} -Y -R '{bam_header}' {reference} "
-             f"{' '.join([str(file) for file in fastq_files])} > {temp_dir}/{sample_id}.sam",
-             f"BWA alignment for {sample_id}"),
-
-            (f"{samtools} view -@ {threads // 2} -bh {temp_dir}/{sample_id}.sam > {temp_dir}/{sample_id}.bam",
-             f"Convert SAM to BAM for {sample_id}"),
-
-            (f"{samtools} sort -@ {threads // 2} -n -o {temp_dir}/{sample_id}.namesort.bam {temp_dir}/{sample_id}.bam",
-             f"Sort BAM by name for {sample_id}"),
-
             (
-            f"{samtools} fixmate -@ {threads // 2} -m {temp_dir}/{sample_id}.namesort.bam {temp_dir}/{sample_id}.fixmate.bam",
-            f"Fixmate for {sample_id}"),
-
-            (f"{samtools} sort -@ {threads // 2} -m {sort_memory} -T {temp_dir}/sort_{sample_id} "
-             f"-o {temp_dir}/{sample_id}.sorted.bam {temp_dir}/{sample_id}.fixmate.bam",
-             f"Sort BAM by position for {sample_id}"),
-
-            (f"{samtools} markdup -@ {threads // 2} -s {temp_dir}/{sample_id}.sorted.bam {bam_output} "
-             f"2> {metrics_file}",
-             f"Mark duplicates for {sample_id}"),
-
-            (f"{samtools} index -@ {threads} {bam_output}",
-             f"Index BAM for {sample_id}")
+                f"{bwa} mem -t {threads} -Y -R '{bam_header}' {reference} "
+                f"{' '.join([str(file) for file in fastq_files])} > {temp_dir}/{sample_id}.sam",
+                f"BWA alignment for {sample_id}",
+            ),
+            (
+                f"{samtools} view -@ {threads // 2} -bh {temp_dir}/{sample_id}.sam > {temp_dir}/{sample_id}.bam",
+                f"Convert SAM to BAM for {sample_id}",
+            ),
+            (
+                f"{samtools} sort -@ {threads // 2} -n -o {temp_dir}/{sample_id}.namesort.bam {temp_dir}/{sample_id}.bam",
+                f"Sort BAM by name for {sample_id}",
+            ),
+            (
+                f"{samtools} fixmate -@ {threads // 2} -m {temp_dir}/{sample_id}.namesort.bam {temp_dir}/{sample_id}.fixmate.bam",
+                f"Fixmate for {sample_id}",
+            ),
+            (
+                f"{samtools} sort -@ {threads // 2} -m {sort_memory} -T {temp_dir}/sort_{sample_id} "
+                f"-o {temp_dir}/{sample_id}.sorted.bam {temp_dir}/{sample_id}.fixmate.bam",
+                f"Sort BAM by position for {sample_id}",
+            ),
+            (
+                f"{samtools} markdup -@ {threads // 2} -s {temp_dir}/{sample_id}.sorted.bam {bam_output} "
+                f"2> {metrics_file}",
+                f"Mark duplicates for {sample_id}",
+            ),
+            (
+                f"{samtools} index -@ {threads} {bam_output}",
+                f"Index BAM for {sample_id}",
+            ),
         ]
 
         for command, description in steps:
             if run_command(command, description) != 0:
                 return 1
 
-            output_file = command.split(">")[-1].strip().split()[0] if ">" in command else command.split()[-1]
-            if output_file.endswith('.bam') or output_file.endswith('.sam'):
+            output_file = (
+                command.split(">")[-1].strip().split()[0]
+                if ">" in command
+                else command.split()[-1]
+            )
+            if output_file.endswith(".bam") or output_file.endswith(".sam"):
                 file_size = Path(output_file).stat().st_size
-                console.print(f"[green]File size of {output_file}: {file_size} bytes[/green]")
+                console.print(
+                    f"[green]File size of {output_file}: {file_size} bytes[/green]"
+                )
 
         shutil.rmtree(temp_dir)
 
         final_size = bam_output.stat().st_size
-        console.print(f"[bold green]Final BAM file size: {final_size} bytes[/bold green]")
+        console.print(
+            f"[bold green]Final BAM file size: {final_size} bytes[/bold green]"
+        )
 
         if final_size < 1_000_000:  # Less than 1MB
-            console.print("[bold red]Warning: Final BAM file is suspiciously small![/bold red]")
+            console.print(
+                "[bold red]Warning: Final BAM file is suspiciously small![/bold red]"
+            )
             return 1
 
         return 0
