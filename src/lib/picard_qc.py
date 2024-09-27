@@ -27,51 +27,51 @@ console = Console()
 URL = "https://mutalyzer.nl/services/?wsdl"
 
 
-class MyTemplate(string.Template):
-    """
-    TBA
-    """
-
-    delimiter = "%"
-    idpattern = "[a-z]+_[a-z]+"
-
-
-function = MyTemplate(
-    """$(function () {
-    $('#container%container_number').highcharts({
-        chart:{
-            type: 'spline'
-        },
-        title: {
-            text: 'Coverage - %gene_name g.%location_here',
-
-        },
-        subtitle: {
-            text: '',
-        },
-        xAxis: {
-            categories: []
-        },
-        yAxis: {
-            title: {
-                text: 'coverage'
-            },
-            min: 0,
-        },
-        tooltip: {
-            pointFormat: '{point.y}'
-        },
-        series: [{
-            name: '%gene_name',
-            data: %data_here,
-            zones: [{
-                    value: 26,
-                    color: '#FF1811'
-                    }],
-        }]
-    });
-    });"""
-)
+# class MyTemplate(string.Template):
+#     """
+#     TBA
+#     """
+#
+#     delimiter = "%"
+#     idpattern = "[a-z]+_[a-z]+"
+#
+#
+# function = MyTemplate(
+#     """$(function () {
+#     $('#container%container_number').highcharts({
+#         chart:{
+#             type: 'spline'
+#         },
+#         title: {
+#             text: 'Coverage - %gene_name g.%location_here',
+#
+#         },
+#         subtitle: {
+#             text: '',
+#         },
+#         xAxis: {
+#             categories: []
+#         },
+#         yAxis: {
+#             title: {
+#                 text: 'coverage'
+#             },
+#             min: 0,
+#         },
+#         tooltip: {
+#             pointFormat: '{point.y}'
+#         },
+#         series: [{
+#             name: '%gene_name',
+#             data: %data_here,
+#             zones: [{
+#                     value: 26,
+#                     color: '#FF1811'
+#                     }],
+#         }]
+#     });
+#     });"""
+# )
 
 
 
