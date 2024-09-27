@@ -40,15 +40,9 @@ def get_coverage(
     reference: Path,
     picard: str,
     db: Union[TinyDB, str],
-    bed_file: Path,
+    bed_file: Union[str, Path],
     panel: str = "full"
 ) -> str:
-    def safe_log_to_db(message: str, level: str, program: str):
-        if isinstance(db, TinyDB):
-            log_to_db(db, message, level, program, sample_id, str(datadir))
-        else:
-            console.print(f"[yellow]Warning: DB logging unavailable. Message: {message}[/yellow]")
-
     def _get_coverage():
         bam_dir = datadir / "BAM" / sample_id / "BAM"
         metrics_dir = datadir / "BAM" / sample_id / "Metrics"
@@ -58,9 +52,19 @@ def get_coverage(
         output_suffix = ".nucl.panel.out" if is_panel else ".nucl.out"
         output_file = metrics_dir / f"{sample_id}{output_suffix}"
         metrics_output = metrics_dir / f"{sample_id}.{'panel.' if is_panel else ''}out"
-        if panel == "full":
+
+        # Check if output file already exists and is not empty
+        if output_file.exists() and output_file.stat().st_size > 0:
+            message = f"Output file already exists: {output_file}"
+            console.print(Panel(f"[bold yellow]{message}[/bold yellow]"))
+            safe_log_to_db(message, "INFO", "picard_coverage")
+            return "success"
+
+        # Determine the correct intervals file
+        if is_panel:
             intervals_file = Path(bed_file)
         else:
+            # For full coverage, use the bait file
             intervals_file = Path(str(bed_file).replace('.bed', '.picard.bed'))
 
         # Check if input files exist
@@ -78,7 +82,7 @@ def get_coverage(
             return "error"
 
         if not intervals_file.exists():
-            error_msg = f"BED file not found: {intervals_file}"
+            error_msg = f"Intervals file not found: {intervals_file}"
             console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
             safe_log_to_db(error_msg, "ERROR", "picard_coverage")
             return "error"
@@ -89,14 +93,8 @@ def get_coverage(
             safe_log_to_db(error_msg, "ERROR", "picard_coverage")
             return "error"
 
-        if output_file.exists() and output_file.stat().st_size > 0:
-            message = f"Output file already exists: {output_file}"
-            console.print(Panel(f"[bold yellow]{message}[/bold yellow]"))
-            safe_log_to_db(message, "INFO", "picard_coverage")
-            return "success"
-
         picard_cmd = (
-            f"{picard} CollectHsMetrics "
+            f"java -Xmx8g -jar {picard} CollectHsMetrics "
             f"BI={intervals_file} "
             f"I={bam_file} "
             f"PER_BASE_COVERAGE={output_file} "
@@ -110,7 +108,7 @@ def get_coverage(
             f"USE_JDK_DEFLATER=true "
             f"USE_JDK_INFLATER=true "
             f"COMPRESSION_LEVEL=1 "
-            f"MAX_RECORDS_IN_RAM=6000000 "
+            f"MAX_RECORDS_IN_RAM=2000000 "
             f"VALIDATION_STRINGENCY=LENIENT"
         )
 
@@ -131,13 +129,13 @@ def get_coverage(
                 console.print(f"[dim]{line.strip()}[/dim]")
                 safe_log_to_db(line.strip(), "DEBUG", "picard_coverage")
 
-            if output_file.exists():
+            if output_file.exists() and output_file.stat().st_size > 0:
                 console.print(Panel(f"[bold green]Picard {panel} coverage file created for {sample_id}[/bold green]"))
                 log_to_api(f"Picard {panel} coverage file created", "INFO", "picard_coverage", sample_id, str(datadir))
                 safe_log_to_db(f"Picard {panel} coverage file created successfully for {sample_id}", "INFO", "picard_coverage")
                 return "success"
             else:
-                raise FileNotFoundError(f"Picard CollectHsMetrics completed but output file not found for {sample_id}")
+                raise FileNotFoundError(f"Picard CollectHsMetrics completed but output file not found or empty for {sample_id}")
 
         except subprocess.CalledProcessError as e:
             error_msg = f"Picard CollectHsMetrics failed for {sample_id}. Return code: {e.returncode}\nOutput: {e.output}"
@@ -153,7 +151,6 @@ def get_coverage(
             return "error"
 
     return _get_coverage()
-
 
 
 
