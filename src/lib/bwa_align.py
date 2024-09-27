@@ -1,26 +1,21 @@
 # lib/bwa_align.py
 
 import logging
-import subprocess
 import shutil
+import subprocess
 from pathlib import Path
 from typing import List
+
 from rich.console import Console
 from rich.panel import Panel
-from rich.progress import (
-    Progress,
-    SpinnerColumn,
-    BarColumn,
-    TextColumn,
-    TimeElapsedColumn,
-)
-from rich.table import Table
+from rich.progress import (BarColumn, Progress, SpinnerColumn, TextColumn,
+                           TimeElapsedColumn)
 from rich.syntax import Syntax
+from rich.table import Table
 from tinydb import TinyDB
 
-from .utils import move_bam
+from .db_logger import timer_with_db_log
 from .log_api import log_to_api
-from .db_logger import log_to_db, timer_with_db_log
 
 console = Console()
 
@@ -31,6 +26,18 @@ logger = logging.getLogger(__name__)
 def check_existing_bam(
     sample_id: str, datadir: Path, threads: int, samtools: str
 ) -> int:
+    """
+    Checks if a BAM file exists for a given sample ID and data directory.
+
+    Args:
+        sample_id (str): The ID of the sample to check.
+        datadir (Path): The directory where the data is located.
+        threads (int): The number of threads to use for indexing.
+        samtools (str): The path to the Samtools executable.
+
+    Returns:
+        int: 0 if the BAM file exists and has a corresponding BAI file, 1 otherwise.
+    """
     bam_paths = [
         datadir / "BAM" / sample_id / f"{sample_id}.bam",
         datadir / "BAM" / sample_id / "BAM" / f"{sample_id}.bam",
@@ -64,7 +71,7 @@ def check_existing_bam(
                 str(datadir),
             )
             index_string = f"{samtools} index -@ {threads} {existing_bam_path}"
-            result = run_command(index_string, f"Indexing BAM file for {sample_id}")
+            run_command(index_string, f"Indexing BAM file for {sample_id}")
 
             if bai_path.exists():
                 console.print(f"[green]BAI file created for {sample_id}[/green]")
@@ -91,6 +98,43 @@ def check_existing_bam(
 
 
 def index_bam(sample_id: str, samtools: str, threads: int, bam_output: Path) -> int:
+    def index_bam(sample_id: str, samtools: str, threads: int, bam_output: Path) -> int:
+        """
+        Indexes a BAM file using Samtools.
+
+        Args:
+            sample_id (str): The ID of the sample.
+            samtools (str): The path to the Samtools executable.
+            threads (int): The number of threads to use for indexing.
+            bam_output (Path): The path to the BAM file to be indexed.
+
+        Returns:
+            int: 0 if the indexing is successful, 1 otherwise.
+
+        This function generates the command string to index a BAM file using Samtools,
+        and then calls the `run_command` function to execute the command. If the
+        indexing is successful, it returns 0. Otherwise, it prints an error message
+        and logs the failure to the API, and returns 1.
+        """
+
+        index_string = f"{samtools} index -@ {threads} {bam_output}"
+        console.print(Panel("[bold cyan]Indexing BAM file[/bold cyan]"))
+        result = run_command(index_string, f"Indexing BAM file for {sample_id}")
+
+        if result != 0:
+            console.print(
+                f"[bold red]BAM indexing failed for sample {sample_id}[/bold red]"
+            )
+            log_to_api(
+                f"BAM indexing failed for sample {sample_id}",
+                "ERROR",
+                "bwa_align",
+                sample_id,
+                str(bam_output.parent.parent),
+            )
+            return 1
+        return 0
+
     index_string = f"{samtools} index -@ {threads} {bam_output}"
     console.print(Panel("[bold cyan]Indexing BAM file[/bold cyan]"))
     result = run_command(index_string, f"Indexing BAM file for {sample_id}")
