@@ -78,7 +78,7 @@ URL = "https://mutalyzer.nl/services/?wsdl"
 
 def get_picard_version(picard: str) -> str:
     """Get Picard version."""
-    result = subprocess.run(["java", "-jar", picard, "--version"], capture_output=True, text=True)
+    result = subprocess.run([picard, "--version"], capture_output=True, text=True)
     return result.stdout.strip()
 
 
@@ -124,7 +124,7 @@ def get_coverage(
         safe_log_to_db(f"Starting Picard's CollectHsMetrics for {panel} coverage of {sample_id}", "INFO", "picard_coverage")
 
         picard_cmd = (
-            f"java -jar {picard} CollectHsMetrics "
+            f"{picard} CollectHsMetrics "
             f"BI={bed_file} "
             f"I={bam_dir}/{sample_id}.bam "
             f"PER_BASE_COVERAGE={output_file} "
