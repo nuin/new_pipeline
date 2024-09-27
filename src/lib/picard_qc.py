@@ -89,9 +89,10 @@ def get_coverage(sample_id: str, datadir: Path, reference: Path, bait_file: Path
         metrics_dir = datadir / "BAM" / sample_id / "Metrics"
         metrics_dir.mkdir(parents=True, exist_ok=True)
 
-        output_suffix = ".nucl.panel.out" if panel != "full" else ".nucl.out"
+        is_panel = panel != "full"
+        output_suffix = ".nucl.panel.out" if is_panel else ".nucl.out"
         output_file = metrics_dir / f"{sample_id}{output_suffix}"
-        metrics_output = metrics_dir / f"{sample_id}.{'panel' if panel != 'full' else ''}out"
+        metrics_output = metrics_dir / f"{sample_id}.{'panel.' if is_panel else ''}out"
 
         picard_version = get_picard_version(picard)
         log_to_db(db, f"Starting Picard CollectHsMetrics for sample {sample_id} with Picard version {picard_version}", "INFO", "picard_coverage", sample_id, datadir.name)
@@ -106,7 +107,7 @@ def get_coverage(sample_id: str, datadir: Path, reference: Path, bait_file: Path
         log_to_api(f"Starting Picard's CollectHsMetrics for {panel} coverage", "INFO", "picard_coverage", sample_id, datadir.name)
         log_to_db(db, f"Starting Picard's CollectHsMetrics for {panel} coverage of {sample_id}", "INFO", "picard_coverage", sample_id, datadir.name)
 
-        if panel != "full":
+        if is_panel:
             bait_file = bait_file.with_suffix('.picard.bed')
 
         picard_cmd = (
@@ -188,6 +189,8 @@ def get_coverage(sample_id: str, datadir: Path, reference: Path, bait_file: Path
             return "error"
 
     return _get_coverage()
+
+
 
 def get_coverage_parp(
     sample_id: str, directory: str, reference: str, bait_file: str, picard: str
