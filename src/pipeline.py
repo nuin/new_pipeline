@@ -254,11 +254,11 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
 
         @timer_with_db_log(sample_db)
         def run_picard_coverage():
-            return get_coverage(sample, datadir, reference, bait_file, picard)
+            return get_coverage(sample, datadir, reference, bait_file, picard, sample_db)
 
         @timer_with_db_log(sample_db)
         def run_picard_coverage_panel():
-            return get_coverage(sample, datadir, reference, bed_file[sample], picard, "panel")
+            return get_coverage(sample, datadir, reference, bed_file[sample], picard, sample_db, panel="panel")
 
         @timer_with_db_log(sample_db)
         def run_picard_yield():

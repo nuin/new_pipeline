@@ -6,18 +6,24 @@
 
 """
 
-import os
-import string
 import subprocess
 from pathlib import Path
+from typing import Dict
+from datetime import datetime
+import psutil
+import shlex
 
-import pandas as pd
 from rich.console import Console
-from suds.client import Client
+from rich.panel import Panel
+from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeElapsedColumn
+from rich.syntax import Syntax
 
 from .log_api import log_to_api
+from .db_logger import log_to_db, timer_with_db_log
 
 console = Console()
+
+
 URL = "https://mutalyzer.nl/services/?wsdl"
 
 
@@ -68,126 +74,120 @@ function = MyTemplate(
 )
 
 
-def get_coverage(
-    sample_id: str,
-    datadir: str,
-    reference: str,
-    bait_file: str,
-    picard: str,
-    panel: str = "full",
-) -> str:
-    """
-    Function that calls Picard to generate nucleotide coverage
 
-    :param sample_id: ID of the patient/sample being analysed using Picard
-    :param datadir: Location of the BAM files
-    :param reference: Reference genome
-    :param bait_file: Picard specific BED file
-    :param picard: Picard jar file location
-    :param panel: Panel type, default is "full"
 
-    :type sample_id: string
-    :type datadir: string
-    :type reference: string
-    :type bait_file: string
-    :type picard: string
-    :type panel: string
+def get_picard_version(picard: str) -> str:
+    """Get Picard version."""
+    result = subprocess.run(["java", "-jar", picard, "--version"], capture_output=True, text=True)
+    return result.stdout.strip()
 
-    :return: returns 'success' if the Picard coverage file is successfully created, 'exists' if the file already exists.
 
-    :todo: fix argument
-    """
+def get_coverage(sample_id: str, datadir: Path, reference: Path, bait_file: Path, picard: str, db: Dict, panel: str = "full", threads: int = 4, max_retries: int = 3) -> str:
+    @timer_with_db_log(db)
+    def _get_coverage():
+        bam_dir = datadir / "BAM" / sample_id / "BAM"
+        metrics_dir = datadir / "BAM" / sample_id / "Metrics"
+        metrics_dir.mkdir(parents=True, exist_ok=True)
 
-    bam_dir = f"{datadir}/BAM/{sample_id}/BAM/"
-    metrics_dir = f"{datadir}/BAM/{sample_id}/Metrics/"
+        output_suffix = ".nucl.panel.out" if panel != "full" else ".nucl.out"
+        output_file = metrics_dir / f"{sample_id}{output_suffix}"
+        metrics_output = metrics_dir / f"{sample_id}.{'panel' if panel != 'full' else ''}out"
 
-    if panel == "full":
-        if Path(f"{metrics_dir}/{sample_id}.nucl.out").exists():
-            console.log(f"Picard coverage file exists {sample_id}")
-            log_to_api(
-                "Picard coverage file exists",
-                "INFO",
-                "picard_coverage",
-                sample_id,
-                Path(datadir).name,
-            )
+        picard_version = get_picard_version(picard)
+        log_to_db(db, f"Starting Picard CollectHsMetrics for sample {sample_id} with Picard version {picard_version}", "INFO", "picard_coverage", sample_id, datadir.name)
+
+        if output_file.exists():
+            console.print(Panel(f"[yellow]Picard coverage file already exists for {sample_id}[/yellow]"))
+            log_to_api(f"Picard {panel} coverage file exists", "INFO", "picard_coverage", sample_id, datadir.name)
+            log_to_db(db, f"Picard {panel} coverage file already exists for {sample_id}", "INFO", "picard_coverage", sample_id, datadir.name)
             return "exists"
 
-        console.log(f"Starting Picard's CollectHsMetrics {sample_id}")
-        log_to_api(
-            "Starting Picard's CollectHsMetrics",
-            "INFO",
-            "picard_coverage",
-            sample_id,
-            Path(datadir).name,
+        console.print(Panel(f"[bold blue]Starting Picard's CollectHsMetrics for {panel} coverage of {sample_id}[/bold blue]"))
+        log_to_api(f"Starting Picard's CollectHsMetrics for {panel} coverage", "INFO", "picard_coverage", sample_id, datadir.name)
+        log_to_db(db, f"Starting Picard's CollectHsMetrics for {panel} coverage of {sample_id}", "INFO", "picard_coverage", sample_id, datadir.name)
+
+        if panel != "full":
+            bait_file = bait_file.with_suffix('.picard.bed')
+
+        picard_cmd = (
+            f"java -jar {picard} CollectHsMetrics "
+            f"BI={bait_file} "
+            f"I={bam_dir}/{sample_id}.bam "
+            f"PER_BASE_COVERAGE={output_file} "
+            f"MINIMUM_MAPPING_QUALITY=0 "
+            f"MINIMUM_BASE_QUALITY=0 "
+            f"TARGET_INTERVALS={bait_file} "
+            f"OUTPUT={metrics_output} "
+            f"R={reference} "
+            f"QUIET=true "
+            f"TMP_DIR={metrics_dir} "
+            f"USE_JDK_DEFLATER=true "
+            f"USE_JDK_INFLATER=true "
+            f"COMPRESSION_LEVEL=1 "
+            f"MAX_RECORDS_IN_RAM=2000000 "
+            f"VALIDATION_STRINGENCY=LENIENT"
         )
-        picard_string = (
-            f"{picard} CollectHsMetrics BI={bait_file} I={bam_dir}/{sample_id}.bam PER_BASE_COVERAGE={metrics_dir}/{sample_id}.nucl.out "
-            f"MINIMUM_MAPPING_QUALITY=0 MINIMUM_BASE_QUALITY=0 TARGET_INTERVALS={bait_file} OUTPUT={metrics_dir}/{sample_id}.out R={reference} QUIET=true"
-        )
-        proc = subprocess.Popen(
-            picard_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        console.log(f"Picard command: {picard_string}")
-        log_to_api(
-            picard_string, "INFO", "picard_coverage", sample_id, Path(datadir).name
-        )
-        proc.wait()
-        while True:
-            output = proc.stderr.readline().strip()
-            if output == b"":
+
+        console.print(Syntax(picard_cmd, "bash", theme="monokai", line_numbers=True))
+        log_to_db(db, f"Picard command: {picard_cmd}", "INFO", "picard_coverage", sample_id, datadir.name)
+
+        for attempt in range(max_retries):
+            start_time = datetime.now()
+            log_to_db(db, f"Picard CollectHsMetrics started at {start_time} (Attempt {attempt + 1}/{max_retries})", "INFO", "picard_coverage", sample_id, datadir.name)
+
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                TimeElapsedColumn(),
+                console=console,
+                transient=True
+            ) as progress:
+                task = progress.add_task(f"[cyan]Running Picard CollectHsMetrics for {sample_id}...", total=None)
+
+                process = subprocess.Popen(shlex.split(picard_cmd), stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1, universal_newlines=True)
+
+                for line in process.stdout:
+                    progress.update(task, advance=1)
+                    console.print(f"[dim]{line.strip()}[/dim]")
+                    log_to_db(db, line.strip(), "DEBUG", "picard_coverage", sample_id, datadir.name)
+
+                process.wait()
+
+            end_time = datetime.now()
+            duration = end_time - start_time
+            log_to_db(db, f"Picard CollectHsMetrics finished at {end_time}. Duration: {duration}", "INFO", "picard_coverage", sample_id, datadir.name)
+
+            if process.returncode == 0:
                 break
+            elif attempt < max_retries - 1:
+                log_to_db(db, f"Picard CollectHsMetrics failed. Retrying (Attempt {attempt + 2}/{max_retries})", "WARNING", "picard_coverage", sample_id, datadir.name)
             else:
-                console.log(output.decode("utf-8"))
-        console.log(f"Picard coverage file created {sample_id}")
-        log_to_api(
-            "Picard coverage file created",
-            "INFO",
-            "picard_coverage",
-            sample_id,
-            Path(datadir).name,
-        )
-        return "success"
+                error_msg = f"Picard CollectHsMetrics failed for {sample_id} after {max_retries} attempts"
+                console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
+                log_to_api(error_msg, "ERROR", "picard_coverage", sample_id, datadir.name)
+                log_to_db(db, f"{error_msg}. Last return code: {process.returncode}", "ERROR", "picard_coverage", sample_id, datadir.name)
+                return "error"
 
-    if Path(f"{metrics_dir}/{sample_id}.nucl.panel.out").exists():
-        console.log(f"Picard panel coverage file exists {sample_id}")
-        log_to_api(
-            "Picard panel coverage file exists",
-            "INFO",
-            "picard_coverage",
-            sample_id,
-            Path(datadir).name,
-        )
-        return "exists"
+        if output_file.exists():
+            console.print(Panel(f"[bold green]Picard {panel} coverage file created for {sample_id}[/bold green]"))
+            log_to_api(f"Picard {panel} coverage file created", "INFO", "picard_coverage", sample_id, datadir.name)
+            log_to_db(db, f"Picard {panel} coverage file created successfully for {sample_id}", "INFO", "picard_coverage", sample_id, datadir.name)
 
-    console.log(f"Starting Picard's CollectHsMetrics for panel {sample_id}")
-    log_to_api(
-        "Starting Picard's CollectHsMetrics for panel",
-        "INFO",
-        "picard_coverage",
-        sample_id,
-        Path(datadir).name,
-    )
-    bait_file = bait_file.replace(".bed", ".picard.bed")
-    picard_string = (
-        f"{picard} CollectHsMetrics BI={bait_file} I={bam_dir}/{sample_id}.bam PER_BASE_COVERAGE={metrics_dir}/{sample_id}.nucl.panel.out "
-        f"MINIMUM_MAPPING_QUALITY=0 MINIMUM_BASE_QUALITY=0 TARGET_INTERVALS={bait_file} OUTPUT={metrics_dir}/{sample_id}.panel.out R={reference} QUIET=true"
-    )
-    console.log(f"Picard command: {picard_string}")
-    log_to_api(picard_string, "INFO", "picard_coverage", sample_id, Path(datadir).name)
-    proc = subprocess.Popen(
-        picard_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    while True:
-        output = proc.stderr.readline().strip()
-        if output == b"":
-            break
+            # Log file size and resource usage
+            log_to_db(db, f"Output file size: {output_file.stat().st_size} bytes", "INFO", "picard_coverage", sample_id, datadir.name)
+            log_to_db(db, f"Peak memory usage: {psutil.Process().memory_info().rss / 1024 / 1024:.2f} MB", "INFO", "picard_coverage", sample_id, datadir.name)
+
+            return "success"
         else:
-            console.log(output.decode("utf-8"))
-    proc.wait()
+            error_msg = f"Picard CollectHsMetrics completed but output file not found for {sample_id}"
+            console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
+            log_to_api(error_msg, "ERROR", "picard_coverage", sample_id, datadir.name)
+            log_to_db(db, error_msg, "ERROR", "picard_coverage", sample_id, datadir.name)
+            return "error"
 
-    return "success"
-
+    return _get_coverage()
 
 def get_coverage_parp(
     sample_id: str, directory: str, reference: str, bait_file: str, picard: str
