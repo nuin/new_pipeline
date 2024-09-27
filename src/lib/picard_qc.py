@@ -58,7 +58,11 @@ def get_coverage(
         output_suffix = ".nucl.panel.out" if is_panel else ".nucl.out"
         output_file = metrics_dir / f"{sample_id}{output_suffix}"
         metrics_output = metrics_dir / f"{sample_id}.{'panel.' if is_panel else ''}out"
-        bed_file_path = Path(bed_file) if isinstance(bed_file, str) else bed_file
+        if is_panel:
+            intervals_file = Path(bed_file)
+        else:
+            # For full coverage, use the bait file
+            intervals_file = Path(str(bed_file).replace('.bed', '.picard.bed'))
 
         # Check if input files exist
         if not bam_dir.exists():
@@ -74,8 +78,8 @@ def get_coverage(
             safe_log_to_db(error_msg, "ERROR", "picard_coverage")
             return "error"
 
-        if not bed_file_path.exists():
-            error_msg = f"BED file not found: {bed_file}"
+        if not intervals_file.exists():
+            error_msg = f"BED file not found: {intervals_file}"
             console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
             safe_log_to_db(error_msg, "ERROR", "picard_coverage")
             return "error"
@@ -88,12 +92,12 @@ def get_coverage(
 
         picard_cmd = (
             f"{picard} CollectHsMetrics "
-            f"BI={bed_file_path} "
+            f"BI={intervals_file} "
             f"I={bam_file} "
             f"PER_BASE_COVERAGE={output_file} "
             f"MINIMUM_MAPPING_QUALITY=0 "
             f"MINIMUM_BASE_QUALITY=0 "
-            f"TARGET_INTERVALS={bed_file_path} "
+            f"TARGET_INTERVALS={intervals_file} "
             f"OUTPUT={metrics_output} "
             f"R={reference} "
             f"QUIET=true "
