@@ -106,7 +106,7 @@ def get_coverage(
         output_suffix = ".nucl.panel.out" if is_panel else ".nucl.out"
         output_file = metrics_dir / f"{sample_id}{output_suffix}"
         metrics_output = metrics_dir / f"{sample_id}.{'panel.' if is_panel else ''}out"
-        bed_file = Path(bed_file)
+        bed_file_path = Path(bed_file) if isinstance(bed_file, str) else bed_file
 
         # Check if input files exist
         if not bam_dir.exists():
@@ -122,7 +122,7 @@ def get_coverage(
             safe_log_to_db(error_msg, "ERROR", "picard_coverage")
             return "error"
 
-        if not bed_file.exists():
+        if not bed_file_path.exists():
             error_msg = f"BED file not found: {bed_file}"
             console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
             safe_log_to_db(error_msg, "ERROR", "picard_coverage")
@@ -136,12 +136,12 @@ def get_coverage(
 
         picard_cmd = (
             f"java -jar {picard} CollectHsMetrics "
-            f"BI={bed_file} "
+            f"BI={bed_file_path} "
             f"I={bam_file} "
             f"PER_BASE_COVERAGE={output_file} "
             f"MINIMUM_MAPPING_QUALITY=0 "
             f"MINIMUM_BASE_QUALITY=0 "
-            f"TARGET_INTERVALS={bed_file} "
+            f"TARGET_INTERVALS={bed_file_path} "
             f"OUTPUT={metrics_output} "
             f"R={reference} "
             f"QUIET=true "
