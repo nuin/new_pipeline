@@ -6,30 +6,19 @@
 """
 
 import subprocess
-from pathlib import Path
-import tempfile
-import os
-from typing import Dict, Optional
 from datetime import datetime
-
-from rich.console import Console
-from rich.panel import Panel
-from rich.progress import (
-    Progress,
-    SpinnerColumn,
-    BarColumn,
-    TextColumn,
-    TimeElapsedColumn,
-)
-from rich.syntax import Syntax
-
-from .log_api import log_to_api
-from .db_logger import log_to_db, timer_with_db_log
-
+from pathlib import Path
+from typing import Dict, Optional
 
 import psutil
-import shlex
+from rich.console import Console
+from rich.panel import Panel
+from rich.progress import (BarColumn, Progress, SpinnerColumn, TextColumn,
+                           TimeElapsedColumn)
+from rich.syntax import Syntax
 
+from .db_logger import log_to_db, timer_with_db_log
+from .log_api import log_to_api
 
 console = Console()
 
@@ -185,18 +174,151 @@ def annotate_merged(
             str(input_vcf),
         ]
 
-        # Rest of the function remains the same...
+        console.print(
+            Syntax(
+                " ".join(map(str, bcftools_cmd)),
+                "bash",
+                theme="monokai",
+                line_numbers=True,
+            )
+        )
+        log_to_db(
+            db,
+            f"bcftools command: {' '.join(map(str, bcftools_cmd))}",
+            "INFO",
+            "bcftools_ann",
+            sample_id,
+            datadir.name,
+        )
+
+        for attempt in range(max_retries):
+            start_time = datetime.now()
+            log_to_db(
+                db,
+                f"bcftools csq attempt {attempt + 1} started at {start_time}",
+                "INFO",
+                "bcftools_ann",
+                sample_id,
+                datadir.name,
+            )
+
+            with Progress(
+                SpinnerColumn(),
+                TextColumn("[progress.description]{task.description}"),
+                BarColumn(),
+                TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+                TimeElapsedColumn(),
+                console=console,
+                transient=True,
+            ) as progress:
+                task = progress.add_task(
+                    f"[cyan]Running bcftools csq for {sample_id} (Attempt {attempt + 1})...",
+                    total=None,
+                )
+
+                try:
+                    process = subprocess.Popen(
+                        bcftools_cmd,
+                        stdout=subprocess.PIPE,
+                        stderr=subprocess.PIPE,
+                        text=True,
+                        bufsize=1,
+                        universal_newlines=True,
+                    )
+
+                    while True:
+                        output = process.stdout.readline()
+                        if output == "" and process.poll() is not None:
+                            break
+                        if output:
+                            progress.update(task, advance=1)
+                            console.print(f"[dim]{output.strip()}[/dim]")
+                            log_to_db(
+                                db,
+                                output.strip(),
+                                "DEBUG",
+                                "bcftools_ann",
+                                sample_id,
+                                datadir.name,
+                            )
+
+                    stderr = process.stderr.read()
+                    if stderr:
+                        console.print(f"[yellow]{stderr.strip()}[/yellow]")
+                        log_to_db(
+                            db,
+                            stderr.strip(),
+                            "WARNING",
+                            "bcftools_ann",
+                            sample_id,
+                            datadir.name,
+                        )
+
+                    process.wait()
+
+                    if process.returncode == 0:
+                        break
+                    else:
+                        raise subprocess.CalledProcessError(
+                            process.returncode, bcftools_cmd
+                        )
+
+                except subprocess.CalledProcessError as e:
+                    error_msg = f"bcftools csq failed for {sample_id} (Attempt {attempt + 1}): {e}"
+                    console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
+                    log_to_api(
+                        error_msg, "ERROR", "bcftools_ann", sample_id, datadir.name
+                    )
+                    log_to_db(
+                        db, error_msg, "ERROR", "bcftools_ann", sample_id, datadir.name
+                    )
+
+                    if attempt == max_retries - 1:
+                        return "error"
+
+            end_time = datetime.now()
+            duration = end_time - start_time
+            log_to_db(
+                db,
+                f"bcftools csq attempt {attempt + 1} finished at {end_time}. Duration: {duration}",
+                "INFO",
+                "bcftools_ann",
+                sample_id,
+                datadir.name,
+            )
 
         if output_vcf.exists():
             if transcript_list:
-                # Perform in-place filtering if transcript_list is provided
+                console.print(
+                    Panel(
+                        f"[bold blue]Filtering VCF for specific transcripts for {sample_id}[/bold blue]"
+                    )
+                )
+                log_to_api(
+                    "Filtering VCF for specific transcripts",
+                    "INFO",
+                    "bcftools_ann",
+                    sample_id,
+                    datadir.name,
+                )
+                log_to_db(
+                    db,
+                    f"Filtering VCF for specific transcripts for {sample_id}",
+                    "INFO",
+                    "bcftools_ann",
+                    sample_id,
+                    datadir.name,
+                )
+
                 try:
-                    filtered_lines = []
+                    # Read the list of desired transcripts
                     with open(transcript_list, "r") as f:
                         desired_transcripts = set(line.strip() for line in f)
 
-                    with open(output_vcf, "r") as vcf_file:
-                        for line in vcf_file:
+                    # Filter the CSQ output
+                    filtered_lines = []
+                    with open(output_vcf, "r") as infile:
+                        for line in infile:
                             if line.startswith("#"):
                                 filtered_lines.append(line)
                                 continue
@@ -219,9 +341,9 @@ def annotate_merged(
                             else:
                                 filtered_lines.append(line)
 
-                    # Write filtered content back to the same file
-                    with open(output_vcf, "w") as vcf_file:
-                        vcf_file.writelines(filtered_lines)
+                    # Write the filtered content back to the same file
+                    with open(output_vcf, "w") as outfile:
+                        outfile.writelines(filtered_lines)
 
                     console.print(
                         Panel(
@@ -312,6 +434,7 @@ def annotate_merged(
 if __name__ == "__main__":
     # Example usage (for testing purposes)
     from pathlib import Path
+
     from tinydb import TinyDB
 
     sample_id = "test_sample"
