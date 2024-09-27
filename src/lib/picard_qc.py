@@ -265,98 +265,98 @@ def get_transcripts(transcript_location: str) -> dict:
     return transcripts
 
 
-def chr_frame(segment: pd.DataFrame) -> tuple:
-    """
-    Function that checks chromosome regions for coverage under 25X
-
-    :param segment: current segment being analysed
-
-    :type segment: pandas DataFrame
-
-    :return: gene, segment and chromosome if there's a region under 25x, otherwise returns 'empty', 'empty', 'empty'
-
-    :rtype: tuple
-    """
-
-    if segment.loc[segment["coverage"].idxmin()]["coverage"] <= 100:
-        gene = segment.iloc[0]["Gene"]
-        chromosome = segment.iloc[0]["chrom"]
-        return gene, segment, chromosome
-
-    return "empty", "empty", "empty"
-
-
-def convert_g_to_c(chromosome, position, transcript):
-    """
-    Function that converts g. notation to c.
-
-    :param chromosome: chromosome number
-    :param position: position to be converted
-    :param transcript: list of transcripts
-
-    :type chromosome: string
-    :type position: integer
-    :type transcript: list
-
-    :return: HVGS notation of the position
-
-    """
-
-    fake_nucleotides = "A>A"
-    connection = Client(URL, cache=None)
-    mutalyzer = connection.service
-    result = mutalyzer.numberConversion(
-        build="hg19", variant=str(chromosome) + ":g." + str(position) + fake_nucleotides
-    )[0]
-    result_dict = {k: v for k, v in (x.split(":") for x in result)}
-    try:
-        return result_dict[transcript]
-    except Exception as e:
-        console.log(str(e))
-        return str(result[0])
+# def chr_frame(segment: pd.DataFrame) -> tuple:
+#     """
+#     Function that checks chromosome regions for coverage under 25X
+#
+#     :param segment: current segment being analysed
+#
+#     :type segment: pandas DataFrame
+#
+#     :return: gene, segment and chromosome if there's a region under 25x, otherwise returns 'empty', 'empty', 'empty'
+#
+#     :rtype: tuple
+#     """
+#
+#     if segment.loc[segment["coverage"].idxmin()]["coverage"] <= 100:
+#         gene = segment.iloc[0]["Gene"]
+#         chromosome = segment.iloc[0]["chrom"]
+#         return gene, segment, chromosome
+#
+#     return "empty", "empty", "empty"
 
 
-def create_table(under_30, chromosome, gene, trans, coverage_file):
-    """
-    Function that creates a text table with the locations under
-    20x of coverage
+# def convert_g_to_c(chromosome, position, transcript):
+#     """
+#     Function that converts g. notation to c.
+#
+#     :param chromosome: chromosome number
+#     :param position: position to be converted
+#     :param transcript: list of transcripts
+#
+#     :type chromosome: string
+#     :type position: integer
+#     :type transcript: list
+#
+#     :return: HVGS notation of the position
+#
+#     """
+#
+#     fake_nucleotides = "A>A"
+#     connection = Client(URL, cache=None)
+#     mutalyzer = connection.service
+#     result = mutalyzer.numberConversion(
+#         build="hg19", variant=str(chromosome) + ":g." + str(position) + fake_nucleotides
+#     )[0]
+#     result_dict = {k: v for k, v in (x.split(":") for x in result)}
+#     try:
+#         return result_dict[transcript]
+#     except Exception as e:
+#         console.log(str(e))
+#         return str(result[0])
 
-    :param under30: list of regions under 100x (name should be changed)
-    :param chromosome: chromosome number
-    :param gene: gene symbol
-    :param trans: transcript ID
-    :param coverage_file: location of the coverage file
 
-    :type under30: list
-    :type chromosome: string
-    :type gene: string
-    :type transcript: string
-    :type coverage_file: string
-
-    :return: not return set
-
-    """
-
-    table_output = open(
-        os.path.dirname(coverage_file).replace("/Metrics", "")
-        + "/QC/"
-        + os.path.basename(coverage_file).replace(".nucl.out", "")
-        + "_under_25.txt",
-        "a",
-    )
-    for item in under_30:
-        if len(under_30[item]) != 0:
-            start_pos = convert_g_to_c(chromosome, under_30[item][0], trans)
-            end_pos = convert_g_to_c(chromosome, under_30[item][-1], trans)
-            table_output.write(
-                chromosome
-                + "\t"
-                + gene
-                + "\t"
-                + str(int(under_30[item][-1]) - int(under_30[item][0]))
-                + "\tg."
-            )
-            table_output.write(
-                str(under_30[item][0]) + "\tg." + str(under_30[item][-1]) + "\t"
-            )
-            table_output.write(start_pos + "\t" + end_pos + "\n")
+# def create_table(under_30, chromosome, gene, trans, coverage_file):
+#     """
+#     Function that creates a text table with the locations under
+#     20x of coverage
+#
+#     :param under30: list of regions under 100x (name should be changed)
+#     :param chromosome: chromosome number
+#     :param gene: gene symbol
+#     :param trans: transcript ID
+#     :param coverage_file: location of the coverage file
+#
+#     :type under30: list
+#     :type chromosome: string
+#     :type gene: string
+#     :type transcript: string
+#     :type coverage_file: string
+#
+#     :return: not return set
+#
+#     """
+#
+#     table_output = open(
+#         os.path.dirname(coverage_file).replace("/Metrics", "")
+#         + "/QC/"
+#         + os.path.basename(coverage_file).replace(".nucl.out", "")
+#         + "_under_25.txt",
+#         "a",
+#     )
+#     for item in under_30:
+#         if len(under_30[item]) != 0:
+#             start_pos = convert_g_to_c(chromosome, under_30[item][0], trans)
+#             end_pos = convert_g_to_c(chromosome, under_30[item][-1], trans)
+#             table_output.write(
+#                 chromosome
+#                 + "\t"
+#                 + gene
+#                 + "\t"
+#                 + str(int(under_30[item][-1]) - int(under_30[item][0]))
+#                 + "\tg."
+#             )
+#             table_output.write(
+#                 str(under_30[item][0]) + "\tg." + str(under_30[item][-1]) + "\t"
+#             )
+#             table_output.write(start_pos + "\t" + end_pos + "\n")
