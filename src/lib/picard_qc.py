@@ -27,54 +27,6 @@ console = Console()
 URL = "https://mutalyzer.nl/services/?wsdl"
 
 
-# class MyTemplate(string.Template):
-#     """
-#     TBA
-#     """
-#
-#     delimiter = "%"
-#     idpattern = "[a-z]+_[a-z]+"
-#
-#
-# function = MyTemplate(
-#     """$(function () {
-#     $('#container%container_number').highcharts({
-#         chart:{
-#             type: 'spline'
-#         },
-#         title: {
-#             text: 'Coverage - %gene_name g.%location_here',
-#
-#         },
-#         subtitle: {
-#             text: '',
-#         },
-#         xAxis: {
-#             categories: []
-#         },
-#         yAxis: {
-#             title: {
-#                 text: 'coverage'
-#             },
-#             min: 0,
-#         },
-#         tooltip: {
-#             pointFormat: '{point.y}'
-#         },
-#         series: [{
-#             name: '%gene_name',
-#             data: %data_here,
-#             zones: [{
-#                     value: 26,
-#                     color: '#FF1811'
-#                     }],
-#         }]
-#     });
-#     });"""
-# )
-
-
-
 
 import shlex
 import subprocess
@@ -135,7 +87,7 @@ def get_coverage(
             return "error"
 
         picard_cmd = (
-            f"java -jar {picard} CollectHsMetrics "
+            f"{picard} CollectHsMetrics "
             f"BI={bed_file_path} "
             f"I={bam_file} "
             f"PER_BASE_COVERAGE={output_file} "
