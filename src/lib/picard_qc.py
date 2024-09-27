@@ -82,8 +82,15 @@ def get_picard_version(picard: str) -> str:
     return result.stdout.strip()
 
 
-def get_coverage(sample_id: str, datadir: Path, reference: Path, bait_file: Path, picard: str, db: Dict,
-                 panel: str = "full", threads: int = 4, max_retries: int = 3) -> str:
+def get_coverage(
+    sample_id: str,
+    datadir: Path,
+    reference: Path,
+    picard: str,
+    db: Dict,
+    bed_file: Path,
+    panel: str = "full"
+) -> str:
     @timer_with_db_log(db)
     def _get_coverage():
         bam_dir = datadir / "BAM" / sample_id / "BAM"
@@ -96,38 +103,29 @@ def get_coverage(sample_id: str, datadir: Path, reference: Path, bait_file: Path
         metrics_output = metrics_dir / f"{sample_id}.{'panel.' if is_panel else ''}out"
 
         picard_version = get_picard_version(picard)
-        log_to_db(db, f"Starting Picard CollectHsMetrics for sample {sample_id} with Picard version {picard_version}",
-                  "INFO", "picard_coverage", sample_id, datadir.name)
+        log_to_db(db, f"Starting Picard CollectHsMetrics for sample {sample_id} with Picard version {picard_version}", "INFO", "picard_coverage", sample_id, datadir.name)
 
         if output_file.exists():
             console.print(Panel(f"[yellow]Picard coverage file already exists for {sample_id}[/yellow]"))
             log_to_api(f"Picard {panel} coverage file exists", "INFO", "picard_coverage", sample_id, datadir.name)
-            log_to_db(db, f"Picard {panel} coverage file already exists for {sample_id}", "INFO", "picard_coverage",
-                      sample_id, datadir.name)
+            log_to_db(db, f"Picard {panel} coverage file already exists for {sample_id}", "INFO", "picard_coverage", sample_id, datadir.name)
             return "exists"
 
-        console.print(
-            Panel(f"[bold blue]Starting Picard's CollectHsMetrics for {panel} coverage of {sample_id}[/bold blue]"))
-        log_to_api(f"Starting Picard's CollectHsMetrics for {panel} coverage", "INFO", "picard_coverage", sample_id,
-                   datadir.name)
-        log_to_db(db, f"Starting Picard's CollectHsMetrics for {panel} coverage of {sample_id}", "INFO",
-                  "picard_coverage", sample_id, datadir.name)
+        console.print(Panel(f"[bold blue]Starting Picard's CollectHsMetrics for {panel} coverage of {sample_id}[/bold blue]"))
+        log_to_api(f"Starting Picard's CollectHsMetrics for {panel} coverage", "INFO", "picard_coverage", sample_id, datadir.name)
+        log_to_db(db, f"Starting Picard's CollectHsMetrics for {panel} coverage of {sample_id}", "INFO", "picard_coverage", sample_id, datadir.name)
 
-        # Ensure bait_file is a Path object
-        bait_file = Path(bait_file)
-
-        # Modify bait_file for panel if necessary
-        if is_panel:
-            bait_file = bait_file.with_suffix('.picard.bed')
+        # Use the provided bed_file
+        intervals_file = bed_file
 
         picard_cmd = (
             f"java -jar {picard} CollectHsMetrics "
-            f"BI={bait_file} "
+            f"BI={intervals_file} "
             f"I={bam_dir}/{sample_id}.bam "
             f"PER_BASE_COVERAGE={output_file} "
             f"MINIMUM_MAPPING_QUALITY=0 "
             f"MINIMUM_BASE_QUALITY=0 "
-            f"TARGET_INTERVALS={bait_file} "
+            f"TARGET_INTERVALS={intervals_file} "
             f"OUTPUT={metrics_output} "
             f"R={reference} "
             f"QUIET=true "
@@ -142,7 +140,45 @@ def get_coverage(sample_id: str, datadir: Path, reference: Path, bait_file: Path
         console.print(Syntax(picard_cmd, "bash", theme="monokai", line_numbers=True))
         log_to_db(db, f"Picard command: {picard_cmd}", "INFO", "picard_coverage", sample_id, datadir.name)
 
-        # ... (rest of the function remains the same)
+        try:
+            process = subprocess.run(
+                shlex.split(picard_cmd),
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                universal_newlines=True
+            )
+
+            for line in process.stdout.splitlines():
+                console.print(f"[dim]{line.strip()}[/dim]")
+                log_to_db(db, line.strip(), "DEBUG", "picard_coverage", sample_id, datadir.name)
+
+            if output_file.exists():
+                console.print(Panel(f"[bold green]Picard {panel} coverage file created for {sample_id}[/bold green]"))
+                log_to_api(f"Picard {panel} coverage file created", "INFO", "picard_coverage", sample_id, datadir.name)
+                log_to_db(db, f"Picard {panel} coverage file created successfully for {sample_id}", "INFO", "picard_coverage", sample_id, datadir.name)
+
+                # Log file size and resource usage
+                log_to_db(db, f"Output file size: {output_file.stat().st_size} bytes", "INFO", "picard_coverage", sample_id, datadir.name)
+                log_to_db(db, f"Peak memory usage: {psutil.Process().memory_info().rss / 1024 / 1024:.2f} MB", "INFO", "picard_coverage", sample_id, datadir.name)
+
+                return "success"
+            else:
+                raise FileNotFoundError(f"Picard CollectHsMetrics completed but output file not found for {sample_id}")
+
+        except subprocess.CalledProcessError as e:
+            error_msg = f"Picard CollectHsMetrics failed for {sample_id}. Return code: {e.returncode}"
+            console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
+            log_to_api(error_msg, "ERROR", "picard_coverage", sample_id, datadir.name)
+            log_to_db(db, f"{error_msg}\nOutput: {e.output}", "ERROR", "picard_coverage", sample_id, datadir.name)
+            return "error"
+        except Exception as e:
+            error_msg = f"Unexpected error in Picard CollectHsMetrics for {sample_id}: {str(e)}"
+            console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
+            log_to_api(error_msg, "ERROR", "picard_coverage", sample_id, datadir.name)
+            log_to_db(db, error_msg, "ERROR", "picard_coverage", sample_id, datadir.name)
+            return "error"
 
     return _get_coverage()
 
