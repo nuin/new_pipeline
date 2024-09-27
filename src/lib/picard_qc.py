@@ -26,8 +26,6 @@ console = Console()
 
 URL = "https://mutalyzer.nl/services/?wsdl"
 
-
-
 import shlex
 import subprocess
 from pathlib import Path
@@ -57,7 +55,7 @@ def get_coverage(
         if output_file.exists() and output_file.stat().st_size > 0:
             message = f"Output file already exists: {output_file}"
             console.print(Panel(f"[bold yellow]{message}[/bold yellow]"))
-            safe_log_to_db(message, "INFO", "picard_coverage")
+            log_to_db(message, "INFO", "picard_coverage")
             return "success"
 
         # Determine the correct intervals file
@@ -71,7 +69,7 @@ def get_coverage(
         if not bam_dir.exists():
             error_msg = f"BAM directory not found: {bam_dir}"
             console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
-            safe_log_to_db(error_msg, "ERROR", "picard_coverage")
+            log_to_db(error_msg, "ERROR", "picard_coverage")
             return "error"
 
         bam_file = bam_dir / f"{sample_id}.bam"
@@ -84,13 +82,13 @@ def get_coverage(
         if not intervals_file.exists():
             error_msg = f"Intervals file not found: {intervals_file}"
             console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
-            safe_log_to_db(error_msg, "ERROR", "picard_coverage")
+            log_to_db(error_msg, "ERROR", "picard_coverage")
             return "error"
 
         if not reference.exists():
             error_msg = f"Reference file not found: {reference}"
             console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
-            safe_log_to_db(error_msg, "ERROR", "picard_coverage")
+            log_to_db(error_msg, "ERROR", "picard_coverage")
             return "error"
 
         picard_cmd = (
@@ -113,7 +111,7 @@ def get_coverage(
         )
 
         console.print(Syntax(picard_cmd, "bash", theme="monokai", line_numbers=True))
-        safe_log_to_db(f"Picard command: {picard_cmd}", "INFO", "picard_coverage")
+        log_to_db(f"Picard command: {picard_cmd}", "INFO", "picard_coverage")
 
         try:
             process = subprocess.run(
@@ -141,13 +139,13 @@ def get_coverage(
             error_msg = f"Picard CollectHsMetrics failed for {sample_id}. Return code: {e.returncode}\nOutput: {e.output}"
             console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
             log_to_api(error_msg, "ERROR", "picard_coverage", sample_id, str(datadir))
-            safe_log_to_db(error_msg, "ERROR", "picard_coverage")
+            log_to_db(error_msg, "ERROR", "picard_coverage")
             return "error"
         except Exception as e:
             error_msg = f"Unexpected error in Picard CollectHsMetrics for {sample_id}: {str(e)}"
             console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
             log_to_api(error_msg, "ERROR", "picard_coverage", sample_id, str(datadir))
-            safe_log_to_db(error_msg, "ERROR", "picard_coverage")
+            log_to_db(error_msg, "ERROR", "picard_coverage")
             return "error"
 
     return _get_coverage()
@@ -228,100 +226,3 @@ def get_transcripts(transcript_location: str) -> dict:
         transcripts[temp[0]] = temp[1]
 
     return transcripts
-
-
-# def chr_frame(segment: pd.DataFrame) -> tuple:
-#     """
-#     Function that checks chromosome regions for coverage under 25X
-#
-#     :param segment: current segment being analysed
-#
-#     :type segment: pandas DataFrame
-#
-#     :return: gene, segment and chromosome if there's a region under 25x, otherwise returns 'empty', 'empty', 'empty'
-#
-#     :rtype: tuple
-#     """
-#
-#     if segment.loc[segment["coverage"].idxmin()]["coverage"] <= 100:
-#         gene = segment.iloc[0]["Gene"]
-#         chromosome = segment.iloc[0]["chrom"]
-#         return gene, segment, chromosome
-#
-#     return "empty", "empty", "empty"
-
-
-# def convert_g_to_c(chromosome, position, transcript):
-#     """
-#     Function that converts g. notation to c.
-#
-#     :param chromosome: chromosome number
-#     :param position: position to be converted
-#     :param transcript: list of transcripts
-#
-#     :type chromosome: string
-#     :type position: integer
-#     :type transcript: list
-#
-#     :return: HVGS notation of the position
-#
-#     """
-#
-#     fake_nucleotides = "A>A"
-#     connection = Client(URL, cache=None)
-#     mutalyzer = connection.service
-#     result = mutalyzer.numberConversion(
-#         build="hg19", variant=str(chromosome) + ":g." + str(position) + fake_nucleotides
-#     )[0]
-#     result_dict = {k: v for k, v in (x.split(":") for x in result)}
-#     try:
-#         return result_dict[transcript]
-#     except Exception as e:
-#         console.log(str(e))
-#         return str(result[0])
-
-
-# def create_table(under_30, chromosome, gene, trans, coverage_file):
-#     """
-#     Function that creates a text table with the locations under
-#     20x of coverage
-#
-#     :param under30: list of regions under 100x (name should be changed)
-#     :param chromosome: chromosome number
-#     :param gene: gene symbol
-#     :param trans: transcript ID
-#     :param coverage_file: location of the coverage file
-#
-#     :type under30: list
-#     :type chromosome: string
-#     :type gene: string
-#     :type transcript: string
-#     :type coverage_file: string
-#
-#     :return: not return set
-#
-#     """
-#
-#     table_output = open(
-#         os.path.dirname(coverage_file).replace("/Metrics", "")
-#         + "/QC/"
-#         + os.path.basename(coverage_file).replace(".nucl.out", "")
-#         + "_under_25.txt",
-#         "a",
-#     )
-#     for item in under_30:
-#         if len(under_30[item]) != 0:
-#             start_pos = convert_g_to_c(chromosome, under_30[item][0], trans)
-#             end_pos = convert_g_to_c(chromosome, under_30[item][-1], trans)
-#             table_output.write(
-#                 chromosome
-#                 + "\t"
-#                 + gene
-#                 + "\t"
-#                 + str(int(under_30[item][-1]) - int(under_30[item][0]))
-#                 + "\tg."
-#             )
-#             table_output.write(
-#                 str(under_30[item][0]) + "\tg." + str(under_30[item][-1]) + "\t"
-#             )
-#             table_output.write(start_pos + "\t" + end_pos + "\n")
