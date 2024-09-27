@@ -6,16 +6,14 @@
 
 """
 
+import shlex
 import subprocess
 from pathlib import Path
-from typing import Dict
-from datetime import datetime
-import psutil
-import shlex
+from typing import Union
+from tinydb import TinyDB
 
 from rich.console import Console
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeElapsedColumn
 from rich.syntax import Syntax
 
 from .log_api import log_to_api
@@ -26,11 +24,7 @@ console = Console()
 
 URL = "https://mutalyzer.nl/services/?wsdl"
 
-import shlex
-import subprocess
-from pathlib import Path
-from typing import Union
-from tinydb import TinyDB
+
 
 def get_coverage(
     sample_id: str,
@@ -55,7 +49,7 @@ def get_coverage(
         if output_file.exists() and output_file.stat().st_size > 0:
             message = f"Output file already exists: {output_file}"
             console.print(Panel(f"[bold yellow]{message}[/bold yellow]"))
-            log_to_db(message, "INFO", "picard_coverage")
+            log_to_db(db, message, "INFO", "picard_coverage", sample_id, datadir.name)
             return "success"
 
         # Determine the correct intervals file
@@ -64,32 +58,6 @@ def get_coverage(
         else:
             # For full coverage, use the bait file
             intervals_file = Path(str(bed_file).replace('.bed', '.picard.bed'))
-
-        # Check if input files exist
-        if not bam_dir.exists():
-            error_msg = f"BAM directory not found: {bam_dir}"
-            console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
-            log_to_db(error_msg, "ERROR", "picard_coverage")
-            return "error"
-
-        bam_file = bam_dir / f"{sample_id}.bam"
-        if not bam_file.exists():
-            error_msg = f"BAM file not found: {bam_file}"
-            console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
-            safe_log_to_db(error_msg, "ERROR", "picard_coverage")
-            return "error"
-
-        if not intervals_file.exists():
-            error_msg = f"Intervals file not found: {intervals_file}"
-            console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
-            log_to_db(error_msg, "ERROR", "picard_coverage")
-            return "error"
-
-        if not reference.exists():
-            error_msg = f"Reference file not found: {reference}"
-            console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
-            log_to_db(error_msg, "ERROR", "picard_coverage")
-            return "error"
 
         picard_cmd = (
             f"java -Xmx8g -jar {picard} CollectHsMetrics "
@@ -125,27 +93,29 @@ def get_coverage(
 
             for line in process.stdout.splitlines():
                 console.print(f"[dim]{line.strip()}[/dim]")
-                safe_log_to_db(line.strip(), "DEBUG", "picard_coverage")
+                log_to_db(db, line.strip(), "DEBUG", "picard_coverage", sample_id, datadir.name)
 
             if output_file.exists() and output_file.stat().st_size > 0:
                 console.print(Panel(f"[bold green]Picard {panel} coverage file created for {sample_id}[/bold green]"))
                 log_to_api(f"Picard {panel} coverage file created", "INFO", "picard_coverage", sample_id, str(datadir))
-                safe_log_to_db(f"Picard {panel} coverage file created successfully for {sample_id}", "INFO", "picard_coverage")
+                log_to_db(db, f"Picard {panel} coverage file created successfully for {sample_id}", "INFO",
+                          "picard_coverage", sample_id, datadir.name)
                 return "success"
             else:
-                raise FileNotFoundError(f"Picard CollectHsMetrics completed but output file not found or empty for {sample_id}")
+                raise FileNotFoundError(
+                    f"Picard CollectHsMetrics completed but output file not found or empty for {sample_id}")
 
         except subprocess.CalledProcessError as e:
             error_msg = f"Picard CollectHsMetrics failed for {sample_id}. Return code: {e.returncode}\nOutput: {e.output}"
             console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
             log_to_api(error_msg, "ERROR", "picard_coverage", sample_id, str(datadir))
-            log_to_db(error_msg, "ERROR", "picard_coverage")
+            log_to_db(db, error_msg, "ERROR", "picard_coverage", sample_id, datadir.name)
             return "error"
         except Exception as e:
             error_msg = f"Unexpected error in Picard CollectHsMetrics for {sample_id}: {str(e)}"
             console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
             log_to_api(error_msg, "ERROR", "picard_coverage", sample_id, str(datadir))
-            log_to_db(error_msg, "ERROR", "picard_coverage")
+            log_to_db(db, error_msg, "ERROR", "picard_coverage", sample_id, datadir.name)
             return "error"
 
     return _get_coverage()
