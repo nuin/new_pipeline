@@ -58,10 +58,9 @@ def get_coverage(
         output_suffix = ".nucl.panel.out" if is_panel else ".nucl.out"
         output_file = metrics_dir / f"{sample_id}{output_suffix}"
         metrics_output = metrics_dir / f"{sample_id}.{'panel.' if is_panel else ''}out"
-        if is_panel:
+        if panel == "full":
             intervals_file = Path(bed_file)
         else:
-            # For full coverage, use the bait file
             intervals_file = Path(str(bed_file).replace('.bed', '.picard.bed'))
 
         # Check if input files exist
