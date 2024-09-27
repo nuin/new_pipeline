@@ -89,6 +89,12 @@ def get_coverage(
             safe_log_to_db(error_msg, "ERROR", "picard_coverage")
             return "error"
 
+        if output_file.exists() and output_file.stat().st_size > 0:
+            message = f"Output file already exists: {output_file}"
+            console.print(Panel(f"[bold yellow]{message}[/bold yellow]"))
+            safe_log_to_db(message, "INFO", "picard_coverage")
+            return "success"
+
         picard_cmd = (
             f"{picard} CollectHsMetrics "
             f"BI={intervals_file} "
@@ -104,7 +110,7 @@ def get_coverage(
             f"USE_JDK_DEFLATER=true "
             f"USE_JDK_INFLATER=true "
             f"COMPRESSION_LEVEL=1 "
-            f"MAX_RECORDS_IN_RAM=2000000 "
+            f"MAX_RECORDS_IN_RAM=6000000 "
             f"VALIDATION_STRINGENCY=LENIENT"
         )
 
