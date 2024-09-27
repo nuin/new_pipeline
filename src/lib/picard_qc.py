@@ -10,20 +10,16 @@ import shlex
 import subprocess
 from pathlib import Path
 from typing import Union
-from tinydb import TinyDB
 
 from rich.console import Console
 from rich.panel import Panel
 from rich.syntax import Syntax
+from tinydb import TinyDB
 
+from .db_logger import log_to_db
 from .log_api import log_to_api
-from .db_logger import log_to_db, timer_with_db_log
 
 console = Console()
-
-
-URL = "https://mutalyzer.nl/services/?wsdl"
-
 
 
 def get_coverage(
@@ -33,10 +29,34 @@ def get_coverage(
     picard: str,
     db: Union[TinyDB, str],
     bed_file: Union[str, Path],
-    panel: str = "full"
+    panel: str = "full",
 ) -> str:
+    """
+    .. module:: picard_qc
+        :platform: Any
+        :synopsis: Module that generates nucleotide-based coverage using Picard
+
+    Function that generates nucleotide-based coverage using Picard CollectHsMetrics.
+
+    :param sample_id: Sample identifier
+    :type sample_id: str
+    :param datadir: Path to the data directory
+    :type datadir: Path
+    :param reference: Path to the reference genome
+    :type reference: Path
+    :param picard: Path to the Picard jar file
+    :type picard: str
+    :param db: Database object or connection string
+    :type db: Union[TinyDB, str]
+    :param bed_file: Path to the BED file
+    :type bed_file: Union[str, Path]
+    :param panel: Type of panel (full or panel), defaults to "full"
+    :type panel: str, optional
+    :return: Status of the Picard CollectHsMetrics command
+    :rtype: str
+    """
     def _get_coverage():
-        bam_dir = datadir / "BAM" / sample_id / "BAM"
+        bam_file = datadir / "BAM" / sample_id / "BAM" / sample_id + ".bam"
         metrics_dir = datadir / "BAM" / sample_id / "Metrics"
         metrics_dir.mkdir(parents=True, exist_ok=True)
 
@@ -57,7 +77,7 @@ def get_coverage(
             intervals_file = Path(bed_file)
         else:
             # For full coverage, use the bait file
-            intervals_file = Path(str(bed_file).replace('.bed', '.picard.bed'))
+            intervals_file = Path(str(bed_file).replace(".bed", ".picard.bed"))
 
         picard_cmd = (
             f"java -Xmx8g -jar {picard} CollectHsMetrics "
@@ -88,91 +108,67 @@ def get_coverage(
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                universal_newlines=True
+                universal_newlines=True,
             )
 
             for line in process.stdout.splitlines():
                 console.print(f"[dim]{line.strip()}[/dim]")
-                log_to_db(db, line.strip(), "DEBUG", "picard_coverage", sample_id, datadir.name)
+                log_to_db(
+                    db,
+                    line.strip(),
+                    "DEBUG",
+                    "picard_coverage",
+                    sample_id,
+                    datadir.name,
+                )
 
             if output_file.exists() and output_file.stat().st_size > 0:
-                console.print(Panel(f"[bold green]Picard {panel} coverage file created for {sample_id}[/bold green]"))
-                log_to_api(f"Picard {panel} coverage file created", "INFO", "picard_coverage", sample_id, str(datadir))
-                log_to_db(db, f"Picard {panel} coverage file created successfully for {sample_id}", "INFO",
-                          "picard_coverage", sample_id, datadir.name)
+                console.print(
+                    Panel(
+                        f"[bold green]Picard {panel} coverage file created for {sample_id}[/bold green]"
+                    )
+                )
+                log_to_api(
+                    f"Picard {panel} coverage file created",
+                    "INFO",
+                    "picard_coverage",
+                    sample_id,
+                    str(datadir),
+                )
+                log_to_db(
+                    db,
+                    f"Picard {panel} coverage file created successfully for {sample_id}",
+                    "INFO",
+                    "picard_coverage",
+                    sample_id,
+                    datadir.name,
+                )
                 return "success"
             else:
                 raise FileNotFoundError(
-                    f"Picard CollectHsMetrics completed but output file not found or empty for {sample_id}")
+                    f"Picard CollectHsMetrics completed but output file not found or empty for {sample_id}"
+                )
 
         except subprocess.CalledProcessError as e:
             error_msg = f"Picard CollectHsMetrics failed for {sample_id}. Return code: {e.returncode}\nOutput: {e.output}"
             console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
             log_to_api(error_msg, "ERROR", "picard_coverage", sample_id, str(datadir))
-            log_to_db(db, error_msg, "ERROR", "picard_coverage", sample_id, datadir.name)
+            log_to_db(
+                db, error_msg, "ERROR", "picard_coverage", sample_id, datadir.name
+            )
             return "error"
         except Exception as e:
-            error_msg = f"Unexpected error in Picard CollectHsMetrics for {sample_id}: {str(e)}"
+            error_msg = (
+                f"Unexpected error in Picard CollectHsMetrics for {sample_id}: {str(e)}"
+            )
             console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
             log_to_api(error_msg, "ERROR", "picard_coverage", sample_id, str(datadir))
-            log_to_db(db, error_msg, "ERROR", "picard_coverage", sample_id, datadir.name)
+            log_to_db(
+                db, error_msg, "ERROR", "picard_coverage", sample_id, datadir.name
+            )
             return "error"
 
     return _get_coverage()
-
-
-
-def get_coverage_parp(
-    sample_id: str, directory: str, reference: str, bait_file: str, picard: str
-) -> str:
-    """
-    Function that calls Picard to generate nucleotide coverage for PARP.
-
-    :param sample_id: ID of the patient/sample being analysed using Picard
-    :param directory: Location of the BAM files
-    :param reference: Reference genome
-    :param bait_file: Picard specific BED file
-    :param picard: Picard jar file location
-
-    :type sample_id: string
-    :type directory: string
-    :type reference: string
-    :type bait_file: string
-    :type picard: string
-
-    :return: returns 'success' if the Picard coverage file is successfully created, 'exists' if the file already exists.
-
-    :todo: return error
-    """
-
-    if os.path.isdir(directory + "/BAM/" + sample_id + "/Metrics/"):
-        argument = directory + "/BAM/" + sample_id + "/Metrics/" + sample_id
-    else:
-        argument = directory + "/BAM/" + sample_id + "/" + sample_id
-
-    if os.path.isdir(directory + "/BAM/" + sample_id + "/BAM/"):
-        argument2 = directory + "/BAM/" + sample_id + "/BAM/" + sample_id
-    else:
-        argument2 = directory + "/BAM/" + sample_id + "/" + sample_id
-
-    if os.path.isfile(argument + ".nucl.out"):
-        return "exists"
-
-    picard_string = (
-        '%s CollectHsMetrics BI="%s" I=%s.good.bam PER_BASE_COVERAGE=%s.nucl.out MINIMUM_MAPPING_QUALITY=0 MINIMUM_BASE_QUALITY=0 TARGET_INTERVALS=%s OUTPUT=%s.out R=%s QUIET=true'
-        % (picard, bait_file, argument2, argument, bait_file, argument, reference)
-    )
-    proc = subprocess.Popen(
-        picard_string, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-    while True:
-        output = proc.stderr.readline().strip()
-        if output == b"":
-            break
-        else:
-            pass
-    proc.wait()
-    return "success"
 
 
 def get_transcripts(transcript_location: str) -> dict:
