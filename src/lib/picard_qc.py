@@ -82,16 +82,24 @@ def get_picard_version(picard: str) -> str:
     return result.stdout.strip()
 
 
+from typing import Union
+from tinydb import TinyDB
+
 def get_coverage(
     sample_id: str,
     datadir: Path,
     reference: Path,
     picard: str,
-    db: Dict,
+    db: Union[TinyDB, str],
     bed_file: Path,
     panel: str = "full"
 ) -> str:
-    @timer_with_db_log(db)
+    def safe_log_to_db(message: str, level: str, program: str):
+        if isinstance(db, TinyDB):
+            log_to_db(db, message, level, program, sample_id, str(datadir))
+        else:
+            console.print(f"[yellow]Warning: DB logging unavailable. Message: {message}[/yellow]")
+
     def _get_coverage():
         bam_dir = datadir / "BAM" / sample_id / "BAM"
         metrics_dir = datadir / "BAM" / sample_id / "Metrics"
@@ -103,29 +111,26 @@ def get_coverage(
         metrics_output = metrics_dir / f"{sample_id}.{'panel.' if is_panel else ''}out"
 
         picard_version = get_picard_version(picard)
-        log_to_db(db, f"Starting Picard CollectHsMetrics for sample {sample_id} with Picard version {picard_version}", "INFO", "picard_coverage", sample_id, datadir.name)
+        safe_log_to_db(f"Starting Picard CollectHsMetrics for sample {sample_id} with Picard version {picard_version}", "INFO", "picard_coverage")
 
         if output_file.exists():
             console.print(Panel(f"[yellow]Picard coverage file already exists for {sample_id}[/yellow]"))
-            log_to_api(f"Picard {panel} coverage file exists", "INFO", "picard_coverage", sample_id, datadir.name)
-            log_to_db(db, f"Picard {panel} coverage file already exists for {sample_id}", "INFO", "picard_coverage", sample_id, datadir.name)
+            log_to_api(f"Picard {panel} coverage file exists", "INFO", "picard_coverage", sample_id, str(datadir))
+            safe_log_to_db(f"Picard {panel} coverage file already exists for {sample_id}", "INFO", "picard_coverage")
             return "exists"
 
         console.print(Panel(f"[bold blue]Starting Picard's CollectHsMetrics for {panel} coverage of {sample_id}[/bold blue]"))
-        log_to_api(f"Starting Picard's CollectHsMetrics for {panel} coverage", "INFO", "picard_coverage", sample_id, datadir.name)
-        log_to_db(db, f"Starting Picard's CollectHsMetrics for {panel} coverage of {sample_id}", "INFO", "picard_coverage", sample_id, datadir.name)
-
-        # Use the provided bed_file
-        intervals_file = bed_file
+        log_to_api(f"Starting Picard's CollectHsMetrics for {panel} coverage", "INFO", "picard_coverage", sample_id, str(datadir))
+        safe_log_to_db(f"Starting Picard's CollectHsMetrics for {panel} coverage of {sample_id}", "INFO", "picard_coverage")
 
         picard_cmd = (
             f"java -jar {picard} CollectHsMetrics "
-            f"BI={intervals_file} "
+            f"BI={bed_file} "
             f"I={bam_dir}/{sample_id}.bam "
             f"PER_BASE_COVERAGE={output_file} "
             f"MINIMUM_MAPPING_QUALITY=0 "
             f"MINIMUM_BASE_QUALITY=0 "
-            f"TARGET_INTERVALS={intervals_file} "
+            f"TARGET_INTERVALS={bed_file} "
             f"OUTPUT={metrics_output} "
             f"R={reference} "
             f"QUIET=true "
@@ -138,7 +143,7 @@ def get_coverage(
         )
 
         console.print(Syntax(picard_cmd, "bash", theme="monokai", line_numbers=True))
-        log_to_db(db, f"Picard command: {picard_cmd}", "INFO", "picard_coverage", sample_id, datadir.name)
+        safe_log_to_db(f"Picard command: {picard_cmd}", "INFO", "picard_coverage")
 
         try:
             process = subprocess.run(
@@ -152,16 +157,16 @@ def get_coverage(
 
             for line in process.stdout.splitlines():
                 console.print(f"[dim]{line.strip()}[/dim]")
-                log_to_db(db, line.strip(), "DEBUG", "picard_coverage", sample_id, datadir.name)
+                safe_log_to_db(line.strip(), "DEBUG", "picard_coverage")
 
             if output_file.exists():
                 console.print(Panel(f"[bold green]Picard {panel} coverage file created for {sample_id}[/bold green]"))
-                log_to_api(f"Picard {panel} coverage file created", "INFO", "picard_coverage", sample_id, datadir.name)
-                log_to_db(db, f"Picard {panel} coverage file created successfully for {sample_id}", "INFO", "picard_coverage", sample_id, datadir.name)
+                log_to_api(f"Picard {panel} coverage file created", "INFO", "picard_coverage", sample_id, str(datadir))
+                safe_log_to_db(f"Picard {panel} coverage file created successfully for {sample_id}", "INFO", "picard_coverage")
 
                 # Log file size and resource usage
-                log_to_db(db, f"Output file size: {output_file.stat().st_size} bytes", "INFO", "picard_coverage", sample_id, datadir.name)
-                log_to_db(db, f"Peak memory usage: {psutil.Process().memory_info().rss / 1024 / 1024:.2f} MB", "INFO", "picard_coverage", sample_id, datadir.name)
+                safe_log_to_db(f"Output file size: {output_file.stat().st_size} bytes", "INFO", "picard_coverage")
+                safe_log_to_db(f"Peak memory usage: {psutil.Process().memory_info().rss / 1024 / 1024:.2f} MB", "INFO", "picard_coverage")
 
                 return "success"
             else:
@@ -170,18 +175,17 @@ def get_coverage(
         except subprocess.CalledProcessError as e:
             error_msg = f"Picard CollectHsMetrics failed for {sample_id}. Return code: {e.returncode}"
             console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
-            log_to_api(error_msg, "ERROR", "picard_coverage", sample_id, datadir.name)
-            log_to_db(db, f"{error_msg}\nOutput: {e.output}", "ERROR", "picard_coverage", sample_id, datadir.name)
+            log_to_api(error_msg, "ERROR", "picard_coverage", sample_id, str(datadir))
+            safe_log_to_db(f"{error_msg}\nOutput: {e.output}", "ERROR", "picard_coverage")
             return "error"
         except Exception as e:
             error_msg = f"Unexpected error in Picard CollectHsMetrics for {sample_id}: {str(e)}"
             console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
-            log_to_api(error_msg, "ERROR", "picard_coverage", sample_id, datadir.name)
-            log_to_db(db, error_msg, "ERROR", "picard_coverage", sample_id, datadir.name)
+            log_to_api(error_msg, "ERROR", "picard_coverage", sample_id, str(datadir))
+            safe_log_to_db(error_msg, "ERROR", "picard_coverage")
             return "error"
 
     return _get_coverage()
-
 def get_coverage_parp(
     sample_id: str, directory: str, reference: str, bait_file: str, picard: str
 ) -> str:
