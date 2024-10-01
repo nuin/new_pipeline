@@ -16,7 +16,7 @@ from rich.syntax import Syntax
 
 from .log_api import log_to_api
 from .db_logger import log_to_db, timer_with_db_log
-
+from tinydb import TinyDB
 console = Console()
 
 from rich.text import Text
