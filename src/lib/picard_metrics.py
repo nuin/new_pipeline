@@ -85,9 +85,12 @@ def get_yield(sample_id: str, datadir: Path, picard: str, db: Dict) -> str:
 
     return _get_yield()
 
+
 def get_hs_metrics(sample_id: str, datadir: Path, reference: Path, bait_file: Path, picard: str, db: Dict, panel: str = "full") -> str:
     @timer_with_db_log(db)
     def _get_hs_metrics():
+        nonlocal bait_file  # Use the outer bait_file
+
         bam_dir = datadir / "BAM" / sample_id / "BAM"
         metrics_dir = datadir / "BAM" / sample_id / "Metrics"
 
@@ -104,7 +107,8 @@ def get_hs_metrics(sample_id: str, datadir: Path, reference: Path, bait_file: Pa
             return "exists"
 
         # Ensure bait_file is a Path object and exists
-        bait_file = Path(bait_file)
+        if not isinstance(bait_file, Path):
+            bait_file = Path(bait_file)
         if not bait_file.exists():
             error_msg = f"Bait file does not exist: {bait_file}"
             console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
@@ -132,6 +136,7 @@ def get_hs_metrics(sample_id: str, datadir: Path, reference: Path, bait_file: Pa
             return "error"
 
     return _get_hs_metrics()
+
 
 
 def get_align_summary(sample_id: str, datadir: Path, reference: Path, picard: str, db: Dict) -> str:
