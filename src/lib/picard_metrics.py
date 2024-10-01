@@ -13,6 +13,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeElapsedColumn
 from rich.syntax import Syntax
+from rich.markup import escape
 
 from .log_api import log_to_api
 from .db_logger import log_to_db, timer_with_db_log
@@ -22,6 +23,9 @@ console = Console()
 from rich.text import Text
 
 
+from rich.text import Text
+from rich.markup import escape
+
 def run_picard_command(command: str, description: str, sample_id: str, datadir: Path, db: Union[TinyDB, str]) -> int:
     if isinstance(db, str):
         db = TinyDB(db)
@@ -30,7 +34,6 @@ def run_picard_command(command: str, description: str, sample_id: str, datadir: 
     console.print(Syntax(command, "bash", theme="monokai", line_numbers=True))
 
     log_to_db(db, f"Running Picard command: {command}", "INFO", "picard_metrics", sample_id, datadir.name)
-
 
     with Progress(
         SpinnerColumn(),
@@ -47,8 +50,8 @@ def run_picard_command(command: str, description: str, sample_id: str, datadir: 
 
         for line in process.stdout:
             progress.update(task, advance=1)
-            # Use Text to escape any potential markup in the output
-            safe_line = Text(line.strip())
+            # Escape any potential markup in the output
+            safe_line = escape(line.strip())
             console.print(f"[dim]{safe_line}[/dim]")
             log_to_db(db, line.strip(), "DEBUG", "picard_metrics", sample_id, datadir.name)
 
@@ -62,7 +65,6 @@ def run_picard_command(command: str, description: str, sample_id: str, datadir: 
         return 1
 
     return 0
-
 
 def get_yield(sample_id: str, datadir: Path, picard: str, db: Dict) -> str:
     @timer_with_db_log(db)
@@ -138,11 +140,11 @@ def get_hs_metrics(sample_id: str, datadir: Path, reference: Path, bait_file: Un
 
         picard_command = (
             f"{picard} CollectHsMetrics "
-            f"I={bam_dir}/{sample_id}.bam "
-            f"O={output_file} "
-            f"R={reference} "
-            f"BAIT_INTERVALS={bait_file} "
-            f"TARGET_INTERVALS={bait_file}"
+            f"-I {bam_dir}/{sample_id}.bam "
+            f"-O {output_file} "
+            f"-R {reference} "
+            f"-BAIT_INTERVALS {bait_file} "
+            f"-TARGET_INTERVALS {bait_file}"
         )
 
         result = run_picard_command(picard_command, f"Generating Picard CollectHsMetrics {panel} for {sample_id}", sample_id, datadir, db)
