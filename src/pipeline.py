@@ -256,7 +256,7 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
 
         @timer_with_db_log(sample_db)
         def run_picard_coverage():
-            return get_coverage(sample, datadir, reference, picard, sample_db, bait_file)
+            return get_coverage(sample, datadir, reference, picard, sample_db, bait_file, panel)
 
         @timer_with_db_log(sample_db)
         def run_picard_coverage_panel():
