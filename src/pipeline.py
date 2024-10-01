@@ -308,10 +308,8 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         to_return[sample]["bcftools_ann"] = run_bcftools_ann()
         to_return[sample]["vep_annotation"] = run_vep_annotation()
         to_return[sample]["picard_coverage"] = run_picard_coverage()
-        to_return[sample]["picard_coverage_panel"] = run_picard_coverage_panel()
-        
-        # ^^^^^^^ done
-        
+        # to_return[sample]["picard_coverage_panel"] = run_picard_coverage_panel()
+
         to_return[sample]["picard_yield"] = run_picard_yield()
         to_return[sample]["picard_hs_metrics"] = run_picard_hs_metrics()
         to_return[sample]["picard_hs_metrics_panel"] = run_picard_hs_metrics_panel()

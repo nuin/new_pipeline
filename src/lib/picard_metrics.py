@@ -93,6 +93,7 @@ def get_hs_metrics(sample_id: str, datadir: Path, reference: Path, bait_file: Pa
 
         if panel == "full":
             output_file = metrics_dir / f"{sample_id}.hs_metrics.out"
+            # Keep the original bait_file for full panel
         else:
             output_file = metrics_dir / f"{sample_id}.hs_metrics.panel.out"
             bait_file = bait_file.with_suffix('.picard.bed')
@@ -123,6 +124,7 @@ def get_hs_metrics(sample_id: str, datadir: Path, reference: Path, bait_file: Pa
             return "error"
 
     return _get_hs_metrics()
+
 
 def get_align_summary(sample_id: str, datadir: Path, reference: Path, picard: str, db: Dict) -> str:
     @timer_with_db_log(db)
