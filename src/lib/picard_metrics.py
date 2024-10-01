@@ -85,6 +85,7 @@ def get_yield(sample_id: str, datadir: Path, picard: str, db: Dict) -> str:
 
     return _get_yield()
 
+
 def get_hs_metrics(sample_id: str, datadir: Path, reference: Path, bait_file: Path, picard: str, db: Dict, panel: str = "full") -> str:
     @timer_with_db_log(db)
     def _get_hs_metrics():
@@ -93,7 +94,6 @@ def get_hs_metrics(sample_id: str, datadir: Path, reference: Path, bait_file: Pa
 
         if panel == "full":
             output_file = metrics_dir / f"{sample_id}.hs_metrics.out"
-            # Keep the original bait_file for full panel
         else:
             output_file = metrics_dir / f"{sample_id}.hs_metrics.panel.out"
             bait_file = bait_file.with_suffix('.picard.bed')
@@ -103,6 +103,15 @@ def get_hs_metrics(sample_id: str, datadir: Path, reference: Path, bait_file: Pa
             log_to_api(f"Picard CollectHsMetrics {panel} file exists", "INFO", "picard_metrics", sample_id, datadir.name)
             log_to_db(db, f"Picard CollectHsMetrics {panel} file exists for {sample_id}", "INFO", "picard_metrics", sample_id, datadir.name)
             return "exists"
+
+        # Ensure bait_file is a Path object and exists
+        bait_file = Path(bait_file)
+        if not bait_file.exists():
+            error_msg = f"Bait file does not exist: {bait_file}"
+            console.print(Panel(f"[bold red]{error_msg}[/bold red]"))
+            log_to_api(error_msg, "ERROR", "picard_metrics", sample_id, datadir.name)
+            log_to_db(db, error_msg, "ERROR", "picard_metrics", sample_id, datadir.name)
+            return "error"
 
         picard_command = (
             f"{picard} CollectHsMetrics "
