@@ -200,6 +200,7 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
     gff_file = env["GFF"] 
     vep = env["VEP"]
     transcripts = env["TRANSCRIPTS"]
+    datadir = Path(datadir)
 
     for pos, sample in enumerate(samples):
         console.print(Panel(f"[bold blue]Processing {sample} :: {pos + 1} of {len(samples)}[/bold blue]"))
@@ -267,15 +268,15 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
 
         @timer_with_db_log(sample_db)
         def run_picard_hs_metrics():
-            return get_hs_metrics(sample, datadir, reference, bait_file, picard)
+            return get_hs_metrics(sample, datadir, reference, bait_file, picard, sample_db)
 
         @timer_with_db_log(sample_db)
         def run_picard_hs_metrics_panel():
-            return get_hs_metrics(sample, datadir, reference, bed_file[sample], picard, "panel")
+            return get_hs_metrics(sample, datadir, reference, bed_file[sample], sample_db, picard, "panel")
 
         @timer_with_db_log(sample_db)
         def run_picard_align_metrics():
-            return get_align_summary(sample, datadir, reference, picard)
+            return get_align_summary(sample, datadir, reference, picard, sample_db)
 
         @timer_with_db_log(sample_db)
         def run_mpileup_ident():
