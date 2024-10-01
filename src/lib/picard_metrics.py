@@ -21,11 +21,16 @@ console = Console()
 
 from rich.text import Text
 
-def run_picard_command(command: str, description: str, sample_id: str, datadir: Path, db: Dict) -> int:
+
+def run_picard_command(command: str, description: str, sample_id: str, datadir: Path, db: Union[TinyDB, str]) -> int:
+    if isinstance(db, str):
+        db = TinyDB(db)
+
     console.print(Panel(f"[bold blue]{description}[/bold blue]"))
     console.print(Syntax(command, "bash", theme="monokai", line_numbers=True))
 
     log_to_db(db, f"Running Picard command: {command}", "INFO", "picard_metrics", sample_id, datadir.name)
+
 
     with Progress(
         SpinnerColumn(),
@@ -91,20 +96,25 @@ def get_yield(sample_id: str, datadir: Path, picard: str, db: Dict) -> str:
     return _get_yield()
 
 
-def get_hs_metrics(sample_id: str, datadir: Path, reference: Path, bait_file: Union[str, Path], picard: str, db: Dict, panel: str = "full") -> str:
+from typing import Union
+from tinydb import TinyDB
+from pathlib import Path
+
+def get_hs_metrics(sample_id: str, datadir: Path, reference: Path, bait_file: Union[str, Path], picard: str, db: Union[TinyDB, str], panel: str = "full") -> str:
     @timer_with_db_log(db)
     def _get_hs_metrics():
-        nonlocal bait_file  # Use the outer bait_file
-
-        bam_dir = datadir / "BAM" / sample_id / "BAM"
-        metrics_dir = datadir / "BAM" / sample_id / "Metrics"
+        nonlocal bait_file, db  # Use the outer bait_file and db
 
         # Convert bait_file to Path if it's a string
         if isinstance(bait_file, str):
             bait_file = Path(bait_file)
 
+        # If db is a string, create a TinyDB instance
         if isinstance(db, str):
             db = TinyDB(db)
+
+        bam_dir = datadir / "BAM" / sample_id / "BAM"
+        metrics_dir = datadir / "BAM" / sample_id / "Metrics"
 
         if panel == "full":
             output_file = metrics_dir / f"{sample_id}.hs_metrics.out"
