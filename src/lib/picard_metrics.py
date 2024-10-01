@@ -19,6 +19,8 @@ from .db_logger import log_to_db, timer_with_db_log
 
 console = Console()
 
+from rich.text import Text
+
 def run_picard_command(command: str, description: str, sample_id: str, datadir: Path, db: Dict) -> int:
     console.print(Panel(f"[bold blue]{description}[/bold blue]"))
     console.print(Syntax(command, "bash", theme="monokai", line_numbers=True))
@@ -40,7 +42,9 @@ def run_picard_command(command: str, description: str, sample_id: str, datadir: 
 
         for line in process.stdout:
             progress.update(task, advance=1)
-            console.print(f"[dim]{line.strip()}[/dim]")
+            # Use Text to escape any potential markup in the output
+            safe_line = Text(line.strip())
+            console.print(f"[dim]{safe_line}[/dim]")
             log_to_db(db, line.strip(), "DEBUG", "picard_metrics", sample_id, datadir.name)
 
     process.wait()
@@ -53,6 +57,7 @@ def run_picard_command(command: str, description: str, sample_id: str, datadir: 
         return 1
 
     return 0
+
 
 def get_yield(sample_id: str, datadir: Path, picard: str, db: Dict) -> str:
     @timer_with_db_log(db)
