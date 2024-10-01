@@ -272,7 +272,7 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
 
         @timer_with_db_log(sample_db)
         def run_picard_hs_metrics_panel():
-            return get_hs_metrics(sample, datadir, reference, bed_file[sample], sample_db, picard, "panel")
+            return get_hs_metrics(sample, datadir, reference, bed_file[sample], picard, sample_db, "panel")
 
         @timer_with_db_log(sample_db)
         def run_picard_align_metrics():

@@ -8,26 +8,26 @@ from pathlib import Path
 from tinydb import TinyDB
 
 
-def log_to_db(
-    db: TinyDB, message: str, level: str, program: str, sample_id: str, run_id: str
-):
+def log_to_db(db: Union[TinyDB, str], message: str, level: str, program: str, sample_id: str, run_id: str):
     """
-    Logs a message to a database.
-    :param db:
-    :param message:
-    :param level:
-    :param program:
-    :param sample_id:
-    :param run_id:
-    :return:
+    :param db: The database instance (TinyDB) or file path (str) where the log entry will be stored.
+    :param message: The message to be logged.
+    :param level: The severity level of the log message.
+    :param program: The name of the program generating the log message.
+    :param sample_id: The sample identifier related to the log entry.
+    :param run_id: The run identifier for tracking the log entry.
+    :return: None
     """
+    if isinstance(db, str):
+        db = TinyDB(db)
+
     log_entry = {
         "timestamp": datetime.now().isoformat(),
         "message": message,
         "level": level,
         "program": program,
         "sample_id": sample_id,
-        "run_id": run_id,
+        "run_id": run_id
     }
     db.insert(log_entry)
 

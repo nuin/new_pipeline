@@ -103,6 +103,9 @@ def get_hs_metrics(sample_id: str, datadir: Path, reference: Path, bait_file: Un
         if isinstance(bait_file, str):
             bait_file = Path(bait_file)
 
+        if isinstance(db, str):
+            db = TinyDB(db)
+
         if panel == "full":
             output_file = metrics_dir / f"{sample_id}.hs_metrics.out"
         else:
