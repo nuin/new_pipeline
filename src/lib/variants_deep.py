@@ -2,7 +2,6 @@ import logging
 import shlex
 import subprocess
 import threading
-import time
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional, Union
@@ -10,8 +9,6 @@ from typing import Dict, Optional, Union
 import psutil
 from rich.console import Console
 from rich.panel import Panel
-from rich.progress import (BarColumn, Progress, SpinnerColumn, TextColumn,
-                           TimeElapsedColumn)
 from rich.syntax import Syntax
 
 from .db_logger import log_to_db, timer_with_db_log

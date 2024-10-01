@@ -7,7 +7,7 @@
 
 import subprocess
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Union
 
 from rich.console import Console
 from rich.panel import Panel
