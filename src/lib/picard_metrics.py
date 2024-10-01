@@ -85,7 +85,6 @@ def get_yield(sample_id: str, datadir: Path, picard: str, db: Dict) -> str:
 
     return _get_yield()
 
-
 def get_hs_metrics(sample_id: str, datadir: Path, reference: Path, bait_file: Path, picard: str, db: Dict, panel: str = "full") -> str:
     @timer_with_db_log(db)
     def _get_hs_metrics():
@@ -166,6 +165,7 @@ def get_align_summary(sample_id: str, datadir: Path, reference: Path, picard: st
             return "error"
 
     return _get_align_summary()
+
 
 def get_call_metrics(sample_id: str, datadir: Path, vcf_file: Path, picard: str, db: Dict) -> str:
     @timer_with_db_log(db)
