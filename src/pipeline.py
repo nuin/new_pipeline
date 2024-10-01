@@ -179,6 +179,7 @@ def process_dir(config: Path, datadir: Path, samples: List[str], panel: str, ful
 
     return True
 
+
 def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, full_analysis: bool, db: TinyDB) -> Dict[str, Dict[str, bool]]:
     to_return = defaultdict(dict)
     env = dotenv_values(Path.cwd() / ".env")
@@ -262,7 +263,7 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
 
         @timer_with_db_log(sample_db)
         def run_picard_yield():
-            return get_yield(sample, datadir, picard)
+            return get_yield(sample, datadir, picard, sample_db)
 
         @timer_with_db_log(sample_db)
         def run_picard_hs_metrics():
@@ -307,6 +308,9 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         to_return[sample]["vep_annotation"] = run_vep_annotation()
         to_return[sample]["picard_coverage"] = run_picard_coverage()
         to_return[sample]["picard_coverage_panel"] = run_picard_coverage_panel()
+        
+        # ^^^^^^^ done
+        
         to_return[sample]["picard_yield"] = run_picard_yield()
         to_return[sample]["picard_hs_metrics"] = run_picard_hs_metrics()
         to_return[sample]["picard_hs_metrics_panel"] = run_picard_hs_metrics_panel()
