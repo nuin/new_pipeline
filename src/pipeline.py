@@ -7,7 +7,6 @@
 
 """
 
-import os
 from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -18,7 +17,7 @@ import yaml
 from dotenv import dotenv_values
 from rich.console import Console
 from rich.panel import Panel
-from tinydb import TinyDB, Query
+from tinydb import TinyDB
 
 from lib.bwa_align import run_bwa
 from lib.cnv import cnv_calculation, compile_samples
@@ -61,7 +60,6 @@ def get_db(datadir: Path) -> TinyDB:
     return TinyDB(db_path)
 
 
-def log_to_db(db: TinyDB, message: str, level: str, program: str, sample_id: str, run_id: str):
 def log_to_db(db: TinyDB, message: str, level: str, program: str, sample_id: str, run_id: str):
     """
     Log a message to the database.
