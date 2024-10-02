@@ -11,12 +11,16 @@ from rich.console import Console
 from rich.progress import Progress
 from typing import Dict
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from .log_api import log_to_api
-from .db_logger import log_to_db, timer_with_db_log
+from .db_logger import log_to_db
 from clickhouse_driver import Client
 from dotenv import load_dotenv
 import os
 from datetime import datetime
+
+import click
+from pathlib import Path
+from .db_logger import get_sample_db
+
 
 console = Console()
 
@@ -118,8 +122,8 @@ def extract_counts(datadir: Path, full_BED: Path, sample_id: str, db: Dict) -> N
         console.log(f"CNV file already exists for {sample_id}")
         log_to_db(db, f"CNV file already exists for {sample_id}", "INFO", "count2", sample_id, datadir.name)
 
+
 def save_to_clickhouse(cnv_file: Path, sample_id: str, run_id: str) -> None:
-    """Save CNV data to ClickHouse database."""
     client = get_clickhouse_client()
 
     # Create table if not exists
@@ -148,11 +152,36 @@ def save_to_clickhouse(cnv_file: Path, sample_id: str, run_id: str) -> None:
 
     console.log(f"Data for {sample_id} saved to ClickHouse")
 
-if __name__ == "__main__":
-    # Example usage
-    datadir = Path("/path/to/data")
-    full_BED = Path(f"{BED_FILES}/your_bed_file.bed")
-    sample_id = "SAMPLE001"
-    db = {}  # Initialize your database connection here
+@click.command()
+@click.option('-d', '--datadir', type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path), required=True, help="Path to the data directory")
+@click.option('-b', '--bed', type=str, required=True, help="Name of the BED file to use")
+@click.option('-s', '--sample', type=str, required=True, help="Sample ID")
+@click.option('-l', '--log', type=click.Path(dir_okay=False, path_type=Path), default='count2_log.json', help="Path to the log file (default: count2_log.json)")
+def main(datadir: Path, bed: str, sample: str, log: Path):
+    """Extract read counts for genomic regions."""
+    # Load environment variables
+    load_dotenv()
 
-    extract_counts(datadir, full_BED, sample_id, db)
+    # Set up paths and database
+    bed_files_dir = os.getenv('BED_FILES')
+    if not bed_files_dir:
+        raise click.ClickException("BED_FILES environment variable is not set")
+    full_BED = Path(bed_files_dir) / bed
+
+    # Validate inputs
+    if not full_BED.exists():
+        raise click.FileError(str(full_BED), hint="BED file not found")
+
+    # Set up logging
+    db = get_sample_db(datadir, sample)
+
+    try:
+        click.echo(f"Processing sample {sample} with BED file {full_BED}")
+        extract_counts(datadir, full_BED, sample, db)
+        click.echo(f"Processing completed for sample {sample}")
+    except Exception as e:
+        click.echo(f"An error occurred while processing sample {sample}: {str(e)}", err=True)
+        raise click.Abort()
+
+if __name__ == "__main__":
+    main()
