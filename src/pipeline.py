@@ -309,11 +309,12 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         to_return[sample]["vep_annotation"] = run_vep_annotation()
         to_return[sample]["picard_coverage"] = run_picard_coverage()
         # to_return[sample]["picard_coverage_panel"] = run_picard_coverage_panel()
-
         to_return[sample]["picard_yield"] = run_picard_yield()
         to_return[sample]["picard_hs_metrics"] = run_picard_hs_metrics()
         to_return[sample]["picard_hs_metrics_panel"] = run_picard_hs_metrics_panel()
         to_return[sample]["picard_align_metrics"] = run_picard_align_metrics()
+
+
         to_return[sample]["mpileup_ident"] = run_mpileup_ident()
         to_return[sample]["identity_table"] = run_identity_table()
         to_return[sample]["full_identity"] = run_full_identity()
