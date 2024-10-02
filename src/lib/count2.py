@@ -18,7 +18,6 @@ from datetime import datetime
 
 import click
 from pathlib import Path
-from .db_logger import
 
 
 import sys
