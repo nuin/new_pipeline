@@ -288,7 +288,7 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
 
         @timer_with_db_log(sample_db)
         def run_full_identity():
-            return barcoding(sample, datadir)
+            return barcoding(sample, datadir, sample_db)
 
         @timer_with_db_log(sample_db)
         def run_extract_counts():
