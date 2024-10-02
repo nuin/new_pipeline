@@ -26,7 +26,20 @@ load_dotenv()
 # Access environment variables
 SAMTOOLS = os.getenv('SAMTOOLS')
 BED_FILES = os.getenv('BED_FILES')
-DB = os.getenv('DB')  # Assuming this is the ClickHouse DB address
+DB_HOST = os.getenv('DB_HOST')
+DB_PORT = int(os.getenv('DB_PORT', 9000))
+DB_USER = os.getenv('DB_USER')
+DB_PASSWORD = os.getenv('DB_PASSWORD')
+DB_NAME = os.getenv('DB_NAME')
+
+def get_clickhouse_client():
+    return Client(
+        host=DB_HOST,
+        port=DB_PORT,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME
+    )
 
 def process_bed_region(samfile, region: Dict[str, str]) -> Dict[str, str]:
     """Process a single BED region and return the count."""
@@ -108,7 +121,7 @@ def extract_counts(datadir: Path, full_BED: Path, sample_id: str, db: Dict) -> N
 
 def save_to_clickhouse(cnv_file: Path, sample_id: str, run_id: str) -> None:
     """Save CNV data to ClickHouse database."""
-    client = Client(host=DB)
+    client = get_clickhouse_client()
 
     # Create table if not exists
     client.execute('''
