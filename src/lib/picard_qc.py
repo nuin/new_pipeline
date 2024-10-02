@@ -12,8 +12,13 @@ from typing import Dict
 
 from rich.console import Console
 from rich.panel import Panel
-from rich.progress import (BarColumn, Progress, SpinnerColumn, TextColumn,
-                           TimeElapsedColumn)
+from rich.progress import (
+    BarColumn,
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    TimeElapsedColumn,
+)
 from rich.syntax import Syntax
 
 from .db_logger import log_to_db, timer_with_db_log
@@ -25,6 +30,28 @@ console = Console()
 def run_picard_command(
     command: str, description: str, sample_id: str, datadir: Path, db: Dict
 ) -> int:
+    """
+    Runs a Picard command using subprocess, logs its output, and
+    returns its return code.
+
+    Parameters
+    ----------
+    command : str
+        The command to run as a string
+    description : str
+        A description of the command to display in the console
+    sample_id : str
+        The sample ID of the sample this command is being run for
+    datadir : Path
+        The directory where the data is stored
+    db : Dict
+        A dictionary containing the database configuration
+
+    Returns
+    -------
+    int
+        The return code of the command
+    """
     console.print(Panel(f"[bold blue]{description}[/bold blue]"))
     console.print(Syntax(command, "bash", theme="monokai", line_numbers=True))
 
@@ -84,6 +111,32 @@ def get_coverage(
     bait_file: Path,
     panel: str = "full",
 ) -> str:
+    """
+    Generates nucleotide-based coverage metrics for a given sample using Picard.
+
+    Parameters
+    ----------
+    sample_id : str
+        The sample ID of the sample to generate coverage metrics for
+    datadir : Path
+        The directory where the data is stored
+    reference : Path
+        The path to the reference genome
+    picard : str
+        The path to the Picard executable
+    db : Dict
+        A dictionary containing the database configuration
+    bait_file : Path
+        The path to the bait file
+    panel : str
+        The panel of genes to generate coverage metrics for, defaults to "full"
+
+    Returns
+    -------
+    str
+        The status of the coverage metrics generation, will be one of "exists", "success", or "error"
+    """
+
     @timer_with_db_log(db)
     def _get_coverage():
         bam_dir = datadir / "BAM" / sample_id / "BAM"
@@ -168,22 +221,25 @@ def get_coverage(
     return _get_coverage()
 
 
-# Other functions in picard_qc.py should be updated similarly
-
-
 def get_transcripts(transcript_location: str) -> dict:
     """
-    Function that gets the currently used transcripts for HGVS numberConversion
+    Reads a transcript file from a given location and returns a dictionary
+    mapping transcript IDs to their corresponding transcript names.
 
-    :param transcript_location: Location of the transcript file
+    The file should contain two columns, the first being the transcript ID and
+    the second being the transcript name. The two columns should be separated by
+    a tab character.
 
-    :type transcript_location: string
+    Parameters
+    ----------
+    transcript_location : str
+        The location of the transcript file.
 
-    :return: Dictionary of transcripts
-
-    :rtype: dict
+    Returns
+    -------
+    dict
+        A dictionary mapping transcript IDs to their corresponding transcript names.
     """
-
     transcript_file = open(transcript_location).read().splitlines()
 
     transcripts = {}

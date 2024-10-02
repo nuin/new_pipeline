@@ -12,8 +12,13 @@ from typing import Dict, Union
 from rich.console import Console
 from rich.markup import escape
 from rich.panel import Panel
-from rich.progress import (BarColumn, Progress, SpinnerColumn, TextColumn,
-                           TimeElapsedColumn)
+from rich.progress import (
+    BarColumn,
+    Progress,
+    SpinnerColumn,
+    TextColumn,
+    TimeElapsedColumn,
+)
 from rich.syntax import Syntax
 from tinydb import TinyDB
 
@@ -113,6 +118,7 @@ def get_yield(sample_id: str, datadir: Path, picard: str, db: Dict) -> str:
     Returns:
         A string indicating whether the command was successful ("success"), an error occurred ("error"), or the file already exists ("exists").
     """
+
     @timer_with_db_log(db)
     def _get_yield():
         bam_dir = datadir / "BAM" / sample_id / "BAM"
@@ -193,6 +199,22 @@ def get_hs_metrics(
     db: Union[TinyDB, str],
     panel: str = "full",
 ) -> str:
+    """
+    Generate Picard CollectHsMetrics output for a given sample ID.
+
+    Args:
+    sample_id (str): The sample ID to generate the metrics for.
+    datadir (Path): The base directory containing the sample's data.
+    reference (Path): The path to the reference genome.
+    bait_file (Union[str, Path]): The path to the bait file.
+    picard (str): The path to the Picard jar file.
+    db (Union[TinyDB, str]): The database to store the results in.
+    panel (str): The panel to generate the metrics for. Defaults to "full".
+
+    Returns:
+    str: "exists" if the file already exists, "success" if the file was generated, or "error" if an error occurred.
+    """
+
     @timer_with_db_log(db)
     def _get_hs_metrics():
         nonlocal bait_file, db  # Use the outer bait_file and db
@@ -293,6 +315,14 @@ def get_hs_metrics(
 def get_align_summary(
     sample_id: str, datadir: Path, reference: Path, picard: str, db: Dict
 ) -> str:
+    """
+    Runs Picard's CollectAlignmentSummaryMetrics on a BAM file.
+
+    If the output file already exists, logs a message and returns "exists".
+    Otherwise, runs the command and logs a message with the result.
+    Returns "success" or "error" depending on the result of the command.
+    """
+
     @timer_with_db_log(db)
     def _get_align_summary():
         bam_dir = datadir / "BAM" / sample_id / "BAM"
@@ -368,6 +398,34 @@ def get_align_summary(
 def get_call_metrics(
     sample_id: str, datadir: Path, vcf_file: Path, picard: str, db: Dict
 ) -> str:
+    """
+    Run Picard CollectVariantCallingMetrics.
+
+    This function runs the Picard CollectVariantCallingMetrics command to generate
+    a variant calling metrics file for the given sample. If the file already exists,
+    it will log a message and exit with "exists". If the command runs successfully,
+    it will log a success message and return "success". If the command fails, it will
+    log an error message and return "error".
+
+    Parameters
+    ----------
+    sample_id : str
+        The sample ID.
+    datadir : Path
+        The root directory for the pipeline output.
+    vcf_file : Path
+        The path to the DBSNP VCF file.
+    picard : str
+        The path to the Picard jar file.
+    db : Dict
+        The database connection object.
+
+    Returns
+    -------
+    str
+        The result of running the command. Either "exists", "success", or "error".
+    """
+
     @timer_with_db_log(db)
     def _get_call_metrics():
         metrics_dir = datadir / "BAM" / sample_id / "Metrics"
