@@ -51,7 +51,6 @@ def process_bed_region(samfile, region: Dict[str, str]) -> Dict[str, str]:
         ))
     }
 
-@timer_with_db_log
 def extract_counts(datadir: Path, full_BED: Path, sample_id: str, db: Dict) -> None:
     """
     Function that reads the BAM file and extracts the read count for each window
