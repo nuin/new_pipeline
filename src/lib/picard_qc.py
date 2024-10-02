@@ -6,41 +6,57 @@
 
 """
 
-from rich.console import Console
-
+import subprocess
 from pathlib import Path
 from typing import Dict
+
 from rich.console import Console
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeElapsedColumn
+from rich.progress import (BarColumn, Progress, SpinnerColumn, TextColumn,
+                           TimeElapsedColumn)
 from rich.syntax import Syntax
-import subprocess
 
-from .log_api import log_to_api
 from .db_logger import log_to_db, timer_with_db_log
+from .log_api import log_to_api
 
 console = Console()
 
 
-def run_picard_command(command: str, description: str, sample_id: str, datadir: Path, db: Dict) -> int:
+def run_picard_command(
+    command: str, description: str, sample_id: str, datadir: Path, db: Dict
+) -> int:
     console.print(Panel(f"[bold blue]{description}[/bold blue]"))
     console.print(Syntax(command, "bash", theme="monokai", line_numbers=True))
 
-    log_to_db(db, f"Running Picard command: {command}", "INFO", "picard_qc", sample_id, datadir.name)
+    log_to_db(
+        db,
+        f"Running Picard command: {command}",
+        "INFO",
+        "picard_qc",
+        sample_id,
+        datadir.name,
+    )
 
     with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            BarColumn(),
-            TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
-            TimeElapsedColumn(),
-            console=console,
-            transient=True
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        BarColumn(),
+        TextColumn("[progress.percentage]{task.percentage:>3.0f}%"),
+        TimeElapsedColumn(),
+        console=console,
+        transient=True,
     ) as progress:
         task = progress.add_task(description, total=None)
 
-        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
-                                   bufsize=1, universal_newlines=True)
+        process = subprocess.Popen(
+            command,
+            shell=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+            universal_newlines=True,
+        )
 
         for line in process.stdout:
             progress.update(task, advance=1)
@@ -59,8 +75,15 @@ def run_picard_command(command: str, description: str, sample_id: str, datadir: 
     return 0
 
 
-def get_coverage(sample_id: str, datadir: Path, reference: Path, picard: str, db: Dict, bait_file: Path,
-                 panel: str = "full") -> str:
+def get_coverage(
+    sample_id: str,
+    datadir: Path,
+    reference: Path,
+    picard: str,
+    db: Dict,
+    bait_file: Path,
+    panel: str = "full",
+) -> str:
     @timer_with_db_log(db)
     def _get_coverage():
         bam_dir = datadir / "BAM" / sample_id / "BAM"
@@ -73,9 +96,26 @@ def get_coverage(sample_id: str, datadir: Path, reference: Path, picard: str, db
             output_file = metrics_dir / f"{sample_id}.coverage.panel.out"
 
         if output_file.exists():
-            console.print(Panel(f"[yellow]Picard coverage file already exists for {sample_id}[/yellow]"))
-            log_to_api("Picard coverage file exists", "INFO", "picard_qc", sample_id, datadir.name)
-            log_to_db(db, f"Picard coverage file exists for {sample_id}", "INFO", "picard_qc", sample_id, datadir.name)
+            console.print(
+                Panel(
+                    f"[yellow]Picard coverage file already exists for {sample_id}[/yellow]"
+                )
+            )
+            log_to_api(
+                "Picard coverage file exists",
+                "INFO",
+                "picard_qc",
+                sample_id,
+                datadir.name,
+            )
+            log_to_db(
+                db,
+                f"Picard coverage file exists for {sample_id}",
+                "INFO",
+                "picard_qc",
+                sample_id,
+                datadir.name,
+            )
             return "exists"
 
         picard_command = (
@@ -88,13 +128,35 @@ def get_coverage(sample_id: str, datadir: Path, reference: Path, picard: str, db
             f"INCLUDE_BQ_HISTOGRAM=true"
         )
 
-        result = run_picard_command(picard_command, f"Generating Picard coverage metrics for {sample_id}", sample_id,
-                                    datadir, db)
+        result = run_picard_command(
+            picard_command,
+            f"Generating Picard coverage metrics for {sample_id}",
+            sample_id,
+            datadir,
+            db,
+        )
 
         if result == 0:
-            console.print(Panel(f"[bold green]Picard coverage file created for {sample_id}[/bold green]"))
-            log_to_api("Picard coverage file created", "INFO", "picard_qc", sample_id, datadir.name)
-            log_to_db(db, f"Picard coverage file created for {sample_id}", "INFO", "picard_qc", sample_id, datadir.name)
+            console.print(
+                Panel(
+                    f"[bold green]Picard coverage file created for {sample_id}[/bold green]"
+                )
+            )
+            log_to_api(
+                "Picard coverage file created",
+                "INFO",
+                "picard_qc",
+                sample_id,
+                datadir.name,
+            )
+            log_to_db(
+                db,
+                f"Picard coverage file created for {sample_id}",
+                "INFO",
+                "picard_qc",
+                sample_id,
+                datadir.name,
+            )
             return "success"
         else:
             error_msg = f"Failed to generate Picard coverage file for {sample_id}"
