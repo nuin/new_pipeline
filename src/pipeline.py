@@ -18,20 +18,14 @@ import yaml
 from dotenv import dotenv_values
 from rich.console import Console
 from rich.panel import Panel
-from rich.progress import Progress, SpinnerColumn, BarColumn, TextColumn, TimeElapsedColumn
-from rich.syntax import Syntax
-from rich.table import Table
 from tinydb import TinyDB, Query
 
 from lib.bwa_align import run_bwa
-from lib import recalibration
 from lib.cnv import cnv_calculation, compile_samples
 from lib.count2 import extract_counts
-from lib.dup_indels import remove_duplicates
 from lib.enrichment import get_enrichment
 from lib.extract_identity import create_identity_table, mpileup
 from lib.GATK_vcf import vcf_comparison
-from lib.log_api import log_to_api
 from lib.picard_metrics import get_align_summary, get_hs_metrics, get_yield
 from lib.picard_qc import get_coverage
 from lib.process_identity import barcoding, compile_barcodes
@@ -45,7 +39,6 @@ from lib.variants_GATK3 import haplotype_caller as haplotype_caller3
 from lib.variants_octopus import octopus_caller
 # from lib.variants_deep import deepvariant_caller
 from lib.db_logger import get_sample_db, log_to_db, timer_with_db_log
-from lib.utils import move_bam
 from lib.bcftools_ann import annotate_merged
 
 
@@ -55,11 +48,41 @@ VERSION = VERSIONFILE.read_text().strip()
 
 console = Console()
 
+
 def get_db(datadir: Path) -> TinyDB:
+def get_db(datadir: Path) -> TinyDB:
+    """
+    Return a TinyDB instance for datadir.
+
+    The database is stored in a file named <datadir.name>_pipeline_logs.json.
+    """
+    db_path = datadir / f"{datadir.name}_pipeline_logs.json"
+    return TinyDB(db_path)
     db_path = datadir / f"{datadir.name}_pipeline_logs.json"
     return TinyDB(db_path)
 
+
 def log_to_db(db: TinyDB, message: str, level: str, program: str, sample_id: str, run_id: str):
+def log_to_db(db: TinyDB, message: str, level: str, program: str, sample_id: str, run_id: str):
+    """
+    Log a message to the database.
+
+    The message is stored in a document with the following fields:
+
+    - timestamp: the current time, in ISO format
+    - message: the message to log
+    - level: the logging level (e.g. "INFO", "WARNING", etc.)
+    - program: the name of the program that logged the message
+    - sample_id: the sample ID, if applicable
+    - run_id: the run ID, if applicable
+
+    :param db: the database to log to
+    :param message: the message to log
+    :param level: the logging level
+    :param program: the name of the program that logged the message
+    :param sample_id: the sample ID, if applicable
+    :param run_id: the run ID, if applicable
+    """
     log_entry = {
         "timestamp": datetime.now().isoformat(),
         "message": message,
@@ -69,6 +92,7 @@ def log_to_db(db: TinyDB, message: str, level: str, program: str, sample_id: str
         "run_id": run_id
     }
     db.insert(log_entry)
+
 
 def split_string(ctx: object, param: object, value: Optional[str]) -> List[str]:
     if value is None:
@@ -293,9 +317,9 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         @timer_with_db_log(sample_db)
         def run_extract_counts():
             if panel == "Cplus":
-                return extract_counts(datadir, "/apps/data/src/BED/new/C+_ALL_IDPE_01JUN2021_Window.bed", sample)
+                return extract_counts(datadir, "/apps/data/src/BED/new/C+_ALL_IDPE_01JUN2021_Window.bed", sample, sample_db)
             else:
-                return extract_counts(datadir, "/apps/data/src/BED/new/CardiacALL_29MAR2021_Window.bed", sample)
+                return extract_counts(datadir, "/apps/data/src/BED/new/CardiacALL_29MAR2021_Window.bed", sample, sample_db)
 
         to_return[sample]["gatk_caller"] = run_haplotype_caller()
         to_return[sample]["gatk_caller3"] = run_haplotype_caller3()
@@ -318,6 +342,7 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         to_return[sample]["mpileup_ident"] = run_mpileup_ident()
         to_return[sample]["identity_table"] = run_identity_table()
         to_return[sample]["full_identity"] = run_full_identity()
+
         to_return[sample]["cnv"] = run_extract_counts()
 
         console.print(Panel(f"[bold green]Processing {sample} completed[/bold green]"))
