@@ -280,7 +280,7 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
 
         @timer_with_db_log(sample_db)
         def run_mpileup_ident():
-            return mpileup(sample, datadir, "/apps/data/src/bundle/identity.txt", samtools, sample_db)
+            return mpileup(sample, datadir, Path("/apps/data/src/bundle/identity.txt"), samtools, sample_db)
 
         @timer_with_db_log(sample_db)
         def run_identity_table():
