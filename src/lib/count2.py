@@ -11,7 +11,6 @@ from rich.console import Console
 from rich.progress import Progress
 from typing import Dict
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from .db_logger import log_to_db
 from clickhouse_driver import Client
 from dotenv import load_dotenv
 import os
@@ -19,7 +18,15 @@ from datetime import datetime
 
 import click
 from pathlib import Path
-from .db_logger import get_sample_db
+from .db_logger import
+
+
+import sys
+
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+
+from lib.db_logger import log_to_db, get_sample_db
+
 
 
 console = Console()
