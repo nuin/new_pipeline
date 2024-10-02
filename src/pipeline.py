@@ -50,7 +50,6 @@ console = Console()
 
 
 def get_db(datadir: Path) -> TinyDB:
-def get_db(datadir: Path) -> TinyDB:
     """
     Return a TinyDB instance for datadir.
 
