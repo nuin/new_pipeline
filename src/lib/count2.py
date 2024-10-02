@@ -11,56 +11,39 @@ from rich.console import Console
 from rich.progress import Progress
 from typing import Dict
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from clickhouse_driver import Client
-from dotenv import load_dotenv
 import os
-from datetime import datetime
+from dotenv import load_dotenv
 
-import click
-from pathlib import Path
-
-
-import sys
-
-sys.path.append(str(Path(__file__).resolve().parent.parent))
-
-from lib.db_logger import log_to_db, get_sample_db
-
-
+# Conditional imports
+if __name__ == "__main__":
+    import sys
+    sys.path.append(str(Path(__file__).resolve().parent.parent))
+    from lib.log_api import log_to_api
+    from lib.db_logger import log_to_db, timer_with_db_log, get_sample_db
+    import click
+else:
+    from .log_api import log_to_api
+    from .db_logger import log_to_db, timer_with_db_log, get_sample_db
 
 console = Console()
 
 # Load environment variables
 load_dotenv()
 
-# Access environment variables
-SAMTOOLS = os.getenv('SAMTOOLS')
-BED_FILES = os.getenv('BED_FILES')
-DB_HOST = os.getenv('DB_HOST')
-DB_PORT = int(os.getenv('DB_PORT', 9000))
-DB_USER = os.getenv('DB_USER')
-DB_PASSWORD = os.getenv('DB_PASSWORD')
-DB_NAME = os.getenv('DB_NAME')
-
-def get_clickhouse_client():
-    return Client(
-        host=DB_HOST,
-        port=DB_PORT,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        database=DB_NAME
-    )
-
 def process_bed_region(samfile, region: Dict[str, str]) -> Dict[str, str]:
     """Process a single BED region and return the count."""
-    return {
-        region['name']: str(samfile.count(
+    try:
+        count = samfile.count(
             reference=region['chrom'],
             start=int(region['start']),
             end=int(region['end'])
-        ))
-    }
+        )
+        return {region['name']: str(count)}
+    except Exception as e:
+        console.log(f"Error processing region {region['name']}: {str(e)}")
+        return {region['name']: "ERROR"}
 
+@timer_with_db_log
 def extract_counts(datadir: Path, full_BED: Path, sample_id: str, db: Dict) -> None:
     """
     Function that reads the BAM file and extracts the read count for each window
@@ -118,9 +101,6 @@ def extract_counts(datadir: Path, full_BED: Path, sample_id: str, db: Dict) -> N
             console.log(f"BAM file analyzed, CNV file created for {sample_id}")
             log_to_db(db, f"BAM file analyzed, CNV file created for {sample_id}", "INFO", "count2", sample_id, datadir.name)
 
-            # Save data to ClickHouse
-            save_to_clickhouse(cnv_file, sample_id, datadir.name)
-
         except Exception as e:
             console.log(f"Error: {str(e)}")
             log_to_db(db, f"Error: {str(e)}", "ERROR", "count2", sample_id, datadir.name)
@@ -128,66 +108,34 @@ def extract_counts(datadir: Path, full_BED: Path, sample_id: str, db: Dict) -> N
         console.log(f"CNV file already exists for {sample_id}")
         log_to_db(db, f"CNV file already exists for {sample_id}", "INFO", "count2", sample_id, datadir.name)
 
-
-def save_to_clickhouse(cnv_file: Path, sample_id: str, run_id: str) -> None:
-    client = get_clickhouse_client()
-
-    # Create table if not exists
-    client.execute('''
-        CREATE TABLE IF NOT EXISTS cnv_data (
-            sample_id String,
-            run_id String,
-            gene String,
-            location String,
-            count UInt32,
-            timestamp DateTime
-        ) ENGINE = MergeTree()
-        ORDER BY (sample_id, run_id, gene)
-    ''')
-
-    # Read CNV file and insert data
-    with open(cnv_file, 'r') as f:
-        next(f)  # Skip header
-        for line in f:
-            location, count = line.strip().split('\t')
-            gene = location.split(':')[0]  # Assuming gene is the first part of the location
-            client.execute(
-                'INSERT INTO cnv_data (sample_id, run_id, gene, location, count, timestamp) VALUES',
-                [(sample_id, run_id, gene, location, int(count), datetime.now())]
-            )
-
-    console.log(f"Data for {sample_id} saved to ClickHouse")
-
-@click.command()
-@click.option('-d', '--datadir', type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path), required=True, help="Path to the data directory")
-@click.option('-b', '--bed', type=str, required=True, help="Name of the BED file to use")
-@click.option('-s', '--sample', type=str, required=True, help="Sample ID")
-@click.option('-l', '--log', type=click.Path(dir_okay=False, path_type=Path), default='count2_log.json', help="Path to the log file (default: count2_log.json)")
-def main(datadir: Path, bed: str, sample: str, log: Path):
-    """Extract read counts for genomic regions."""
-    # Load environment variables
-    load_dotenv()
-
-    # Set up paths and database
-    bed_files_dir = os.getenv('BED_FILES')
-    if not bed_files_dir:
-        raise click.ClickException("BED_FILES environment variable is not set")
-    full_BED = Path(bed_files_dir) / bed
-
-    # Validate inputs
-    if not full_BED.exists():
-        raise click.FileError(str(full_BED), hint="BED file not found")
-
-    # Set up logging
-    db = get_sample_db(datadir, sample)
-
-    try:
-        click.echo(f"Processing sample {sample} with BED file {full_BED}")
-        extract_counts(datadir, full_BED, sample, db)
-        click.echo(f"Processing completed for sample {sample}")
-    except Exception as e:
-        click.echo(f"An error occurred while processing sample {sample}: {str(e)}", err=True)
-        raise click.Abort()
-
 if __name__ == "__main__":
+    import click
+
+    @click.command()
+    @click.option('-d', '--datadir', type=click.Path(exists=True, file_okay=False, dir_okay=True, path_type=Path), required=True, help="Path to the data directory")
+    @click.option('-b', '--bed', type=str, required=True, help="Name of the BED file to use")
+    @click.option('-s', '--sample', type=str, required=True, help="Sample ID")
+    def main(datadir: Path, bed: str, sample: str):
+        """Extract read counts for genomic regions."""
+        # Set up paths and database
+        bed_files_dir = os.getenv('BED_FILES')
+        if not bed_files_dir:
+            raise click.ClickException("BED_FILES environment variable is not set")
+        full_BED = Path(bed_files_dir) / bed
+
+        # Validate inputs
+        if not full_BED.exists():
+            raise click.FileError(str(full_BED), hint="BED file not found")
+
+        # Set up logging
+        db = get_sample_db(datadir, sample)
+
+        try:
+            click.echo(f"Processing sample {sample} with BED file {full_BED}")
+            extract_counts(datadir, full_BED, sample, db)
+            click.echo(f"Processing completed for sample {sample}")
+        except Exception as e:
+            click.echo(f"An error occurred while processing sample {sample}: {str(e)}", err=True)
+            raise click.Abort()
+
     main()
