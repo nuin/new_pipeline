@@ -18,8 +18,7 @@ from dotenv import load_dotenv
 if __name__ == "__main__":
     import sys
     sys.path.append(str(Path(__file__).resolve().parent.parent))
-    from lib.log_api import log_to_api
-    from lib.db_logger import log_to_db, timer_with_db_log, get_sample_db
+    from lib.db_logger import log_to_db, get_sample_db
     import click
 else:
     from .log_api import log_to_api
@@ -43,7 +42,6 @@ def process_bed_region(samfile, region: Dict[str, str]) -> Dict[str, str]:
         console.log(f"Error processing region {region['name']}: {str(e)}")
         return {region['name']: "ERROR"}
 
-@timer_with_db_log
 def extract_counts(datadir: Path, full_BED: Path, sample_id: str, db: Dict) -> None:
     """
     Function that reads the BAM file and extracts the read count for each window
@@ -107,6 +105,7 @@ def extract_counts(datadir: Path, full_BED: Path, sample_id: str, db: Dict) -> N
     else:
         console.log(f"CNV file already exists for {sample_id}")
         log_to_db(db, f"CNV file already exists for {sample_id}", "INFO", "count2", sample_id, datadir.name)
+
 
 if __name__ == "__main__":
     import click
