@@ -314,9 +314,9 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         @timer_with_db_log(sample_db)
         def run_extract_counts():
             if panel == "Cplus":
-                return extract_counts(datadir, "/apps/data/src/BED/new/C+_ALL_IDPE_01JUN2021_Window.bed", sample)
+                return extract_counts(datadir, "/apps/data/src/BED/new/C+_ALL_IDPE_01JUN2021_Window.bed", sample, sample_db)
             else:
-                return extract_counts(datadir, "/apps/data/src/BED/new/CardiacALL_29MAR2021_Window.bed", sample)
+                return extract_counts(datadir, "/apps/data/src/BED/new/CardiacALL_29MAR2021_Window.bed", sample, sample_db)
 
         to_return[sample]["gatk_caller"] = run_haplotype_caller()
         to_return[sample]["gatk_caller3"] = run_haplotype_caller3()

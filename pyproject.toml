@@ -23,6 +23,7 @@ requests = "^2.31.0"
 
 tinydb = "^4.8.0"
 psutil = "^6.0.0"
+clickhouse-driver = "^0.2.9"
 [tool.poetry.group.dev.dependencies]
 flake8 = "^6.0.0"
 isort = "^5.12.0"
