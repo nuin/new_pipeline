@@ -29,6 +29,7 @@ from lib.picard_metrics import get_align_summary, get_hs_metrics, get_yield
 from lib.picard_qc import get_coverage
 from lib.process_identity import barcoding, compile_barcodes
 from lib.recalibration import recalibration_pipeline
+
 # from lib.snpEff_ann import annotate_merged
 from lib.uniformity import get_coverage_values
 from lib.utils import compile_identity
@@ -36,6 +37,7 @@ from lib.variants_freebayes import freebayes_caller, process_freebayes_vcf
 from lib.variants_GATK import haplotype_caller
 from lib.variants_GATK3 import haplotype_caller as haplotype_caller3
 from lib.variants_octopus import octopus_caller
+
 # from lib.variants_deep import deepvariant_caller
 from lib.db_logger import get_sample_db, log_to_db, timer_with_db_log
 from lib.bcftools_ann import annotate_merged
@@ -50,9 +52,17 @@ console = Console()
 
 def get_db(datadir: Path) -> TinyDB:
     """
-    Return a TinyDB instance for datadir.
+    Return a TinyDB object for storing logs in a JSON file.
 
-    The database is stored in a file named <datadir.name>_pipeline_logs.json.
+    Parameters
+    ----------
+    datadir : Path
+        The directory where the JSON file will be stored.
+
+    Returns
+    -------
+    db : TinyDB
+        A TinyDB object pointing to the JSON log file.
     """
     db_path = datadir / f"{datadir.name}_pipeline_logs.json"
     return TinyDB(db_path)
@@ -60,44 +70,74 @@ def get_db(datadir: Path) -> TinyDB:
     return TinyDB(db_path)
 
 
-def log_to_db(db: TinyDB, message: str, level: str, program: str, sample_id: str, run_id: str):
-    """
-    Log a message to the database.
-
-    The message is stored in a document with the following fields:
-
-    - timestamp: the current time, in ISO format
-    - message: the message to log
-    - level: the logging level (e.g. "INFO", "WARNING", etc.)
-    - program: the name of the program that logged the message
-    - sample_id: the sample ID, if applicable
-    - run_id: the run ID, if applicable
-
-    :param db: the database to log to
-    :param message: the message to log
-    :param level: the logging level
-    :param program: the name of the program that logged the message
-    :param sample_id: the sample ID, if applicable
-    :param run_id: the run ID, if applicable
-    """
-    log_entry = {
-        "timestamp": datetime.now().isoformat(),
-        "message": message,
-        "level": level,
-        "program": program,
-        "sample_id": sample_id,
-        "run_id": run_id
-    }
-    db.insert(log_entry)
+# def log_to_db(
+#     db: TinyDB, message: str, level: str, program: str, sample_id: str, run_id: str
+# ):
+#     """
+#     Log a message to the database.
+#
+#     The message is stored in a document with the following fields:
+#
+#     - timestamp: the current time, in ISO format
+#     - message: the message to log
+#     - level: the logging level (e.g. "INFO", "WARNING", etc.)
+#     - program: the name of the program that logged the message
+#     - sample_id: the sample ID, if applicable
+#     - run_id: the run ID, if applicable
+#
+#     :param db: the database to log to
+#     :param message: the message to log
+#     :param level: the logging level
+#     :param program: the name of the program that logged the message
+#     :param sample_id: the sample ID, if applicable
+#     :param run_id: the run ID, if applicable
+#     """
+#     log_entry = {
+#         "timestamp": datetime.now().isoformat(),
+#         "message": message,
+#         "level": level,
+#         "program": program,
+#         "sample_id": sample_id,
+#         "run_id": run_id,
+#     }
+#     db.insert(log_entry)
 
 
 def split_string(ctx: object, param: object, value: Optional[str]) -> List[str]:
+    """
+    Split a comma-separated string into a list of strings.
+
+    If the value is None, return an empty list. Otherwise, split the string
+    on the comma character and strip any leading or trailing whitespace
+    from the resulting strings.
+
+    :param ctx: the Click context object
+    :param param: the parameter being processed
+    :param value: the value of the parameter, as a string
+    :return: a list of strings
+    """
     if value is None:
         return []
     else:
         return [item.strip() for item in value.split(",")]
 
-def find_fastq(datadir: Path, panel_samples: List[str], panel: str, db: TinyDB) -> List[Path]:
+
+def find_fastq(
+    datadir: Path, panel_samples: List[str], panel: str, db: TinyDB
+) -> List[Path]:
+    """
+    Find the FASTQ files in a directory.
+
+    Walk the directory looking for any files with the .fastq.gz extension.
+    For each file found, log a message to the database with an INFO level
+    and print the same message to the console.
+
+    :param datadir: the directory to search
+    :param panel_samples: a list of sample IDs in the panel
+    :param panel: the panel name
+    :param db: the database to log to
+    :return: a list of Paths, one for each FASTQ file found
+    """
     fastqs = sorted(datadir.glob("*.fastq.gz"))
     for fastq in fastqs:
         message = f"Found {fastq}"
@@ -105,13 +145,37 @@ def find_fastq(datadir: Path, panel_samples: List[str], panel: str, db: TinyDB) 
         log_to_db(db, message, "INFO", "pipeline", "NA", datadir.name)
     return fastqs
 
+
 def get_ids(fastqs: List[Path]) -> List[str]:
     sample_ids = []
     for fastq in fastqs:
         sample_ids.append(Path(fastq).name.split("_")[0])
     return sorted(set(sample_ids))
 
-def create_directories(datadir: Path, sample_ids: List[str], panel: str, db: TinyDB) -> None:
+
+def create_directories(
+    datadir: Path, sample_ids: List[str], panel: str, db: TinyDB
+) -> None:
+    """
+    Create the directories needed for the pipeline.
+
+    This function will create the following directories:
+
+    - {panel}/BAM
+    - {panel}/BAM/{sample}
+    - {panel}/BAM/{sample}/{sub_dir}
+
+    for each sample in the panel, and for each of the subdirectories
+    listed in the `sub_dir` parameter.
+
+    If the {panel}/BAM directory already exists, a message will be
+    printed to the console and logged to the database indicating this.
+
+    :param datadir: the directory where the panel is located
+    :param sample_ids: a list of sample IDs in the panel
+    :param panel: the name of the panel
+    :param db: the database to log to
+    """
     try:
         (datadir / "BAM").mkdir(exist_ok=True)
     except FileExistsError:
@@ -119,8 +183,17 @@ def create_directories(datadir: Path, sample_ids: List[str], panel: str, db: Tin
         console.print(Panel(f"[yellow]{message}[/yellow]"))
         log_to_db(db, message, "INFO", "pipeline", "NA", datadir.name)
 
-    console.print(Panel(f"[bold blue]Creating directories in {panel} directory[/bold blue]"))
-    log_to_db(db, f"Creating directories in {panel} directory", "INFO", "pipeline", "NA", datadir.name)
+    console.print(
+        Panel(f"[bold blue]Creating directories in {panel} directory[/bold blue]")
+    )
+    log_to_db(
+        db,
+        f"Creating directories in {panel} directory",
+        "INFO",
+        "pipeline",
+        "NA",
+        datadir.name,
+    )
 
     for sample in sample_ids:
         console.print(f"[cyan]Processing {sample}[/cyan]")
@@ -136,7 +209,24 @@ def create_directories(datadir: Path, sample_ids: List[str], panel: str, db: Tin
     console.print(Panel("[bold green]Directories created/existed[/bold green]"))
     log_to_db(db, "Directories created/existed", "INFO", "pipeline", "NA", datadir.name)
 
-def align_files(config: Path, datadir: Path, samples: List[str], fastqs: List[Path], db: TinyDB) -> bool:
+
+def align_files(
+    config: Path, datadir: Path, samples: List[str], fastqs: List[Path], db: TinyDB
+) -> bool:
+    """
+    Aligns all the fastq files in the panel to the reference genome.
+
+    This function will take all the fastq files in the panel and align them to the
+    reference genome using BWA. The output of the alignment will be stored in the
+    `BAM` directory of the panel.
+
+    :param config: the path to the configuration YAML file
+    :param datadir: the path to the panel directory
+    :param samples: a list of sample IDs in the panel
+    :param fastqs: a list of Path objects pointing to the fastq files
+    :param db: the database to log to
+    :return: a boolean indicating whether the alignment was successful
+    """
     env = dotenv_values(Path.cwd() / ".env")
     configuration = yaml.safe_load(config.read_text())
     bwa = env["BWA"]
@@ -152,14 +242,38 @@ def align_files(config: Path, datadir: Path, samples: List[str], fastqs: List[Pa
 
         fastq_files = [fastq for fastq in fastqs if sample in fastq.name]
         console.print(Panel(f"[bold blue]Aligning sample {sample}[/bold blue]"))
-        log_to_db(db, f"Aligning sample {sample}", "INFO", "pipeline", sample, datadir.name)
+        log_to_db(
+            db, f"Aligning sample {sample}", "INFO", "pipeline", sample, datadir.name
+        )
 
         sample_db = TinyDB(datadir / "BAM" / sample / f"{sample}_pipeline_logs.json")
         run_bwa(sample, fastq_files, datadir, reference, bwa, samtools, sample_db)
 
     return True
 
-def process_dir(config: Path, datadir: Path, samples: List[str], panel: str, full_analysis: bool, db: TinyDB) -> Dict[str, Dict[str, bool]]:
+
+def process_dir(
+    config: Path,
+    datadir: Path,
+    samples: List[str],
+    panel: str,
+    full_analysis: bool,
+    db: TinyDB,
+) -> Dict[str, Dict[str, bool]]:
+    """
+    The main function to process a directory of FASTQ files.
+
+    Args:
+    - config (Path): the path to the configuration YAML file
+    - datadir (Path): the path to the panel directory
+    - samples (List[str]): a list of sample IDs in the panel. If empty, all samples will be processed
+    - panel (str): the name of the panel
+    - full_analysis (bool): whether to run a full analysis or just alignment
+    - db (TinyDB): the database to log to
+
+    Returns:
+    - Dict[str, Dict[str, bool]]: a dictionary with one key per sample, each with a dictionary of the steps completed
+    """
     env = dotenv_values(Path.cwd() / ".env")
     configuration = yaml.safe_load(config.read_text())
 
@@ -192,7 +306,9 @@ def process_dir(config: Path, datadir: Path, samples: List[str], panel: str, ful
     log_to_db(db, f"Using SAMTOOLS: {samtools}", "INFO", "pipeline", "NA", datadir.name)
 
     console.print(Panel(f"[cyan]Using reference: {reference}[/cyan]"))
-    log_to_db(db, f"Using reference: {reference}", "INFO", "pipeline", "NA", datadir.name)
+    log_to_db(
+        db, f"Using reference: {reference}", "INFO", "pipeline", "NA", datadir.name
+    )
 
     create_directories(datadir, sample_ids, panel, db)
     align_files(config, datadir, sample_ids, fastqs, db)
@@ -201,7 +317,42 @@ def process_dir(config: Path, datadir: Path, samples: List[str], panel: str, ful
     return True
 
 
-def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, full_analysis: bool, db: TinyDB) -> Dict[str, Dict[str, bool]]:
+def analyse_pairs(
+    config: Path,
+    datadir: Path,
+    samples: List[str],
+    panel: str,
+    full_analysis: bool,
+    db: TinyDB,
+) -> Dict[str, Dict[str, bool]]:
+    """
+    Analyse pairs of fastq files.
+
+    This function takes a list of fastq files and analyses each pair, running
+    recalibration, haplotype caller, freebayes caller and octopus caller.
+    It will also run picard coverage, picard yield, picard hs metrics and mpileup
+    identification. It will also create an identity table and run the full
+    identity pipeline.
+
+    Parameters
+    ----------
+    config : Path
+        The path to the YAML configuration file.
+    datadir : Path
+        The path to the directory containing the fastq files.
+    samples : List[str]
+        A list of sample names.
+    panel : str
+        The panel name.
+    full_analysis : bool
+        Whether to run the full analysis or not.
+
+    Returns
+    -------
+    Dict[str, Dict[str, bool]]
+        A dictionary of sample names to dictionaries of tool names to boolean
+        statuses.
+    """
     to_return = defaultdict(dict)
     env = dotenv_values(Path.cwd() / ".env")
     configuration = yaml.safe_load(config.read_text())
@@ -211,44 +362,79 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
     gatk = env["GATK"]
     gatk3 = env["GATK3"]
     freebayes = env["FREEBAYES"]
-    snpEff = env["SNPEFF"]
+    # snpEff = env["SNPEFF"]
     octopus = env["OCTOPUS"]
     bcftools = env["BCFTOOLS"]
     reference = Path(configuration["Reference"])
     vcf_file = configuration["VCF"]
     bed_file = configuration["BED"]
     bait_file = configuration["BAIT"]
-    gff_file = env["GFF"] 
+    gff_file = env["GFF"]
     vep = env["VEP"]
     transcripts = env["TRANSCRIPTS"]
     datadir = Path(datadir)
 
     for pos, sample in enumerate(samples):
-        console.print(Panel(f"[bold blue]Processing {sample} :: {pos + 1} of {len(samples)}[/bold blue]"))
-        log_to_db(db, f"Processing {sample} :: {pos + 1} of {len(samples)}", "INFO", "pipeline", sample, datadir.name)
+        console.print(
+            Panel(
+                f"[bold blue]Processing {sample} :: {pos + 1} of {len(samples)}[/bold blue]"
+            )
+        )
+        log_to_db(
+            db,
+            f"Processing {sample} :: {pos + 1} of {len(samples)}",
+            "INFO",
+            "pipeline",
+            sample,
+            datadir.name,
+        )
 
         sample_db = get_sample_db(datadir, sample)
 
         @timer_with_db_log(sample_db)
         def run_recalibration():
-            return recalibration_pipeline(datadir, sample, bed_file[sample], vcf_file, reference, gatk, samtools, sample_db)
+            return recalibration_pipeline(
+                datadir,
+                sample,
+                bed_file[sample],
+                vcf_file,
+                reference,
+                gatk,
+                samtools,
+                sample_db,
+            )
 
         recalibration_result = run_recalibration()
         if recalibration_result["status"] != 0:
-            console.print(Panel(f"[bold red]Recalibration failed for sample {sample}[/bold red]"))
-            log_to_db(db, f"Recalibration failed for sample {sample}", "ERROR", "pipeline", sample, datadir.name)
+            console.print(
+                Panel(f"[bold red]Recalibration failed for sample {sample}[/bold red]")
+            )
+            log_to_db(
+                db,
+                f"Recalibration failed for sample {sample}",
+                "ERROR",
+                "pipeline",
+                sample,
+                datadir.name,
+            )
             continue
 
         @timer_with_db_log(sample_db)
         def run_haplotype_caller():
-            return haplotype_caller(datadir, sample, reference, bed_file[sample], gatk, sample_db)
+            return haplotype_caller(
+                datadir, sample, reference, bed_file[sample], gatk, sample_db
+            )
 
         @timer_with_db_log(sample_db)
         def run_haplotype_caller3():
-            return haplotype_caller3(datadir, sample, reference, bed_file[sample], gatk3, sample_db)
+            return haplotype_caller3(
+                datadir, sample, reference, bed_file[sample], gatk3, sample_db
+            )
 
         def run_freebayes_caller():
-            return freebayes_caller(datadir, sample, reference, bed_file[sample], freebayes, sample_db)
+            return freebayes_caller(
+                datadir, sample, reference, bed_file[sample], freebayes, sample_db
+            )
 
         @timer_with_db_log(sample_db)
         def run_process_freebayes_vcf():
@@ -256,7 +442,9 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
 
         @timer_with_db_log(sample_db)
         def run_octopus_caller():
-            return octopus_caller(datadir, sample, reference, bed_file[sample], octopus, sample_db)
+            return octopus_caller(
+                datadir, sample, reference, bed_file[sample], octopus, sample_db
+            )
 
         # @timer_with_db_log(sample_db)
         # def run_deepvariant_caller():
@@ -268,20 +456,33 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
 
         @timer_with_db_log(sample_db)
         def run_bcftools_ann():
-            return annotate_merged(sample, datadir, bcftools, reference, gff_file, sample_db)
-       
+            return annotate_merged(
+                sample, datadir, bcftools, reference, gff_file, sample_db
+            )
+
         @timer_with_db_log(sample_db)
         def run_vep_annotation():
             from lib.vep_ann import vep_annotate  # Import with alias
+
             return vep_annotate(sample, datadir, vep, reference, sample_db, transcripts)
 
         @timer_with_db_log(sample_db)
         def run_picard_coverage():
-            return get_coverage(sample, datadir, reference, picard, sample_db, bait_file, panel)
+            return get_coverage(
+                sample, datadir, reference, picard, sample_db, bait_file, panel
+            )
 
         @timer_with_db_log(sample_db)
         def run_picard_coverage_panel():
-            return get_coverage(sample, datadir, reference, picard, sample_db, bed_file[sample], panel="panel")
+            return get_coverage(
+                sample,
+                datadir,
+                reference,
+                picard,
+                sample_db,
+                bed_file[sample],
+                panel="panel",
+            )
 
         @timer_with_db_log(sample_db)
         def run_picard_yield():
@@ -289,11 +490,15 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
 
         @timer_with_db_log(sample_db)
         def run_picard_hs_metrics():
-            return get_hs_metrics(sample, datadir, reference, bait_file, picard, sample_db)
+            return get_hs_metrics(
+                sample, datadir, reference, bait_file, picard, sample_db
+            )
 
         @timer_with_db_log(sample_db)
         def run_picard_hs_metrics_panel():
-            return get_hs_metrics(sample, datadir, reference, bed_file[sample], picard, sample_db, "panel")
+            return get_hs_metrics(
+                sample, datadir, reference, bed_file[sample], picard, sample_db, "panel"
+            )
 
         @timer_with_db_log(sample_db)
         def run_picard_align_metrics():
@@ -301,7 +506,13 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
 
         @timer_with_db_log(sample_db)
         def run_mpileup_ident():
-            return mpileup(sample, datadir, Path("/apps/data/src/bundle/identity.txt"), samtools, sample_db)
+            return mpileup(
+                sample,
+                datadir,
+                Path("/apps/data/src/bundle/identity.txt"),
+                samtools,
+                sample_db,
+            )
 
         @timer_with_db_log(sample_db)
         def run_identity_table():
@@ -314,9 +525,19 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         @timer_with_db_log(sample_db)
         def run_extract_counts():
             if panel == "Cplus":
-                return extract_counts(datadir, "/apps/data/src/BED/new/C+_ALL_IDPE_01JUN2021_Window.bed", sample, sample_db)
+                return extract_counts(
+                    datadir,
+                    "/apps/data/src/BED/new/C+_ALL_IDPE_01JUN2021_Window.bed",
+                    sample,
+                    sample_db,
+                )
             else:
-                return extract_counts(datadir, "/apps/data/src/BED/new/CardiacALL_29MAR2021_Window.bed", sample, sample_db)
+                return extract_counts(
+                    datadir,
+                    "/apps/data/src/BED/new/CardiacALL_29MAR2021_Window.bed",
+                    sample,
+                    sample_db,
+                )
 
         to_return[sample]["gatk_caller"] = run_haplotype_caller()
         to_return[sample]["gatk_caller3"] = run_haplotype_caller3()
@@ -334,8 +555,6 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         to_return[sample]["picard_hs_metrics"] = run_picard_hs_metrics()
         to_return[sample]["picard_hs_metrics_panel"] = run_picard_hs_metrics_panel()
         to_return[sample]["picard_align_metrics"] = run_picard_align_metrics()
-
-
         to_return[sample]["mpileup_ident"] = run_mpileup_ident()
         to_return[sample]["identity_table"] = run_identity_table()
         to_return[sample]["full_identity"] = run_full_identity()
@@ -343,7 +562,14 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         to_return[sample]["cnv"] = run_extract_counts()
 
         console.print(Panel(f"[bold green]Processing {sample} completed[/bold green]"))
-        log_to_db(db, f"Processing {sample} completed", "INFO", "pipeline", sample, datadir.name)
+        log_to_db(
+            db,
+            f"Processing {sample} completed",
+            "INFO",
+            "pipeline",
+            sample,
+            datadir.name,
+        )
 
     console.print(Panel("[bold blue]Calculating uniformity[/bold blue]"))
     log_to_db(db, "Calculating uniformity", "INFO", "pipeline", "NA", datadir.name)
@@ -358,33 +584,114 @@ def analyse_pairs(config: Path, datadir: Path, samples: List[str], panel: str, f
         console.print(Panel("[bold blue]Compiling identity file[/bold blue]"))
         log_to_db(db, "Compiling identity file", "INFO", "pipeline", "NA", datadir.name)
         if not (datadir / "identity.txt").exists():
-            console.print(Panel("[yellow]Identity file does not exist, creating it[/yellow]"))
-            log_to_db(db, "Identity file does not exist, creating it", "INFO", "pipeline", "NA", datadir.name)
+            console.print(
+                Panel("[yellow]Identity file does not exist, creating it[/yellow]")
+            )
+            log_to_db(
+                db,
+                "Identity file does not exist, creating it",
+                "INFO",
+                "pipeline",
+                "NA",
+                datadir.name,
+            )
             compile_identity(datadir)
         else:
             console.print(Panel("[green]Identity file exists[/green]"))
-            log_to_db(db, "Identity file exists", "INFO", "pipeline", "NA", datadir.name)
+            log_to_db(
+                db, "Identity file exists", "INFO", "pipeline", "NA", datadir.name
+            )
 
         console.print(Panel("[bold blue]Compiling barcodes[/bold blue]"))
         log_to_db(db, "Compiling barcodes", "INFO", "pipeline", "NA", datadir.name)
         compile_barcodes(datadir)
 
-        console.print(Panel("[bold blue]Calculating and saving CNV read normalization[/bold blue]"))
-        log_to_db(db, "Calculating and saving CNV read normalization", "INFO", "pipeline", "NA", datadir.name)
+        console.print(
+            Panel(
+                "[bold blue]Calculating and saving CNV read normalization[/bold blue]"
+            )
+        )
+        log_to_db(
+            db,
+            "Calculating and saving CNV read normalization",
+            "INFO",
+            "pipeline",
+            "NA",
+            datadir.name,
+        )
         all_cnvs = compile_samples(datadir)
         cnv_calculation(datadir, all_cnvs, config)
     else:
-        console.print(Panel("[yellow]Full analysis not requested, skipping additional steps[/yellow]"))
-        log_to_db(db, "Full analysis not requested, skipping additional steps", "INFO", "pipeline", "NA", datadir.name)
+        console.print(
+            Panel(
+                "[yellow]Full analysis not requested, skipping additional steps[/yellow]"
+            )
+        )
+        log_to_db(
+            db,
+            "Full analysis not requested, skipping additional steps",
+            "INFO",
+            "pipeline",
+            "NA",
+            datadir.name,
+        )
 
     return to_return
 
-def generate_analysis(config: Path, datadir: Path, samples: List[str], panel: str, full_analysis: bool, db: TinyDB) -> Dict[str, Dict[str, bool]]:
-    console.print(Panel("[bold blue]Starting analysis and qc report generation[/bold blue]"))
-    log_to_db(db, "Starting analysis and qc report generation", "INFO", "pipeline", "NA", datadir.name)
+
+def generate_analysis(
+    config: Path,
+    datadir: Path,
+    samples: List[str],
+    panel: str,
+    full_analysis: bool,
+    db: TinyDB,
+) -> Dict[str, Dict[str, bool]]:
+    """
+    Starts the analysis and QC report generation pipeline.
+
+    This function is the main entry point for the pipeline. It takes the
+    following parameters:
+
+    - `config`: The path to the configuration file
+    - `datadir`: The path to the directory containing the run data
+    - `samples`: The list of samples to process (if empty, all samples in the run will be processed)
+    - `panel`: The panel name
+    - `full_analysis`: Whether to perform a full analysis (i.e. include CNV read normalization)
+    - `db`: The TinyDB database to log to
+
+    It returns a dictionary with the following structure:
+
+    - The keys are the sample names
+    - The values are dictionaries with the following keys:
+        - `qc`: Whether the sample passed the QC
+        - `analysis`: Whether the sample was successfully analysed
+
+    :param config: The path to the configuration file
+    :param datadir: The path to the directory containing the run data
+    :param samples: The list of samples to process (if empty, all samples in the run will be processed)
+    :param panel: The panel name
+    :param full_analysis: Whether to perform a full analysis (i.e. include CNV read normalization)
+    :param db: The TinyDB database to log to
+    :return: A dictionary with the results of the analysis
+    :rtype: Dict[str, Dict[str, bool]]
+    """
+    console.print(
+        Panel("[bold blue]Starting analysis and qc report generation[/bold blue]")
+    )
+    log_to_db(
+        db,
+        "Starting analysis and qc report generation",
+        "INFO",
+        "pipeline",
+        "NA",
+        datadir.name,
+    )
 
     console.print(Panel(f"[cyan]Configuration file: {config}[/cyan]"))
-    log_to_db(db, f"Configuration file: {config}", "INFO", "pipeline", "NA", datadir.name)
+    log_to_db(
+        db, f"Configuration file: {config}", "INFO", "pipeline", "NA", datadir.name
+    )
 
     console.print(Panel(f"[cyan]Datadir: {datadir}[/cyan]"))
     log_to_db(db, f"Datadir: {datadir}", "INFO", "pipeline", "NA", datadir.name)
@@ -393,46 +700,134 @@ def generate_analysis(config: Path, datadir: Path, samples: List[str], panel: st
     log_to_db(db, f"Panel: {panel}", "INFO", "pipeline", "NA", datadir.name)
 
     if not samples:
-        console.print(Panel("[yellow]No samples provided, will analyse all samples in the run[/yellow]"))
-        log_to_db(db, "No samples provided, will analyse all samples in the run", "INFO", "pipeline", "NA", datadir.name)
+        console.print(
+            Panel(
+                "[yellow]No samples provided, will analyse all samples in the run[/yellow]"
+            )
+        )
+        log_to_db(
+            db,
+            "No samples provided, will analyse all samples in the run",
+            "INFO",
+            "pipeline",
+            "NA",
+            datadir.name,
+        )
         samples = []
 
     console.print(Panel(f"[cyan]Samples: {' '.join(samples)}[/cyan]"))
-    log_to_db(db, f"Samples: {' '.join(samples)}", "INFO", "pipeline", "NA", datadir.name)
+    log_to_db(
+        db, f"Samples: {' '.join(samples)}", "INFO", "pipeline", "NA", datadir.name
+    )
 
     s = process_dir(config, datadir, samples, panel, full_analysis, db)
 
     return s
 
+
 @click.command()
-@click.option("-c", "--configuration-file", "configuration_file", help="YAML file", required=True)
-@click.option("-s", "--sample", "samples", help="sample to be analysed (it can be multiple, each with a -s)",
-              callback=split_string, required=False)
+@click.option(
+    "-c", "--configuration-file", "configuration_file", help="YAML file", required=True
+)
+@click.option(
+    "-s",
+    "--sample",
+    "samples",
+    help="sample to be analysed (it can be multiple, each with a -s)",
+    callback=split_string,
+    required=False,
+)
 @click.option("-d", "--datadir", "datadir", help="run directory", required=True)
 @click.option("-p", "--panel", "panel", help="panel to be used", required=True)
-@click.option("-f", "--full_analysis", "full_analysis", help="full analysis", is_flag=True)
-def run_analysis(configuration_file: str, datadir: str, panel: str, samples: List[str], full_analysis: bool) -> Dict[str, Dict[str, bool]]:
+@click.option(
+    "-f", "--full_analysis", "full_analysis", help="full analysis", is_flag=True
+)
+def run_analysis(
+    configuration_file: str,
+    datadir: str,
+    panel: str,
+    samples: List[str],
+    full_analysis: bool,
+) -> Dict[str, Dict[str, bool]]:
+    """
+    This is the main function of the pipeline. It takes a configuration file,
+    a directory with the data, a panel to be used, and a list of samples to be
+    analyzed. If no samples are provided, it will analyse all samples in the
+    run. It will also perform a full analysis if the corresponding flag is
+    provided.
+
+    Args:
+        configuration_file (str): The path to the configuration file.
+        datadir (str): The path to the directory with the data.
+        panel (str): The panel to be used.
+        samples (List[str]): The list of samples to be analyzed.
+        full_analysis (bool): Whether to perform a full analysis or not.
+
+    Returns:
+        Dict[str, Dict[str, bool]]: A dictionary with the results of the
+        analysis. The keys are the sample names, and the values are dictionaries
+        with the results of the analysis.
+    """
     config_path = Path(configuration_file)
     datadir_path = Path(datadir)
     db = get_db(datadir_path)
 
     if not samples:
-        console.print(Panel("[yellow]No samples provided, will analyse all samples in the run[/yellow]"))
-        log_to_db(db, "No samples provided, will analyse all samples in the run", "INFO", "pipeline", "NA", datadir_path.name)
+        console.print(
+            Panel(
+                "[yellow]No samples provided, will analyse all samples in the run[/yellow]"
+            )
+        )
+        log_to_db(
+            db,
+            "No samples provided, will analyse all samples in the run",
+            "INFO",
+            "pipeline",
+            "NA",
+            datadir_path.name,
+        )
         samples = []
 
-    console.print(Panel(f"[bold cyan]Pipeline current version is {VERSION}[/bold cyan]"))
-    log_to_db(db, f"Pipeline current version is {VERSION}", "INFO", "pipeline", "NA", datadir_path.name)
+    console.print(
+        Panel(f"[bold cyan]Pipeline current version is {VERSION}[/bold cyan]")
+    )
+    log_to_db(
+        db,
+        f"Pipeline current version is {VERSION}",
+        "INFO",
+        "pipeline",
+        "NA",
+        datadir_path.name,
+    )
 
-    console.print(Panel("[bold green]All requirements found, starting analysis[/bold green]"))
-    log_to_db(db, "All requirements found, starting analysis", "INFO", "pipeline", "NA", datadir_path.name)
+    console.print(
+        Panel("[bold green]All requirements found, starting analysis[/bold green]")
+    )
+    log_to_db(
+        db,
+        "All requirements found, starting analysis",
+        "INFO",
+        "pipeline",
+        "NA",
+        datadir_path.name,
+    )
 
     console.print(Panel(f"[cyan]Full analysis: {full_analysis}[/cyan]"))
-    log_to_db(db, f"Full analysis: {full_analysis}", "INFO", "pipeline", "NA", datadir_path.name)
+    log_to_db(
+        db,
+        f"Full analysis: {full_analysis}",
+        "INFO",
+        "pipeline",
+        "NA",
+        datadir_path.name,
+    )
 
-    sample_dict = process_dir(config_path, datadir_path, samples, panel, full_analysis, db)
+    sample_dict = process_dir(
+        config_path, datadir_path, samples, panel, full_analysis, db
+    )
 
     return sample_dict
+
 
 if __name__ == "__main__":
     run_analysis()
