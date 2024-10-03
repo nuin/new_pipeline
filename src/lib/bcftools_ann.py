@@ -15,7 +15,7 @@ def annotate_merged(
     transcript_list: Optional[Path] = None,
     max_retries: int = 3,
 ) -> str:
-    vcf_dir = datadir / "BAM" / sample_id / "VCF"
+    vcf_dir = Path(datadir) / "BAM" / sample_id / "VCF"
     input_vcf = vcf_dir / f"{sample_id}_merged.vcf"
     output_vcf = vcf_dir / f"{sample_id}_merged.csq.vcf"
     final_vcf = vcf_dir / f"{sample_id}_merged.csq.filtered.vcf"
