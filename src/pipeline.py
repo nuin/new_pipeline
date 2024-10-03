@@ -37,6 +37,9 @@ from lib.variants_freebayes import edit_freebayes_vcf, freebayes_caller
 from lib.variants_GATK import haplotype_caller
 from lib.variants_GATK3 import haplotype_caller as haplotype_caller3
 from lib.variants_octopus import octopus_caller
+from lib.vep_ann import vep_annotate
+from lib.bcftools_ann import annotate_merged as bcftools_annotate
+
 
 # checks current version
 VERSIONFILE = "VERSION"
@@ -313,6 +316,8 @@ def analyse_pairs(
     gatk3 = env["GATK3"]
     freebayes = env["FREEBAYES"]
     snpEff = env["SNPEFF"]
+    vep = env["VEP"]
+    bcftools = env["BCFTOOLS"]
     octopus = env["OCTOPUS"]
     reference = configuration["Reference"]
     vcf_file = configuration["VCF"]
@@ -361,6 +366,15 @@ def analyse_pairs(
         )
 
         to_return[sample]["snpEff"] = annotate_merged(sample, datadir, snpEff)
+
+        to_return[sample]["vep"] = vep_annotate(
+            sample, datadir, vep, reference, db, transcript_list
+        )
+
+        # Add bcftools annotation
+        to_return[sample]["bcftools"] = bcftools_annotate(
+            sample, datadir, bcftools, reference, gff_file, db, transcript_list
+        )
 
         to_return[sample]["picard_coverage"] = get_coverage(
             sample, datadir, reference, bait_file, picard
