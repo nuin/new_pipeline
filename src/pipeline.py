@@ -373,7 +373,7 @@ def analyse_pairs(
         )
 
         to_return[sample]["vep"] = vep_annotate(
-            sample, datadir, vep, reference, db, transcript_list
+            sample, datadir, vep, reference
         )
 
 
