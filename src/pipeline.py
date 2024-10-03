@@ -367,14 +367,14 @@ def analyse_pairs(
 
         to_return[sample]["snpEff"] = annotate_merged(sample, datadir, snpEff)
 
+        to_return[sample]["bcftools"] = bcftools_annotate(
+            sample, datadir, bcftools, reference, gff_file, transcript_list
+        )
+
         to_return[sample]["vep"] = vep_annotate(
             sample, datadir, vep, reference, db, transcript_list
         )
 
-        # Add bcftools annotation
-        to_return[sample]["bcftools"] = bcftools_annotate(
-            sample, datadir, bcftools, reference, gff_file, db, transcript_list
-        )
 
         to_return[sample]["picard_coverage"] = get_coverage(
             sample, datadir, reference, bait_file, picard

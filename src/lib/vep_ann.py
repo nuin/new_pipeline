@@ -17,7 +17,6 @@ def vep_annotate(
         datadir: Path,
         vep: str,
         reference: Path,
-        db: Dict,
         transcript_list: Optional[str] = None,
         max_retries: int = 3,
 ) -> str:
