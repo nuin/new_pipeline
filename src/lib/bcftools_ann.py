@@ -12,7 +12,6 @@ def annotate_merged(
     bcftools: str,
     reference: Path,
     gff: Path,
-    db: Dict,
     transcript_list: Optional[Path] = None,
     max_retries: int = 3,
 ) -> str:
