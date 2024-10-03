@@ -369,7 +369,7 @@ def analyse_pairs(
         to_return[sample]["snpEff"] = annotate_merged(sample, datadir, snpEff)
 
         to_return[sample]["bcftools"] = bcftools_annotate(
-            sample, datadir, bcftools, reference, gff_file, transcript_list
+            sample, datadir, bcftools, reference, gff_file
         )
 
         to_return[sample]["vep"] = vep_annotate(
