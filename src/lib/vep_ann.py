@@ -66,7 +66,7 @@ def vep_annotate(
             return "error"
 
     if vep_output.exists():
-        subprocess.run(["sudo", "chown", f"{Path.owner()}:{Path.group()}", str(vep_output)], check=True)
+        subprocess.run(["sudo", "chown", f"{vep_output.owner()}:{vep_output.group()}", str(vep_output)], check=True)
         subprocess.run(["sudo", "cp", str(vep_output), str(output_vcf)], check=True)
         subprocess.run(["sudo", "rm", str(vep_input)], check=True)
         subprocess.run(["sudo", "rm", str(vep_output)], check=True)
