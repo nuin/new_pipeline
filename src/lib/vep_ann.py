@@ -20,7 +20,7 @@ def vep_annotate(
         transcript_list: Optional[str] = None,
         max_retries: int = 3,
 ) -> str:
-    vcf_dir = datadir / "BAM" / sample_id / "VCF"
+    vcf_dir = Path(datadir) / "BAM" / sample_id / "VCF"
     input_vcf = vcf_dir / f"{sample_id}_merged.vcf"
     output_vcf = vcf_dir / f"{sample_id}_merged.vep.vcf"
     vep_dir = Path("/apps/data/src/bin/vep")
