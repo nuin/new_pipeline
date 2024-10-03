@@ -323,6 +323,7 @@ def analyse_pairs(
     vcf_file = configuration["VCF"]
     bed_file = configuration["BED"]
     bait_file = configuration["BAIT"]
+    gff = configuration["GFF"]
 
     for pos, sample in enumerate(samples):
         console.log(f"Processing {sample} :: {pos + 1} of {len(samples)}")
