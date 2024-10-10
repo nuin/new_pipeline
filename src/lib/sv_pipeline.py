@@ -18,18 +18,27 @@ class SVDetectionPipeline:
         self.threads = threads
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-    def run_gridss(self) -> Path:
+    def run_gridss(self):
         logging.info("Running GRIDSS")
         gridss_out = self.output_dir / "gridss_output.vcf.gz"
         cmd = [
             "gridss",
-            f"--reference {self.reference}",
-            f"--output {gridss_out}",
-            f"--threads {self.threads}",
-            f"--workingdir {self.output_dir / 'gridss_work'}",
-            str(self.bam_file)
+            f"OUTPUT={gridss_out}",
+            f"INPUT={self.bam_file}",
+            f"THREADS={self.threads}",
+            f"WORKING_DIR={self.output_dir / 'gridss_work'}",
         ]
-        subprocess.run(" ".join(cmd), shell=True, check=True)
+
+        try:
+            logging.info(f"GRIDSS command: {' '.join(cmd)}")
+            result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+            logging.info(f"GRIDSS stdout: {result.stdout}")
+            logging.info(f"GRIDSS stderr: {result.stderr}")
+        except subprocess.CalledProcessError as e:
+            logging.error(f"GRIDSS failed with exit code {e.returncode}")
+            logging.error(f"GRIDSS stdout: {e.stdout}")
+            logging.error(f"GRIDSS stderr: {e.stderr}")
+            raise
         return gridss_out
 
     def run_smoove(self) -> Path:
