@@ -26,7 +26,6 @@ class SVDetectionPipeline:
             f"WORKING_DIR={self.output_dir / 'gridss_work'}",
         ]
 
-
         try:
             logging.info(f"GRIDSS command: {' '.join(cmd)}")
             result = subprocess.run(cmd, check=True, capture_output=True, text=True)
