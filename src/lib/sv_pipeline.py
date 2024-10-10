@@ -30,6 +30,11 @@ class SVDetectionPipeline:
         gridss_work_dir = os.path.join(self.output_dir, "gridss_work")
         gridss_assembly = os.path.join(self.output_dir, "gridss_assembly.bam")
 
+        # Check if output file already exists
+        if os.path.exists(gridss_out):
+            logging.info(f"GRIDSS output file already exists: {gridss_out}")
+            return gridss_out
+
         # Create the working directory
         os.makedirs(gridss_work_dir, exist_ok=True)
 
