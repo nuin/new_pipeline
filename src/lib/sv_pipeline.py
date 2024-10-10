@@ -20,6 +20,10 @@ class SVDetectionPipeline:
 
     import os
 
+    import os
+    import subprocess
+    import logging
+
     def run_gridss(self):
         logging.info("Running GRIDSS")
 
@@ -30,6 +34,7 @@ class SVDetectionPipeline:
 
         gridss_out = os.path.join(self.output_dir, "gridss_output.vcf.gz")
         gridss_work_dir = os.path.join(self.output_dir, "gridss_work")
+        gridss_assembly = os.path.join(self.output_dir, "gridss_assembly.bam")
 
         # Create the working directory
         os.makedirs(gridss_work_dir, exist_ok=True)
@@ -37,10 +42,12 @@ class SVDetectionPipeline:
         cmd = [
             "gridss",
             f"OUTPUT={gridss_out}",
-            f"INPUT={self.bam_file}",
             f"REFERENCE_SEQUENCE={self.reference}",
+            f"INPUT={self.bam_file}",
+            f"ASSEMBLY={gridss_assembly}",
             f"THREADS={self.threads}",
-            f"WORKING_DIR={gridss_work_dir}"
+            f"WORKING_DIR={gridss_work_dir}",
+            "TMP_DIR=/tmp"  # Adjust this if needed
         ]
 
         cmd_str = " ".join(cmd)
