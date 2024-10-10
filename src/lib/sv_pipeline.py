@@ -7,6 +7,7 @@ import logging
 import concurrent.futures
 from typing import List
 import click
+import shutil
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -34,6 +35,14 @@ class SVDetectionPipeline:
         # Create the working directory
         os.makedirs(gridss_work_dir, exist_ok=True)
 
+        # Find BWA path
+        bwa_path = shutil.which("bwa")
+        if not bwa_path:
+            # If BWA is not in PATH, you might need to specify its location manually
+            bwa_path = "/apps/data/src/bin/bwa"  # Replace with the actual path to BWA
+            if not os.path.exists(bwa_path):
+                raise RuntimeError(f"BWA not found at {bwa_path}. Please install BWA or provide the correct path.")
+
         cmd = [
             "gridss",
             f"OUTPUT={gridss_out}",
@@ -42,7 +51,8 @@ class SVDetectionPipeline:
             f"ASSEMBLY={gridss_assembly}",
             f"THREADS={self.threads}",
             f"WORKING_DIR={gridss_work_dir}",
-            "TMP_DIR=/tmp"  # Adjust this if needed
+            f"TMP_DIR={gridss_work_dir}/tmp",
+            f"ALIGNER_COMMAND_LINE={bwa_path} mem -K 10000000 -L 0,0 -t %3$d %2$s %1$s"
         ]
 
         cmd_str = " ".join(cmd)
