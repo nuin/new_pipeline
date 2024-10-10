@@ -23,11 +23,11 @@ class SVDetectionPipeline:
         gridss_out = self.output_dir / "gridss_output.vcf.gz"
         cmd = [
             "gridss",
-            f"-OUTPUT {gridss_out}",
-            f"-INPUT {self.bam_file}",
-            f"-REFERENCE_SEQUENCE {self.reference}",
-            f"-THREADS {self.threads}",
-            f"-WORKING_DIR {self.output_dir / 'gridss_work'}"
+            f"OUTPUT={gridss_out}",
+            f"INPUT={self.bam_file}",
+            f"REFERENCE_SEQUENCE={self.reference}",
+            f"THREADS={self.threads}",
+            f"WORKING_DIR={self.output_dir / 'gridss_work'}"
         ]
 
         try:
