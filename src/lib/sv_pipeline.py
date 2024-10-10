@@ -12,12 +12,11 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 class SVDetectionPipeline:
     def __init__(self, bam_file: Path, reference: Path, output_dir: Path, threads: int = 4):
-        self.bam_file = Path(bam_file)
-        self.reference = Path(reference)
-        self.output_dir = Path(output_dir)
+        self.bam_file = str(bam_file)
+        self.reference = str(reference)
+        self.output_dir = str(output_dir)
         self.threads = threads
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-
+        os.makedirs(self.output_dir, exist_ok=True)
 
     def run_gridss(self):
         logging.info("Running GRIDSS")
@@ -60,24 +59,26 @@ class SVDetectionPipeline:
 
         return gridss_out
 
-    def run_smoove(self) -> Path:
+    def run_smoove(self) -> str:
         logging.info("Running Smoove")
-        smoove_out_dir = self.output_dir / "smoove_output"
-        smoove_out_dir.mkdir(exist_ok=True)
+        smoove_out_dir = os.path.join(self.output_dir, "smoove_output")
+        os.makedirs(smoove_out_dir, exist_ok=True)
         cmd = [
             "smoove call",
             f"--outdir {smoove_out_dir}",
-            f"--name {self.bam_file.stem}",
+            f"--name {os.path.splitext(os.path.basename(self.bam_file))[0]}",
             f"--fasta {self.reference}",
             f"-p {self.threads}",
             str(self.bam_file)
         ]
         subprocess.run(" ".join(cmd), shell=True, check=True)
-        return smoove_out_dir / f"{self.bam_file.stem}-smoove.genotyped.vcf.gz"
+        return os.path.join(smoove_out_dir,
+                            f"{os.path.splitext(os.path.basename(self.bam_file))[0]}-smoove.genotyped.vcf.gz")
 
-    def run_svaba(self) -> Path:
+
+    def run_svaba(self) -> str:
         logging.info("Running SVABA")
-        svaba_out = self.output_dir / "svaba_output"
+        svaba_out = os.path.join(self.output_dir, "svaba_output")
         cmd = [
             "svaba run",
             f"-t {self.bam_file}",
@@ -86,24 +87,25 @@ class SVDetectionPipeline:
             f"-G {self.reference}"
         ]
         subprocess.run(" ".join(cmd), shell=True, check=True)
-        return svaba_out.with_suffix(".svaba.sv.vcf")
+        return f"{svaba_out}.svaba.sv.vcf"
 
-    def merge_sv_calls(self, vcf_files: List[Path]) -> Path:
+
+    def merge_sv_calls(self, vcf_files: List[str]) -> str:
         logging.info("Merging SV calls")
-        merged_vcf = self.output_dir / "merged_svs.vcf"
-        with open(self.output_dir / "vcf_list.txt", "w") as f:
+        merged_vcf = os.path.join(self.output_dir, "merged_svs.vcf")
+        with open(os.path.join(self.output_dir, "vcf_list.txt"), "w") as f:
             for vcf in vcf_files:
                 f.write(f"{vcf}\n")
         cmd = [
             "SURVIVOR merge",
-            f"{self.output_dir / 'vcf_list.txt'}",
+            os.path.join(self.output_dir, 'vcf_list.txt'),
             "1000",  # Max distance between breakpoints
-            "2",     # Minimum number of supporting callers
-            "1",     # Take the type into account
-            "1",     # Take the strand into account
-            "0",     # Disabled
-            "30",    # Minimum size of SVs to be taken into account
-            str(merged_vcf)
+            "2",  # Minimum number of supporting callers
+            "1",  # Take the type into account
+            "1",  # Take the strand into account
+            "0",  # Disabled
+            "30",  # Minimum size of SVs to be taken into account
+            merged_vcf
         ]
         subprocess.run(" ".join(cmd), shell=True, check=True)
         return merged_vcf
