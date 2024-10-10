@@ -68,17 +68,43 @@ class SVDetectionPipeline:
         logging.info("Running Smoove")
         smoove_out_dir = os.path.join(self.output_dir, "smoove_output")
         os.makedirs(smoove_out_dir, exist_ok=True)
+
+        # Ensure all paths are absolute
+        bam_file = os.path.abspath(self.bam_file)
+        reference = os.path.abspath(self.reference)
+        smoove_out_dir = os.path.abspath(smoove_out_dir)
+
+        # Get the directory containing the BAM file
+        bam_dir = os.path.dirname(bam_file)
+
         cmd = [
-            "smoove call",
-            f"--outdir {smoove_out_dir}",
-            f"--name {os.path.splitext(os.path.basename(self.bam_file))[0]}",
-            f"--fasta {self.reference}",
+            "docker run --rm -v", f"{bam_dir}:/data",
+            f"-v {os.path.dirname(reference)}:/ref",
+            f"-v {smoove_out_dir}:/out",
+            "brentp/smoove",
+            "call",
+            f"--outdir /out",
+            f"--name {os.path.splitext(os.path.basename(bam_file))[0]}",
+            "--fasta /ref/" + os.path.basename(reference),
             f"-p {self.threads}",
-            str(self.bam_file)
+            "/data/" + os.path.basename(bam_file)
         ]
-        subprocess.run(" ".join(cmd), shell=True, check=True)
+
+        cmd_str = " ".join(cmd)
+        logging.info(f"Smoove command: {cmd_str}")
+
+        try:
+            result = subprocess.run(cmd_str, shell=True, check=True, capture_output=True, text=True)
+            logging.info(f"Smoove stdout: {result.stdout}")
+            logging.info(f"Smoove stderr: {result.stderr}")
+        except subprocess.CalledProcessError as e:
+            logging.error(f"Smoove failed with exit code {e.returncode}")
+            logging.error(f"Smoove stdout: {e.stdout}")
+            logging.error(f"Smoove stderr: {e.stderr}")
+            raise
+
         return os.path.join(smoove_out_dir,
-                            f"{os.path.splitext(os.path.basename(self.bam_file))[0]}-smoove.genotyped.vcf.gz")
+                            f"{os.path.splitext(os.path.basename(bam_file))[0]}-smoove.genotyped.vcf.gz")
 
 
     def run_svaba(self) -> str:
