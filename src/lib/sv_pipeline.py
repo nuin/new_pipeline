@@ -18,21 +18,36 @@ class SVDetectionPipeline:
         self.threads = threads
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
+    import os
+
     def run_gridss(self):
         logging.info("Running GRIDSS")
-        gridss_out = self.output_dir / "gridss_output.vcf.gz"
+
+        # Ensure all paths are absolute
+        self.bam_file = os.path.abspath(self.bam_file)
+        self.reference = os.path.abspath(self.reference)
+        self.output_dir = os.path.abspath(self.output_dir)
+
+        gridss_out = os.path.join(self.output_dir, "gridss_output.vcf.gz")
+        gridss_work_dir = os.path.join(self.output_dir, "gridss_work")
+
+        # Create the working directory
+        os.makedirs(gridss_work_dir, exist_ok=True)
+
         cmd = [
             "gridss",
             f"OUTPUT={gridss_out}",
             f"INPUT={self.bam_file}",
             f"REFERENCE_SEQUENCE={self.reference}",
             f"THREADS={self.threads}",
-            f"WORKING_DIR={self.output_dir / 'gridss_work'}"
+            f"WORKING_DIR={gridss_work_dir}"
         ]
 
+        cmd_str = " ".join(cmd)
+
         try:
-            logging.info(f"GRIDSS command: {' '.join(cmd)}")
-            result = subprocess.run(cmd, check=True, capture_output=True, text=True)
+            logging.info(f"GRIDSS command: {cmd_str}")
+            result = subprocess.run(cmd_str, shell=True, check=True, capture_output=True, text=True)
             logging.info(f"GRIDSS stdout: {result.stdout}")
             logging.info(f"GRIDSS stderr: {result.stderr}")
         except subprocess.CalledProcessError as e:
@@ -40,6 +55,7 @@ class SVDetectionPipeline:
             logging.error(f"GRIDSS stdout: {e.stdout}")
             logging.error(f"GRIDSS stderr: {e.stderr}")
             raise
+
         return gridss_out
 
     def run_smoove(self) -> Path:
