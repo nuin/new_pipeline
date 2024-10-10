@@ -18,11 +18,6 @@ class SVDetectionPipeline:
         self.threads = threads
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-    import os
-
-    import os
-    import subprocess
-    import logging
 
     def run_gridss(self):
         logging.info("Running GRIDSS")
