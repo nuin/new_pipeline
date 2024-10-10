@@ -78,11 +78,12 @@ class SVDetectionPipeline:
         bam_dir = os.path.dirname(bam_file)
 
         cmd = [
-            "sudo docker run --rm -v", f"{bam_dir}:/data",
+            "sudo docker run --rm",
+            f"-v {bam_dir}:/data",
             f"-v {os.path.dirname(reference)}:/ref",
             f"-v {smoove_out_dir}:/out",
             "brentp/smoove",
-            "call",
+            "smoove call",  # Change: prefix 'smoove' to 'call'
             f"--outdir /out",
             f"--name {os.path.splitext(os.path.basename(bam_file))[0]}",
             "--fasta /ref/" + os.path.basename(reference),
