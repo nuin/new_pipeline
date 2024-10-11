@@ -83,11 +83,14 @@ class SVDetectionPipeline:
             f"-v {os.path.dirname(reference)}:/ref",
             f"-v {smoove_out_dir}:/out",
             "brentp/smoove",
-            "smoove call",  # Change: prefix 'smoove' to 'call'
+            "smoove call",
             f"--outdir /out",
             f"--name {os.path.splitext(os.path.basename(bam_file))[0]}",
             "--fasta /ref/" + os.path.basename(reference),
             f"-p {self.threads}",
+            "--genotype",  # This will use svtyper for genotyping
+            "--duphold",  # This will use duphold for depth annotation
+            "--removepr",  # This uses mosdepth to remove high-coverage regions
             "/data/" + os.path.basename(bam_file)
         ]
 
@@ -106,7 +109,6 @@ class SVDetectionPipeline:
 
         return os.path.join(smoove_out_dir,
                             f"{os.path.splitext(os.path.basename(bam_file))[0]}-smoove.genotyped.vcf.gz")
-
 
     def run_svaba(self) -> str:
         logging.info("Running SVABA")
